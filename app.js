@@ -4,7 +4,9 @@ const STORAGE_KEYS = {
   direction: "velhoksi.direction",
   enabledMap: "velhoksi.enabledMap",
   caseModeMap: "velhoksi.caseModeMap",
-  stats: "velhoksi.stats",
+  statsMap: "velhoksi.statsMap",
+  missesMap: "velhoksi.missesMap",
+  missedFocusMap: "velhoksi.missedFocusMap",
   feedbackDuration: "velhoksi.feedbackDuration",
   feedbackMode: "velhoksi.feedbackMode",
 };
@@ -51,7 +53,7 @@ const ALPHABETS = [
       ["զ", "z"], ["է", "ee"], ["ը", "uh"], ["թ", "t'"], ["ժ", "zh"],
       ["ի", "i"], ["լ", "l"], ["խ", "kh"], ["ծ", "ts"], ["կ", "k"],
       ["հ", "h"], ["ձ", "dz"], ["ղ", "gh"], ["ճ", "ch"], ["մ", "m"],
-      ["յ", "y"], ["ն", "n"], ["շ", "sh"], ["ո", "vo"], ["չ", "ch'"],
+      ["յ", "y"], ["ն", "n"], ["շ", "sh"], ["ո", "o"], ["չ", "ch'"],
       ["պ", "p"], ["ջ", "j"], ["ռ", "rr"], ["ս", "s"], ["վ", "v"],
       ["տ", "t"], ["ր", "r"], ["ց", "ts'"], ["ւ", "w"], ["փ", "p'"],
       ["ք", "k'"], ["օ", "o"], ["ֆ", "f"],
@@ -73,9 +75,9 @@ const ALPHABETS = [
     label: "arabic",
     symbols: [
       ["ا", "a"], ["ب", "b"], ["ت", "t"], ["ث", "th"], ["ج", "j"],
-      ["ح", "hh"], ["خ", "kh"], ["د", "d"], ["ذ", "dh"], ["ر", "r"],
-      ["ز", "z"], ["س", "s"], ["ش", "sh"], ["ص", "ss"], ["ض", "dd"],
-      ["ط", "tt"], ["ظ", "zz"], ["ع", "ayn"], ["غ", "gh"], ["ف", "f"],
+      ["ح", "h"], ["خ", "kh"], ["د", "d"], ["ذ", "dh"], ["ر", "r"],
+      ["ز", "z"], ["س", "s"], ["ش", "sh"], ["ص", "s2"], ["ض", "d2"],
+      ["ط", "t2"], ["ظ", "z2"], ["ع", "ayn"], ["غ", "gh"], ["ف", "f"],
       ["ق", "q"], ["ك", "k"], ["ل", "l"], ["م", "m"], ["ن", "n"],
       ["ه", "h"], ["و", "w"], ["ي", "y"],
     ],
@@ -85,7 +87,7 @@ const ALPHABETS = [
     label: "hebrew",
     symbols: [
       ["א", "alef"], ["ב", "b"], ["ג", "g"], ["ד", "d"], ["ה", "h"],
-      ["ו", "v"], ["ז", "z"], ["ח", "kh"], ["ט", "t'"], ["י", "y"],
+      ["ו", "v"], ["ז", "z"], ["ח", "kh"], ["ט", "t2"], ["י", "y"],
       ["כ", "k"], ["ל", "l"], ["מ", "m"], ["נ", "n"], ["ס", "s"],
       ["ע", "ayn"], ["פ", "p"], ["צ", "ts"], ["ק", "q"], ["ר", "r"],
       ["ש", "sh"], ["ת", "t"],
@@ -96,9 +98,9 @@ const ALPHABETS = [
     label: "syriac",
     symbols: [
       ["ܐ", "a"], ["ܒ", "b"], ["ܓ", "g"], ["ܕ", "d"], ["ܗ", "h"],
-      ["ܘ", "w"], ["ܙ", "z"], ["ܚ", "hh"], ["ܛ", "tt"], ["ܝ", "y"],
+      ["ܘ", "w"], ["ܙ", "z"], ["ܚ", "h2"], ["ܛ", "t2"], ["ܝ", "y"],
       ["ܟ", "k"], ["ܠ", "l"], ["ܡ", "m"], ["ܢ", "n"], ["ܣ", "s"],
-      ["ܥ", "ayn"], ["ܦ", "p"], ["ܨ", "ss"], ["ܩ", "q"], ["ܪ", "r"],
+      ["ܥ", "ayn"], ["ܦ", "p"], ["ܨ", "s2"], ["ܩ", "q"], ["ܪ", "r"],
       ["ܫ", "sh"], ["ܬ", "t"],
     ],
   },
@@ -172,13 +174,94 @@ const ALPHABETS = [
 
 const alphabetById = Object.fromEntries(ALPHABETS.map((alphabet) => [alphabet.id, alphabet]));
 
+const SYMBOL_NOTES = {
+  hiragana: {
+    "し": "usually romanized as shi, not si.",
+    "ち": "usually romanized as chi, not ti.",
+    "つ": "usually romanized as tsu, not tu.",
+    "ふ": "usually romanized as fu, not hu."
+  },
+  katakana: {
+    "シ": "usually romanized as shi, not si.",
+    "チ": "usually romanized as chi, not ti.",
+    "ツ": "usually romanized as tsu, not tu.",
+    "フ": "usually romanized as fu, not hu."
+  },
+  armenian: {
+    "է": "marked here as ee to keep it distinct from ե.",
+    "ը": "uh is a neutral central vowel, not a full english u.",
+    "ռ": "rr marks a stronger rolled r than ր.",
+    "թ": "apostrophes mark aspirated or ejective-like contrasts in this set.",
+    "ց": "apostrophes mark aspirated or ejective-like contrasts in this set.",
+    "փ": "apostrophes mark aspirated or ejective-like contrasts in this set.",
+    "ք": "apostrophes mark aspirated or ejective-like contrasts in this set."
+  },
+  hangul: {
+    "ㅇ": "silent at the start of a syllable block, ng at the end. here it is shown with its final-sound value.",
+    "ㅓ": "eo is the standard romanization; it is not english eo literally.",
+    "ㅕ": "yeo is the standard romanization; it is not english yeo literally.",
+    "ㅡ": "eu is the standard romanization for this vowel."
+  },
+  arabic: {
+    "ص": "the 2 marks an emphatic consonant kept separate from plain s.",
+    "ض": "the 2 marks an emphatic consonant kept separate from plain d.",
+    "ط": "the 2 marks an emphatic consonant kept separate from plain t.",
+    "ظ": "the 2 marks an emphatic consonant kept separate from plain z.",
+    "ع": "ayn is a conventional transliteration name for this consonant."
+  },
+  hebrew: {
+    "ט": "t2 keeps this letter distinct from ת in this drill set.",
+    "א": "alef is often a carrier for vowels or a glottal stop depending on context.",
+    "ע": "ayn is a conventional transliteration name for this consonant."
+  },
+  syriac: {
+    "ܚ": "h2 keeps this stronger h-like consonant distinct from ܗ.",
+    "ܛ": "t2 keeps this emphatic t-like consonant distinct from ܬ.",
+    "ܨ": "s2 keeps this emphatic s-like consonant distinct from ܣ.",
+    "ܥ": "ayn is a conventional transliteration name for this consonant."
+  },
+  greek: {
+    "η": "shown as ee to keep it distinct from ε in this simple drill set.",
+    "ω": "shown as oo to keep it distinct from ο in this simple drill set.",
+    "χ": "kh marks a rougher sound than plain k."
+  },
+  cyrillic: {
+    "ъ": "hard is a mnemonic label for the hard sign, not a standalone vowel sound.",
+    "ь": "soft is a mnemonic label for the soft sign, not a standalone vowel sound.",
+    "щ": "shown as shch here to keep it distinct from ш."
+  },
+  georgian: {
+    "კ": "apostrophes mark ejective consonants in this set.",
+    "პ": "apostrophes mark ejective consonants in this set.",
+    "ყ": "apostrophes mark ejective consonants in this set.",
+    "წ": "apostrophes mark ejective consonants in this set.",
+    "ჭ": "apostrophes mark ejective consonants in this set."
+  },
+  cherokee: {
+    "Ꭵ": "v is a nasal vowel in cherokee romanization, not the english consonant v.",
+    "Ꭼ": "gv uses the same nasal-v value as Ꭵ.",
+    "Ꮂ": "hv uses the same nasal-v value as Ꭵ.",
+    "Ꮈ": "lv uses the same nasal-v value as Ꭵ.",
+    "Ꮕ": "nv uses the same nasal-v value as Ꭵ.",
+    "Ꮛ": "quv uses the same nasal-v value as Ꭵ.",
+    "Ꮢ": "sv uses the same nasal-v value as Ꭵ.",
+    "Ꮫ": "dv uses the same nasal-v value as Ꭵ.",
+    "Ꮲ": "tlv uses the same nasal-v value as Ꭵ.",
+    "Ꮸ": "tsv uses the same nasal-v value as Ꭵ.",
+    "Ꮾ": "wv uses the same nasal-v value as Ꭵ.",
+    "Ᏼ": "yv uses the same nasal-v value as Ꭵ."
+  }
+};
+
 const state = {
   theme: loadTheme(),
   selectedAlphabet: localStorage.getItem(STORAGE_KEYS.alphabet) || null,
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
   enabledMap: loadEnabledMap(),
   caseModeMap: loadCaseModeMap(),
-  stats: loadStats(),
+  statsMap: loadStatsMap(),
+  missesMap: loadMissesMap(),
+  missedFocusMap: loadMissedFocusMap(),
   feedbackDuration: loadFeedbackDuration(),
   feedbackMode: loadFeedbackMode(),
   currentPromptId: null,
@@ -203,6 +286,12 @@ const refs = {
   settingsToggle: document.querySelector("#settings-toggle"),
   settingsPanel: document.querySelector("#settings-panel"),
   settingsList: document.querySelector("#settings-list"),
+  settingsEmpty: document.querySelector("#settings-empty"),
+  allOnButton: document.querySelector("#all-on-button"),
+  allOffButton: document.querySelector("#all-off-button"),
+  missedFocusToggle: document.querySelector("#missed-focus-toggle"),
+  feedbackDurationControl: document.querySelector("#feedback-duration-control"),
+  feedbackSettingsCopy: document.querySelector("#feedback-settings-copy"),
   caseSettings: document.querySelector("#case-settings"),
   caseOptions: [...document.querySelectorAll(".case-option")],
   feedbackDuration: document.querySelector("#feedback-duration"),
@@ -296,10 +385,42 @@ function bindEvents() {
   refs.closeCheat.addEventListener("click", () => refs.cheatDialog.close());
 
   refs.cheatDialog.addEventListener("click", (event) => {
+    const noteTrigger = event.target.closest(".cheat-note-trigger");
+    if (noteTrigger) {
+      const noteItem = noteTrigger.closest(".cheat-item");
+      const isActive = noteTrigger.classList.contains("active");
+      refs.cheatGrid
+        .querySelectorAll(".cheat-note-trigger.active")
+        .forEach((button) => {
+          button.classList.remove("active");
+          button.setAttribute("aria-expanded", "false");
+        });
+      refs.cheatGrid
+        .querySelectorAll(".cheat-item.note-open")
+        .forEach((item) => item.classList.remove("note-open"));
+      if (!isActive) {
+        noteTrigger.classList.add("active");
+        noteTrigger.setAttribute("aria-expanded", "true");
+        noteItem?.classList.add("note-open");
+      }
+      return;
+    }
+
     const card = refs.cheatDialog.querySelector(".dialog-card");
     if (!card.contains(event.target)) {
       refs.cheatDialog.close();
+      return;
     }
+
+    refs.cheatGrid
+      .querySelectorAll(".cheat-note-trigger.active")
+      .forEach((button) => {
+        button.classList.remove("active");
+        button.setAttribute("aria-expanded", "false");
+      });
+    refs.cheatGrid
+      .querySelectorAll(".cheat-item.note-open")
+      .forEach((item) => item.classList.remove("note-open"));
   });
 
   refs.latinForm.addEventListener("submit", (event) => {
@@ -324,6 +445,46 @@ function bindEvents() {
     setFeedback("stats reset.", "success");
   });
 
+  refs.allOffButton.addEventListener("click", () => {
+    const alphabet = getSelectedAlphabet();
+    if (!alphabet) {
+      return;
+    }
+    state.enabledMap[alphabet.id] = [];
+    saveEnabledMap();
+    clearPendingWrongState();
+    state.currentPromptId = null;
+    setFeedback("");
+    render();
+  });
+
+  refs.allOnButton.addEventListener("click", () => {
+    const alphabet = getSelectedAlphabet();
+    if (!alphabet) {
+      return;
+    }
+    state.enabledMap[alphabet.id] = alphabet.symbols.map((symbol) => symbol.id);
+    saveEnabledMap();
+    clearPendingWrongState();
+    state.currentPromptId = null;
+    setFeedback("");
+    nextPrompt();
+    render();
+  });
+
+  refs.missedFocusToggle.addEventListener("change", () => {
+    const alphabet = getSelectedAlphabet();
+    if (!alphabet) {
+      return;
+    }
+    state.missedFocusMap[alphabet.id] = refs.missedFocusToggle.checked;
+    saveMissedFocusMap();
+    state.currentPromptId = null;
+    setFeedback("");
+    nextPrompt();
+    render();
+  });
+
   refs.feedbackDuration.addEventListener("change", () => {
     state.feedbackDuration = Number(refs.feedbackDuration.value);
     saveFeedbackDuration();
@@ -332,6 +493,7 @@ function bindEvents() {
   refs.feedbackMode.addEventListener("change", () => {
     state.feedbackMode = refs.feedbackMode.value === "manual" ? "manual" : "timed";
     saveFeedbackMode();
+    render();
   });
 
   for (const button of refs.caseOptions) {
@@ -391,6 +553,12 @@ function render() {
   refs.directionToggle.disabled = !alphabet;
   refs.feedbackDuration.value = String(state.feedbackDuration);
   refs.feedbackMode.value = state.feedbackMode;
+  refs.feedbackDurationControl.classList.toggle("hidden", state.feedbackMode === "manual");
+  refs.feedbackSettingsCopy.textContent =
+    state.feedbackMode === "manual"
+      ? "what happens after a wrong answer."
+      : "how long the correct answer stays visible before the next prompt.";
+  refs.missedFocusToggle.checked = alphabet ? getMissedFocusForAlphabet(alphabet) : false;
   refs.caseSettings.classList.toggle("hidden", !alphabet || !alphabet.hasCase);
   for (const button of refs.caseOptions) {
     const active = button.dataset.caseMode === caseMode;
@@ -442,7 +610,6 @@ function renderAlphabetPicker() {
       state.currentPromptId = null;
       state.lastPromptId = null;
       state.settingsOpen = false;
-      resetStatsState();
       setFeedback("");
       render();
     });
@@ -458,6 +625,7 @@ function renderPrompt() {
     state.direction === "foreignToLatin" ? `${sourceLabel} -> latin` : `latin -> ${sourceLabel}`;
 
   if (!prompt) {
+    refs.promptCard.classList.remove("success-flash", "failure-flash");
     refs.promptValue.textContent = "-";
     refs.promptHint.textContent = getSelectedAlphabet() ? "no symbols enabled" : "choose an alphabet";
     refs.promptCard.dataset.promptId = "";
@@ -465,6 +633,7 @@ function renderPrompt() {
   }
 
   if (refs.promptCard.dataset.promptId !== prompt.id) {
+    refs.promptCard.classList.remove("success-flash", "failure-flash");
     refs.promptCard.classList.remove("flash");
     void refs.promptCard.offsetWidth;
     refs.promptCard.classList.add("flash");
@@ -492,11 +661,13 @@ function renderAnswerArea() {
     refs.symbolGrid.innerHTML = "";
     refs.latinInput.value = "";
     refs.latinInput.disabled = true;
+    refs.latinInput.readOnly = false;
     refs.continueButton.classList.add("hidden");
     return;
   }
 
   refs.latinInput.disabled = !useLatinInput;
+  refs.latinInput.readOnly = useLatinInput && state.awaitingManualContinue;
 
   if (useLatinInput) {
     if (!state.awaitingManualContinue) {
@@ -550,6 +721,8 @@ function renderSettings() {
   const enabledSet = new Set(state.enabledMap[alphabet.id]);
   const enabledCount = enabledSet.size;
 
+  refs.settingsEmpty.classList.toggle("hidden", enabledCount > 0);
+
   for (const symbol of alphabet.symbols) {
     const item = document.createElement("label");
     item.className = "setting-item";
@@ -562,7 +735,6 @@ function renderSettings() {
     toggle.type = "checkbox";
     toggle.className = "toggle";
     toggle.checked = enabledSet.has(symbol.id);
-    toggle.disabled = toggle.checked && enabledCount === 1;
     toggle.addEventListener("change", () => {
       updateEnabledSymbol(symbol.id, toggle.checked);
     });
@@ -597,19 +769,37 @@ function renderCheatSheet() {
 }
 
 function getCheatSheetMarkup(symbol, alphabet, caseMode) {
+  const note = getSymbolNote(alphabet.id, symbol.foreign);
+  const noteButton = note
+    ? `<button type="button" class="cheat-note-trigger" aria-label="note about ${symbol.foreign}" aria-expanded="false" data-note="${escapeHtml(note)}">?</button>`
+    : "";
+  const noteBlock = note ? `<div class="cheat-note-inline">${escapeHtml(note)}</div>` : "";
+
   if (!alphabet.hasCase || caseMode === "lower") {
-    return `<strong>${symbol.foreign}</strong><span>${symbol.latin}</span>`;
+    return `<div class="cheat-item-head"><strong>${symbol.foreign}</strong>${noteButton}</div><span>${symbol.latin}</span>${noteBlock}`;
   }
 
   if (caseMode === "upper") {
-    return `<strong>${toUpperVariant(symbol.foreign)}</strong><span>${symbol.latin}</span>`;
+    return `<div class="cheat-item-head"><strong>${toUpperVariant(symbol.foreign)}</strong>${noteButton}</div><span>${symbol.latin}</span>${noteBlock}`;
   }
 
-  return `<strong>${symbol.foreign}</strong><span class="cheat-case">${toUpperVariant(symbol.foreign)}</span><span>${symbol.latin}</span>`;
+  return `<div class="cheat-item-head"><strong>${symbol.foreign}</strong>${noteButton}</div><span class="cheat-case">${toUpperVariant(symbol.foreign)}</span><span>${symbol.latin}</span>${noteBlock}`;
+}
+
+function getSymbolNote(alphabetId, foreign) {
+  return SYMBOL_NOTES[alphabetId]?.[foreign] || "";
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function renderStats() {
-  const { right, wrong } = state.stats;
+  const { right, wrong } = getCurrentStats();
   const total = right + wrong;
   const percent = total === 0 ? 0 : Math.round((right / total) * 100);
 
@@ -629,8 +819,8 @@ function nextPrompt() {
     symbols.length > 1
       ? symbols.filter((symbol) => symbol.id !== state.lastPromptId)
       : symbols;
-
-  const next = pool[Math.floor(Math.random() * pool.length)];
+  const weightedPool = getWeightedPromptPool(pool);
+  const next = weightedPool[Math.floor(Math.random() * weightedPool.length)];
   state.lastPromptId = next.id;
   state.currentPromptId = next.id;
 }
@@ -728,7 +918,7 @@ function updateEnabledSymbol(symbolId, enabled) {
   const nextSet = new Set(state.enabledMap[alphabet.id]);
   if (enabled) {
     nextSet.add(symbolId);
-  } else if (nextSet.size > 1) {
+  } else {
     nextSet.delete(symbolId);
   }
 
@@ -750,21 +940,24 @@ function submitResult(correct, expectedAnswer) {
 
   if (correct) {
     state.selectedWrongSymbolId = null;
-    state.stats.right += 1;
+    const stats = getCurrentStats();
+    stats.right += 1;
+    setCurrentStats(stats);
     setFeedback("right", "success");
     flashPromptSuccess();
-    saveStats();
     renderStats();
     state.currentPromptId = null;
     scheduleNextPrompt(220);
     scheduleSuccessFeedbackClear(2400);
   } else {
-    state.stats.wrong += 1;
+    const stats = getCurrentStats();
+    stats.wrong += 1;
+    setCurrentStats(stats);
+    bumpMissForCurrentPrompt();
     flashPromptFailure();
     state.revealedCorrectSymbolId =
       state.direction === "latinToForeign" && getCurrentPrompt() ? getCurrentPrompt().id : null;
     setFeedback(`correct answer: ${expectedAnswer}`, "error");
-    saveStats();
     renderStats();
     if (state.feedbackMode === "manual") {
       state.awaitingManualContinue = true;
@@ -805,7 +998,11 @@ function submitLatinAnswer(forceSubmit) {
 function focusLatinInput() {
   window.requestAnimationFrame(() => {
     refs.latinInput.focus();
-    refs.latinInput.select();
+    if (state.awaitingManualContinue) {
+      refs.latinInput.setSelectionRange(0, refs.latinInput.value.length);
+    } else {
+      refs.latinInput.select();
+    }
   });
 }
 
@@ -899,16 +1096,13 @@ function scrollPromptIntoViewIfMobile() {
 
 function ensureEnabledMapShape() {
   for (const alphabet of ALPHABETS) {
-    if (!Array.isArray(state.enabledMap[alphabet.id]) || state.enabledMap[alphabet.id].length === 0) {
+    if (!Array.isArray(state.enabledMap[alphabet.id])) {
       state.enabledMap[alphabet.id] = alphabet.symbols
         .filter((symbol) => symbol.enabledByDefault)
         .map((symbol) => symbol.id);
     } else {
       const validIds = new Set(alphabet.symbols.map((symbol) => symbol.id));
       state.enabledMap[alphabet.id] = state.enabledMap[alphabet.id].filter((id) => validIds.has(id));
-      if (state.enabledMap[alphabet.id].length === 0) {
-        state.enabledMap[alphabet.id] = alphabet.symbols.map((symbol) => symbol.id);
-      }
     }
   }
 
@@ -925,6 +1119,66 @@ function getPromptHint(prompt, alphabet) {
   }
 
   return "pick the matching symbol";
+}
+
+function getCurrentStats() {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet) {
+    return { right: 0, wrong: 0 };
+  }
+  return state.statsMap[alphabet.id] || { right: 0, wrong: 0 };
+}
+
+function setCurrentStats(stats) {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet) {
+    return;
+  }
+  state.statsMap[alphabet.id] = stats;
+  saveStatsMap();
+}
+
+function getMissedFocusForAlphabet(alphabet) {
+  return Boolean(state.missedFocusMap[alphabet.id]);
+}
+
+function getMissCountForBaseId(baseId) {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet) {
+    return 0;
+  }
+  return state.missesMap[alphabet.id]?.[baseId] || 0;
+}
+
+function bumpMissForCurrentPrompt() {
+  const alphabet = getSelectedAlphabet();
+  const prompt = getCurrentPrompt();
+  if (!alphabet || !prompt) {
+    return;
+  }
+  const baseId = prompt.baseId || prompt.id;
+  if (!state.missesMap[alphabet.id]) {
+    state.missesMap[alphabet.id] = {};
+  }
+  state.missesMap[alphabet.id][baseId] = (state.missesMap[alphabet.id][baseId] || 0) + 1;
+  saveMissesMap();
+}
+
+function getWeightedPromptPool(pool) {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet || !getMissedFocusForAlphabet(alphabet)) {
+    return pool;
+  }
+
+  const weighted = [];
+  for (const symbol of pool) {
+    weighted.push(symbol);
+    const missCount = Math.min(2, getMissCountForBaseId(symbol.baseId || symbol.id));
+    for (let index = 0; index < missCount; index += 1) {
+      weighted.push(symbol);
+    }
+  }
+  return weighted;
 }
 
 function applyTheme(theme) {
@@ -972,25 +1226,60 @@ function saveCaseModeMap() {
   localStorage.setItem(STORAGE_KEYS.caseModeMap, JSON.stringify(state.caseModeMap));
 }
 
-function loadStats() {
+function loadStatsMap() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.stats) || "{}");
-    return {
-      right: Number.isFinite(parsed.right) ? parsed.right : 0,
-      wrong: Number.isFinite(parsed.wrong) ? parsed.wrong : 0,
-    };
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.statsMap) || "{}");
+    const next = {};
+    for (const alphabet of ALPHABETS) {
+      const item = parsed[alphabet.id] || {};
+      next[alphabet.id] = {
+        right: Number.isFinite(item.right) ? item.right : 0,
+        wrong: Number.isFinite(item.wrong) ? item.wrong : 0,
+      };
+    }
+    return next;
   } catch {
-    return { right: 0, wrong: 0 };
+    return {};
   }
 }
 
-function saveStats() {
-  localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(state.stats));
+function saveStatsMap() {
+  localStorage.setItem(STORAGE_KEYS.statsMap, JSON.stringify(state.statsMap));
 }
 
 function resetStatsState() {
-  state.stats = { right: 0, wrong: 0 };
-  saveStats();
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet) {
+    return;
+  }
+  state.statsMap[alphabet.id] = { right: 0, wrong: 0 };
+  state.missesMap[alphabet.id] = {};
+  saveStatsMap();
+  saveMissesMap();
+}
+
+function loadMissesMap() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.missesMap) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveMissesMap() {
+  localStorage.setItem(STORAGE_KEYS.missesMap, JSON.stringify(state.missesMap));
+}
+
+function loadMissedFocusMap() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.missedFocusMap) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveMissedFocusMap() {
+  localStorage.setItem(STORAGE_KEYS.missedFocusMap, JSON.stringify(state.missedFocusMap));
 }
 
 function loadFeedbackDuration() {

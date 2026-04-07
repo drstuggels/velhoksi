@@ -1,0 +1,28 @@
+{
+  "name": "velhoksi",
+  "short_name": "velhoksi",
+  "description": "a minimal game for practicing alphabets and symbols across scripts.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#17284b",
+  "theme_color": "#17284b",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/velhoksi.png",
+      "sizes": "504x495",
+      "type": "image/png"
+    }
+  ]
+}
