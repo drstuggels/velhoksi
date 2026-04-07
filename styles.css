@@ -86,6 +86,7 @@ body {
 body {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
+  background: var(--bg-layer);
   color: var(--text);
   transition: background 180ms ease, color 180ms ease;
 }
