@@ -37,7 +37,8 @@
           <div class="floating floating-main">
             <div class="prompt-meta">
               <div class="prompt-title-row eyebrow">
-                <span>current language is</span>
+                <span class="prompt-title-prefix">current alphabet is</span>
+                <span class="prompt-title-desktop">current alphabet is</span>
                 <span id="alphabet-title">nothing</span>
                 <button id="switch-alphabet" class="text-button hidden" type="button">but you can switch</button>
               </div>
@@ -84,10 +85,13 @@
               <div id="symbol-grid" class="symbol-grid"></div>
             </section>
 
-            <div id="feedback" class="feedback" aria-live="polite"></div>
-            <button id="continue-button" class="text-button continue-button hidden" type="button">
-              continue
-            </button>
+            <div class="answer-status">
+              <button id="continue-button" class="text-button continue-button hidden" type="button">
+                <span class="continue-label">continue</span>
+                <span class="continue-hint">(or press enter)</span>
+              </button>
+              <div id="feedback" class="feedback" aria-live="polite"></div>
+            </div>
           </div>
 
           <aside class="floating floating-stats">
@@ -112,7 +116,7 @@
             <section class="settings-group">
               <div class="settings-head">
                 <p class="eyebrow">answer reveal</p>
-                <p class="settings-copy">how long the correct answer stays visible after a wrong enter.</p>
+                <p class="settings-copy">how long the correct answer stays visible after a wrong answer.</p>
               </div>
               <label class="duration-control" for="feedback-duration">
                 <select id="feedback-duration">
@@ -123,10 +127,10 @@
                 </select>
               </label>
               <label class="duration-control" for="feedback-mode">
-                <span class="eyebrow">after wrong answer</span>
+                <span class="eyebrow">after a wrong answer</span>
                 <select id="feedback-mode">
                   <option value="timed">wait automatically</option>
-                  <option value="manual">wait for another enter</option>
+                  <option value="manual">wait for another enter press</option>
                 </select>
               </label>
             </section>
@@ -142,6 +146,7 @@
       </main>
 
       <footer class="site-footer">
+        <span class="theme-prefix">current mode is</span>
         <button id="theme-toggle" class="text-button" type="button" aria-label="toggle theme">
           current mode is dark, switch it
         </button>
@@ -153,11 +158,13 @@
       <div class="dialog-card">
         <div class="dialog-head">
           <div>
-            <p class="eyebrow">reference</p>
+            <p class="eyebrow">cheat sheet</p>
             <h2 id="cheat-title">cheat sheet</h2>
           </div>
-          <button id="close-cheat" class="text-button" type="button">close</button>
         </div>
+        <button id="close-cheat" class="text-button close-cheat-button" type="button" aria-label="close cheat sheet">
+          close
+        </button>
         <div id="cheat-grid" class="cheat-grid"></div>
       </div>
     </dialog>

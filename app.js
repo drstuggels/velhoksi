@@ -102,7 +102,10 @@ const state = {
   lastPromptId: null,
   settingsOpen: false,
   feedbackTimeoutId: null,
+  successFeedbackTimeoutId: null,
   awaitingManualContinue: false,
+  selectedWrongSymbolId: null,
+  revealedCorrectSymbolId: null,
 };
 
 const refs = {
@@ -185,6 +188,12 @@ function bindEvents() {
     }
     state.settingsOpen = !state.settingsOpen;
     render();
+    if (state.settingsOpen) {
+      window.requestAnimationFrame(() => {
+        refs.settingsPanel.scrollTop = 0;
+        refs.settingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   });
 
   refs.cheatToggle.addEventListener("click", () => {
@@ -218,6 +227,9 @@ function bindEvents() {
   });
 
   refs.latinInput.addEventListener("input", () => {
+    if (state.awaitingManualContinue || state.feedbackTimeoutId !== null) {
+      return;
+    }
     submitLatinAnswer(false);
   });
 
@@ -239,6 +251,27 @@ function bindEvents() {
 
   refs.continueButton.addEventListener("click", () => {
     continueAfterReveal();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || refs.cheatDialog.open) {
+      return;
+    }
+
+    if (state.awaitingManualContinue) {
+      event.preventDefault();
+      continueAfterReveal();
+      return;
+    }
+
+    if (state.direction === "latinToForeign" && state.feedbackTimeoutId === null) {
+      const prompt = getCurrentPrompt();
+      if (!prompt) {
+        return;
+      }
+      event.preventDefault();
+      submitResult(false, prompt.foreign);
+    }
   });
 }
 
@@ -276,7 +309,20 @@ function renderAlphabetPicker() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "alphabet-button";
-    button.textContent = alphabet.label;
+    const label = document.createElement("span");
+    label.className = "alphabet-button-label";
+    label.textContent = alphabet.label;
+
+    const preview = document.createElement("span");
+    preview.className = "alphabet-button-preview";
+
+    const track = document.createElement("span");
+    track.className = "alphabet-button-preview-track";
+    const previewText = alphabet.symbols.map((symbol) => symbol.foreign).join("   ");
+    track.textContent = `${previewText}   ${previewText}`;
+
+    preview.append(track);
+    button.append(label, preview);
     if (alphabet.id === state.selectedAlphabet) {
       button.classList.add("active");
     }
@@ -327,11 +373,16 @@ function renderPrompt() {
 function renderAnswerArea() {
   const prompt = getCurrentPrompt();
   const useLatinInput = state.direction === "foreignToLatin";
+  const showManualContinue = useLatinInput && state.awaitingManualContinue;
 
-  refs.latinForm.classList.toggle("hidden", !useLatinInput || !prompt);
+  const mainPanel = refs.gameView.querySelector(".floating-main");
+  mainPanel?.classList.toggle("latin-mode", useLatinInput);
+  mainPanel?.classList.toggle("symbol-mode", !useLatinInput);
+
+  refs.latinForm.classList.toggle("hidden", !useLatinInput || (!prompt && !showManualContinue));
   refs.symbolAnswer.classList.toggle("hidden", useLatinInput || !prompt);
 
-  if (!prompt) {
+  if (!prompt && !showManualContinue) {
     refs.symbolGrid.innerHTML = "";
     refs.latinInput.value = "";
     refs.latinInput.disabled = true;
@@ -339,13 +390,13 @@ function renderAnswerArea() {
     return;
   }
 
-  refs.latinInput.disabled = !useLatinInput || state.awaitingManualContinue;
+  refs.latinInput.disabled = !useLatinInput;
 
   if (useLatinInput) {
     if (!state.awaitingManualContinue) {
       refs.latinInput.value = "";
-      focusLatinInput();
     }
+    focusLatinInput();
     return;
   }
 
@@ -359,13 +410,23 @@ function renderSymbolGrid() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "symbol-key";
+    if (state.selectedWrongSymbolId === symbol.id) {
+      button.classList.add("selected-wrong");
+    }
+    if (state.revealedCorrectSymbolId === symbol.id) {
+      button.classList.add("selected-correct");
+    }
     button.textContent = symbol.foreign;
     button.setAttribute("aria-label", `${symbol.foreign} for ${symbol.latin}`);
     button.addEventListener("click", () => {
+      if (state.awaitingManualContinue || state.feedbackTimeoutId !== null) {
+        return;
+      }
       const prompt = getCurrentPrompt();
       if (!prompt) {
         return;
       }
+      state.selectedWrongSymbolId = symbol.id === prompt.id ? null : symbol.id;
       submitResult(symbol.id === prompt.id, prompt.foreign);
     });
     refs.symbolGrid.appendChild(button);
@@ -499,21 +560,26 @@ function updateEnabledSymbol(symbolId, enabled) {
 
 function submitResult(correct, expectedAnswer) {
   clearFeedbackTimer();
+  clearSuccessFeedbackTimer();
   state.awaitingManualContinue = false;
 
   if (correct) {
+    state.selectedWrongSymbolId = null;
     state.stats.right += 1;
     setFeedback("right", "success");
+    flashPromptSuccess();
     saveStats();
     renderStats();
     state.currentPromptId = null;
     scheduleNextPrompt(220);
+    scheduleSuccessFeedbackClear(2400);
   } else {
     state.stats.wrong += 1;
+    state.revealedCorrectSymbolId =
+      state.direction === "latinToForeign" && getCurrentPrompt() ? getCurrentPrompt().id : null;
     setFeedback(`correct answer: ${expectedAnswer}`, "error");
     saveStats();
     renderStats();
-    state.currentPromptId = null;
     if (state.feedbackMode === "manual") {
       state.awaitingManualContinue = true;
       renderAnswerArea();
@@ -571,6 +637,13 @@ function clearFeedbackTimer() {
   }
 }
 
+function clearSuccessFeedbackTimer() {
+  if (state.successFeedbackTimeoutId !== null) {
+    window.clearTimeout(state.successFeedbackTimeoutId);
+    state.successFeedbackTimeoutId = null;
+  }
+}
+
 function setFeedback(message, tone) {
   refs.feedback.textContent = message;
   refs.feedback.className = "feedback";
@@ -584,16 +657,50 @@ function continueAfterReveal() {
     return;
   }
   clearPendingWrongState();
+  if (!refs.feedback.classList.contains("success")) {
+    setFeedback("");
+  }
+  state.currentPromptId = null;
   nextPrompt();
-  setFeedback("");
   renderPrompt();
   renderAnswerArea();
+  scrollPromptIntoViewIfMobile();
 }
 
 function clearPendingWrongState() {
   clearFeedbackTimer();
   state.awaitingManualContinue = false;
+  state.selectedWrongSymbolId = null;
+  state.revealedCorrectSymbolId = null;
   refs.continueButton.classList.add("hidden");
+}
+
+function scheduleSuccessFeedbackClear(delay) {
+  state.successFeedbackTimeoutId = window.setTimeout(() => {
+    if (refs.feedback.classList.contains("success")) {
+      refs.feedback.classList.add("fading");
+      window.setTimeout(() => {
+        if (refs.feedback.classList.contains("success")) {
+          setFeedback("");
+        }
+      }, 420);
+    }
+    state.successFeedbackTimeoutId = null;
+  }, delay);
+}
+
+function flashPromptSuccess() {
+  refs.promptCard.classList.remove("success-flash");
+  void refs.promptCard.offsetWidth;
+  refs.promptCard.classList.add("success-flash");
+}
+
+function scrollPromptIntoViewIfMobile() {
+  if (window.matchMedia("(max-width: 760px)").matches) {
+    window.requestAnimationFrame(() => {
+      refs.promptCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
 }
 
 function ensureEnabledMapShape() {
@@ -618,8 +725,8 @@ function applyTheme(theme) {
   refs.body.dataset.theme = theme;
   refs.themeToggle.textContent =
     theme === "dark"
-      ? "current mode is dark, but you can switch"
-      : "current mode is light, but you can switch";
+      ? "dark, but you can switch"
+      : "light, but you can switch";
 }
 
 function loadTheme() {
@@ -678,7 +785,11 @@ function saveFeedbackDuration() {
 }
 
 function loadFeedbackMode() {
-  return localStorage.getItem(STORAGE_KEYS.feedbackMode) === "manual" ? "manual" : "timed";
+  const stored = localStorage.getItem(STORAGE_KEYS.feedbackMode);
+  if (stored === "timed" || stored === "manual") {
+    return stored;
+  }
+  return "manual";
 }
 
 function saveFeedbackMode() {
