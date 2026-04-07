@@ -1426,13 +1426,52 @@ function normalizeNoteAnswer(raw) {
     .replaceAll(/[0-9]/g, "");
 }
 
+function noteNameToPitchClass(raw) {
+  const value = normalizeNoteAnswer(raw);
+  // Accept German-style H as B.
+  // Supported forms: c, c#, db, bb, b#, cb, h, hb, etc.
+  const match = value.match(/^([a-gh])([#bn]|b)?$/);
+  if (!match) {
+    return null;
+  }
+
+  const letter = match[1];
+  const accidental = match[2] || "";
+  const baseByLetter = {
+    c: 0,
+    d: 2,
+    e: 4,
+    f: 5,
+    g: 7,
+    a: 9,
+    b: 11,
+    h: 11,
+  };
+  const base = baseByLetter[letter];
+  if (typeof base !== "number") {
+    return null;
+  }
+
+  const delta = accidental === "#" ? 1 : accidental === "b" ? -1 : 0;
+  return (base + delta + 12) % 12;
+}
+
 function isAcceptedLatinAnswer(prompt, answer) {
   if (!answer) {
     return false;
   }
   if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
+    const answerPitchClass = noteNameToPitchClass(answer);
+    if (typeof answerPitchClass === "number") {
+      for (const entry of prompt.acceptedAnswers) {
+        const pitchClass = noteNameToPitchClass(entry);
+        if (pitchClass === answerPitchClass) {
+          return true;
+        }
+      }
+    }
     const normalizedAccepted = prompt.acceptedAnswers.map((entry) => normalizeNoteAnswer(entry));
-    return normalizedAccepted.includes(answer);
+    return normalizedAccepted.includes(normalizeNoteAnswer(answer));
   }
   return answer === prompt.latin;
 }
