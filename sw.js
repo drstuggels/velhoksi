@@ -1,9 +1,10 @@
-const CACHE_NAME = "velhoksi-v1";
+const CACHE_NAME = "velhoksi-v2";
 const ASSETS = [
   "/",
   "/index.html",
   "/styles.css",
   "/app.js",
+  "/vendor/abcjs-basic-min.js",
   "/velhoksi.png",
   "/icon-192.png",
   "/icon-512.png",

@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
   alphabet: "velhoksi.alphabet",
   direction: "velhoksi.direction",
   enabledMap: "velhoksi.enabledMap",
+  musicPitchRangeMap: "velhoksi.musicPitchRangeMap",
   caseModeMap: "velhoksi.caseModeMap",
   statsMap: "velhoksi.statsMap",
   missesMap: "velhoksi.missesMap",
@@ -11,7 +12,7 @@ const STORAGE_KEYS = {
   feedbackMode: "velhoksi.feedbackMode",
 };
 
-const ALPHABETS = [
+const BASE_ALPHABETS = [
   {
     id: "hiragana",
     label: "hiragana",
@@ -162,15 +163,158 @@ const ALPHABETS = [
       ["ხ", "kh"], ["ჯ", "j"], ["ჰ", "h"],
     ],
   },
-].map((alphabet) => ({
-  ...alphabet,
-  symbols: alphabet.symbols.map(([foreign, latin], index) => ({
-    id: `${alphabet.id}-${index}`,
-    foreign,
-    latin,
-    enabledByDefault: true,
-  })),
-}));
+];
+
+function getAbcjs() {
+  return typeof window !== "undefined" ? window.ABCJS : null;
+}
+
+function normalizeBaseAlphabets(alphabets) {
+  return alphabets.map((alphabet) => ({
+    ...alphabet,
+    symbols: alphabet.symbols.map(([foreign, latin], index) => ({
+      id: `${alphabet.id}-${index}`,
+      foreign,
+      latin,
+      enabledByDefault: true,
+    })),
+  }));
+}
+
+function createMusicAlphabet() {
+  const id = "music-notes";
+  const label = "music notes";
+  const preview = "𝄞 ♩ ♪ ♫ ♬ 𝄢 ♯ ♭ ♮";
+
+  const nameByPitchClass = {
+    0: { sharp: "c", flat: "c" },
+    1: { sharp: "c#", flat: "db" },
+    2: { sharp: "d", flat: "d" },
+    3: { sharp: "d#", flat: "eb" },
+    4: { sharp: "e", flat: "e" },
+    5: { sharp: "f", flat: "f" },
+    6: { sharp: "f#", flat: "gb" },
+    7: { sharp: "g", flat: "g" },
+    8: { sharp: "g#", flat: "ab" },
+    9: { sharp: "a", flat: "a" },
+    10: { sharp: "a#", flat: "bb" },
+    11: { sharp: "b", flat: "b" },
+  };
+
+  function pitchClassToAnswers(pitchClass) {
+    const entry = nameByPitchClass[pitchClass];
+    const answers = new Set([entry.sharp, entry.flat]);
+    return [...answers];
+  }
+
+  const letterToIndex = { c: 0, d: 1, e: 2, f: 3, g: 4, a: 5, b: 6 };
+  const indexToLetter = ["c", "d", "e", "f", "g", "a", "b"];
+  const naturalPitchClassByLetter = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+
+  function staffStepsForClef(clef, letter, octave) {
+    // Steps are diatonic steps from the bottom staff line.
+    // Treble bottom line: E4. Bass bottom line: G2.
+    const ref = clef === "treble" ? { letter: "e", octave: 4 } : { letter: "g", octave: 2 };
+    return diatonicAbs(letter, octave) - diatonicAbs(ref.letter, ref.octave);
+  }
+
+  function diatonicAbs(letter, octave) {
+    return octave * 7 + letterToIndex[letter];
+  }
+
+  function toAbcPitch(letter, accidental, octave) {
+    const acc = accidental === "#" ? "^" : accidental === "b" ? "_" : "";
+    const upper = letter.toUpperCase();
+    if (octave === 4) {
+      return `${acc}${upper}`;
+    }
+    if (octave > 4) {
+      const lower = letter.toLowerCase();
+      const marks = "'".repeat(Math.max(0, octave - 5));
+      return `${acc}${lower}${marks}`;
+    }
+    const commas = ",".repeat(4 - octave);
+    return `${acc}${upper}${commas}`;
+  }
+
+  function makeSymbol({ clef, letter, accidental, octave, pitchClass, index }) {
+    const display = accidental ? `${letter}${accidental}` : letter;
+    const abcPitch = toAbcPitch(letter, accidental, octave);
+    const abc = `L:1/4\nK:C clef=${clef}\n${abcPitch}\n`;
+    const midi = (octave + 1) * 12 + pitchClass;
+    return {
+      id: `${id}-${index}`,
+      baseId: `${id}-${index}`,
+      foreign: "♪",
+      latin: display,
+      acceptedAnswers: pitchClassToAnswers(pitchClass),
+      enabledByDefault: true,
+      music: { clef, abc, midi },
+      foreignMarkup: "",
+    };
+  }
+
+  const notePool = [];
+  const symbolById = {};
+  let index = 0;
+  let minMidi = Number.POSITIVE_INFINITY;
+  let maxMidi = Number.NEGATIVE_INFINITY;
+  for (const clef of ["treble", "bass"]) {
+    for (let staffSteps = -6; staffSteps <= 14; staffSteps += 1) {
+      const ref = clef === "treble" ? { letter: "e", octave: 4 } : { letter: "g", octave: 2 };
+      const abs = diatonicAbs(ref.letter, ref.octave) + staffSteps;
+      const octave = Math.floor(abs / 7);
+      const letterIndex = abs - octave * 7;
+      const letter = indexToLetter[letterIndex];
+      const naturalPitchClass = naturalPitchClassByLetter[letter];
+
+      const natural = makeSymbol({
+        clef,
+        letter,
+        accidental: "",
+        octave,
+        pitchClass: naturalPitchClass,
+        index,
+      });
+      notePool.push(natural);
+      symbolById[natural.id] = natural;
+      minMidi = Math.min(minMidi, natural.music.midi);
+      maxMidi = Math.max(maxMidi, natural.music.midi);
+      index += 1;
+
+      const useSharp = [0, 2, 5, 7, 9].includes(naturalPitchClass);
+      const accidental = useSharp ? "#" : "b";
+      const accidentalPitchClass = useSharp
+        ? (naturalPitchClass + 1) % 12
+        : (naturalPitchClass + 11) % 12;
+      const altered = makeSymbol({
+        clef,
+        letter,
+        accidental,
+        octave,
+        pitchClass: accidentalPitchClass,
+        index,
+      });
+      notePool.push(altered);
+      symbolById[altered.id] = altered;
+      minMidi = Math.min(minMidi, altered.music.midi);
+      maxMidi = Math.max(maxMidi, altered.music.midi);
+      index += 1;
+    }
+  }
+
+  return {
+    id,
+    label,
+    oneWay: true,
+    preview,
+    symbolById,
+    musicMeta: { minMidi, maxMidi },
+    symbols: notePool,
+  };
+}
+
+const ALPHABETS = [...normalizeBaseAlphabets(BASE_ALPHABETS), createMusicAlphabet()];
 
 const alphabetById = Object.fromEntries(ALPHABETS.map((alphabet) => [alphabet.id, alphabet]));
 
@@ -258,6 +402,7 @@ const state = {
   selectedAlphabet: localStorage.getItem(STORAGE_KEYS.alphabet) || null,
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
   enabledMap: loadEnabledMap(),
+  musicPitchRangeMap: loadMusicPitchRangeMap(),
   caseModeMap: loadCaseModeMap(),
   statsMap: loadStatsMap(),
   missesMap: loadMissesMap(),
@@ -319,11 +464,16 @@ const refs = {
   resetStats: document.querySelector("#reset-stats"),
 };
 
+let musicRenderHost = null;
+let musicHydrationScheduled = false;
+const MUSIC_RENDER_VERSION = 3;
+
 init();
 
 function init() {
   applyTheme(state.theme);
   ensureEnabledMapShape();
+  ensureMusicPitchRangeMapShape();
   bindEvents();
   render();
 }
@@ -347,7 +497,8 @@ function bindEvents() {
   });
 
   refs.directionToggle.addEventListener("click", () => {
-    if (!getSelectedAlphabet()) {
+    const alphabet = getSelectedAlphabet();
+    if (!alphabet || alphabet.oneWay) {
       return;
     }
     state.direction =
@@ -366,10 +517,15 @@ function bindEvents() {
     state.settingsOpen = !state.settingsOpen;
     render();
     if (state.settingsOpen) {
-      window.requestAnimationFrame(() => {
+      const shouldAutoScroll = window.matchMedia?.("(hover: none) and (pointer: coarse)")?.matches;
+      if (shouldAutoScroll) {
+        window.requestAnimationFrame(() => {
+          refs.settingsPanel.scrollTop = 0;
+          refs.settingsPanel.scrollIntoView({ behavior: "auto", block: "start" });
+        });
+      } else {
         refs.settingsPanel.scrollTop = 0;
-        refs.settingsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
+      }
     }
   });
 
@@ -377,12 +533,13 @@ function bindEvents() {
     if (!getSelectedAlphabet()) {
       return;
     }
-    renderCheatSheet();
     if (typeof refs.cheatDialog.showModal === "function") {
       refs.cheatDialog.showModal();
     } else {
       refs.cheatDialog.setAttribute("open", "open");
     }
+    renderCheatSheet();
+    scheduleMusicPreviewHydration();
   });
 
   refs.closeCheat.addEventListener("click", () => refs.cheatDialog.close());
@@ -644,6 +801,10 @@ function bindEvents() {
 function render() {
   const alphabet = getSelectedAlphabet();
   const caseMode = alphabet ? getCaseModeForAlphabet(alphabet) : "lower";
+  if (alphabet?.oneWay && state.direction !== "foreignToLatin") {
+    state.direction = "foreignToLatin";
+    localStorage.setItem(STORAGE_KEYS.direction, state.direction);
+  }
   refs.pickerView.classList.toggle("hidden", Boolean(alphabet));
   refs.gameView.classList.toggle("hidden", !alphabet);
   refs.switchAlphabet.classList.toggle("hidden", !alphabet);
@@ -652,7 +813,7 @@ function render() {
   refs.settingsToggle.setAttribute("aria-expanded", String(Boolean(alphabet && state.settingsOpen)));
   refs.cheatToggle.disabled = !alphabet;
   refs.settingsToggle.disabled = !alphabet;
-  refs.directionToggle.disabled = !alphabet;
+  refs.directionToggle.disabled = !alphabet || Boolean(alphabet?.oneWay);
   refs.feedbackDuration.value = String(state.feedbackDuration);
   refs.feedbackMode.value = state.feedbackMode;
   refs.feedbackDurationControl.classList.toggle("hidden", state.feedbackMode === "manual");
@@ -668,6 +829,7 @@ function render() {
     button.setAttribute("aria-pressed", String(active));
   }
   refs.continueButton.classList.toggle("hidden", !state.awaitingManualContinue);
+  refs.latinInput.placeholder = getLatinInputPlaceholder(alphabet);
   renderAlphabetPicker();
   renderStats();
   renderSettings();
@@ -679,6 +841,28 @@ function render() {
 
   renderPrompt();
   renderAnswerArea();
+}
+
+function getLatinInputPlaceholder(alphabet) {
+  if (alphabet?.id === "music-notes") {
+    return "type the note name (c, c#, db, bb)";
+  }
+  return "type the latin reading";
+}
+
+function getMusicPitchRangeForAlphabet(alphabet) {
+  const meta = alphabet?.musicMeta;
+  const fallback = { minMidi: 0, maxMidi: 127 };
+  if (!meta || typeof meta.minMidi !== "number" || typeof meta.maxMidi !== "number") {
+    return fallback;
+  }
+  const stored = state.musicPitchRangeMap?.[alphabet.id];
+  if (!stored || typeof stored.minMidi !== "number" || typeof stored.maxMidi !== "number") {
+    return { minMidi: meta.minMidi, maxMidi: meta.maxMidi };
+  }
+  const minMidi = Math.max(meta.minMidi, Math.min(stored.minMidi, meta.maxMidi));
+  const maxMidi = Math.max(meta.minMidi, Math.min(stored.maxMidi, meta.maxMidi));
+  return minMidi <= maxMidi ? { minMidi, maxMidi } : { minMidi: meta.minMidi, maxMidi: meta.maxMidi };
 }
 
 function renderAlphabetPicker() {
@@ -697,7 +881,7 @@ function renderAlphabetPicker() {
 
     const track = document.createElement("span");
     track.className = "alphabet-button-preview-track";
-    const previewText = alphabet.symbols.map((symbol) => symbol.foreign).join("   ");
+    const previewText = alphabet.preview || alphabet.symbols.map((symbol) => symbol.foreign).join("   ");
     track.textContent = `${previewText}   ${previewText}`;
 
     preview.append(track);
@@ -729,6 +913,7 @@ function renderPrompt() {
   if (!prompt) {
     refs.promptCard.classList.remove("success-flash", "failure-flash");
     refs.promptValue.textContent = "-";
+    refs.promptValue.classList.remove("graphic");
     refs.promptHint.textContent = getSelectedAlphabet() ? "no symbols enabled" : "choose an alphabet";
     refs.promptCard.dataset.promptId = "";
     return;
@@ -742,8 +927,17 @@ function renderPrompt() {
     refs.promptCard.dataset.promptId = prompt.id;
   }
 
-  refs.promptValue.textContent =
-    state.direction === "foreignToLatin" ? prompt.foreign : prompt.latin;
+  const useGraphic = Boolean(state.direction === "foreignToLatin" && (prompt.music || prompt.foreignMarkup));
+  refs.promptValue.classList.toggle("graphic", useGraphic);
+  if (useGraphic && state.direction === "foreignToLatin") {
+    if (prompt.music) {
+      refs.promptValue.innerHTML = ensureMusicMarkup(prompt);
+    } else {
+      refs.promptValue.innerHTML = prompt.foreignMarkup;
+    }
+  } else {
+    refs.promptValue.textContent = state.direction === "foreignToLatin" ? prompt.foreign : prompt.latin;
+  }
   refs.promptHint.textContent = getPromptHint(prompt, alphabet);
 }
 
@@ -756,6 +950,7 @@ function renderAnswerArea() {
   mainPanel?.classList.toggle("latin-mode", useLatinInput);
   mainPanel?.classList.toggle("symbol-mode", !useLatinInput);
 
+  refs.latinInput.placeholder = getLatinInputPlaceholder(getSelectedAlphabet());
   refs.latinForm.classList.toggle("hidden", !useLatinInput || (!prompt && !showManualContinue));
   refs.symbolAnswer.classList.toggle("hidden", useLatinInput || !prompt);
 
@@ -819,19 +1014,103 @@ function renderSettings() {
   if (!alphabet) {
     return;
   }
+  if (alphabet.id === "music-notes" && !state.settingsOpen) {
+    return;
+  }
 
   const enabledSet = new Set(state.enabledMap[alphabet.id]);
   const enabledCount = enabledSet.size;
 
   refs.settingsEmpty.classList.toggle("hidden", enabledCount > 0);
 
+  if (alphabet.id === "music-notes") {
+    const { minMidi, maxMidi } = getMusicPitchRangeForAlphabet(alphabet);
+    const wrap = document.createElement("div");
+    wrap.className = "music-range";
+
+    const label = document.createElement("div");
+    label.className = "music-range-label";
+    label.textContent = `pitch range: ${midiToLabel(minMidi)} to ${midiToLabel(maxMidi)}`;
+
+    const sliders = document.createElement("div");
+    sliders.className = "music-range-sliders";
+
+    const minInput = document.createElement("input");
+    minInput.type = "range";
+    minInput.min = String(alphabet.musicMeta.minMidi);
+    minInput.max = String(alphabet.musicMeta.maxMidi);
+    minInput.step = "1";
+    minInput.value = String(minMidi);
+    minInput.setAttribute("aria-label", "minimum pitch");
+
+    const maxInput = document.createElement("input");
+    maxInput.type = "range";
+    maxInput.min = String(alphabet.musicMeta.minMidi);
+    maxInput.max = String(alphabet.musicMeta.maxMidi);
+    maxInput.step = "1";
+    maxInput.value = String(maxMidi);
+    maxInput.setAttribute("aria-label", "maximum pitch");
+
+    const setRange = (nextMin, nextMax) => {
+      const clampedMin = Math.max(alphabet.musicMeta.minMidi, Math.min(nextMin, alphabet.musicMeta.maxMidi));
+      const clampedMax = Math.max(alphabet.musicMeta.minMidi, Math.min(nextMax, alphabet.musicMeta.maxMidi));
+      const fixedMin = Math.min(clampedMin, clampedMax);
+      const fixedMax = Math.max(clampedMin, clampedMax);
+      state.musicPitchRangeMap[alphabet.id] = { minMidi: fixedMin, maxMidi: fixedMax };
+      saveMusicPitchRangeMap();
+      label.textContent = `pitch range: ${midiToLabel(fixedMin)} to ${midiToLabel(fixedMax)}`;
+    };
+
+    const syncInputs = () => {
+      const rawMin = Number(minInput.value);
+      const rawMax = Number(maxInput.value);
+      const clampedMin = Math.max(alphabet.musicMeta.minMidi, Math.min(rawMin, alphabet.musicMeta.maxMidi));
+      const clampedMax = Math.max(alphabet.musicMeta.minMidi, Math.min(rawMax, alphabet.musicMeta.maxMidi));
+      const fixedMin = Math.min(clampedMin, clampedMax);
+      const fixedMax = Math.max(clampedMin, clampedMax);
+      minInput.value = String(fixedMin);
+      maxInput.value = String(fixedMax);
+      setRange(fixedMin, fixedMax);
+      return { minMidi: fixedMin, maxMidi: fixedMax };
+    };
+
+    minInput.addEventListener("input", syncInputs);
+    maxInput.addEventListener("input", syncInputs);
+
+    const commit = () => {
+      const { minMidi: fixedMin, maxMidi: fixedMax } = syncInputs();
+      // If current prompt is outside the filtered pool, force a new one.
+      const current = getCurrentPrompt();
+      if (current?.music?.midi && (current.music.midi < fixedMin || current.music.midi > fixedMax)) {
+        state.currentPromptId = null;
+        state.lastPromptId = null;
+        nextPrompt();
+      }
+      render();
+    };
+
+    minInput.addEventListener("change", commit);
+    maxInput.addEventListener("change", commit);
+
+    sliders.append(minInput, maxInput);
+    wrap.append(label, sliders);
+    refs.settingsList.appendChild(wrap);
+  }
+
   for (const symbol of alphabet.symbols) {
+    if (alphabet.id === "music-notes") {
+      const { minMidi, maxMidi } = getMusicPitchRangeForAlphabet(alphabet);
+      const midi = symbol.music?.midi;
+      if (typeof midi === "number" && (midi < minMidi || midi > maxMidi)) {
+        continue;
+      }
+    }
     const item = document.createElement("label");
     item.className = "setting-item";
 
     const symbolWrap = document.createElement("span");
     symbolWrap.className = "setting-symbol";
-    symbolWrap.innerHTML = `<strong>${symbol.foreign}</strong><span>${symbol.latin}</span>`;
+    symbolWrap.innerHTML = getSettingSymbolMarkup(symbol, alphabet);
 
     const toggle = document.createElement("input");
     toggle.type = "checkbox";
@@ -846,20 +1125,44 @@ function renderSettings() {
   }
 }
 
+function getSettingSymbolMarkup(symbol, alphabet) {
+  if (alphabet?.id === "music-notes" && symbol.music) {
+    const clefLabel = symbol.music.clef === "treble" ? "treble" : "bass";
+    return `<strong>${symbol.latin}</strong><span class="setting-clef">${clefLabel}</span>`;
+  }
+  return `<strong>${symbol.foreign}</strong><span>${symbol.latin}</span>`;
+}
+
 function renderCheatSheet() {
   const alphabet = getSelectedAlphabet();
-  refs.cheatGrid.innerHTML = "";
 
   if (!alphabet) {
+    refs.cheatGrid.innerHTML = "";
     refs.cheatTitle.textContent = "cheat sheet";
     return;
   }
 
   refs.cheatTitle.textContent = `${alphabet.label} cheat sheet`;
+
+  const cheatOpen = Boolean(refs.cheatDialog?.open || refs.cheatDialog?.hasAttribute("open"));
+  if (alphabet.id === "music-notes" && !cheatOpen) {
+    // Avoid expensive DOM work unless the dialog is actually open.
+    return;
+  }
+
+  refs.cheatGrid.innerHTML = "";
+
   const enabledSet = new Set(state.enabledMap[alphabet.id]);
   const caseMode = getCaseModeForAlphabet(alphabet);
+  const range = alphabet.id === "music-notes" ? getMusicPitchRangeForAlphabet(alphabet) : null;
 
   for (const symbol of alphabet.symbols) {
+    if (range) {
+      const midi = symbol.music?.midi;
+      if (typeof midi === "number" && (midi < range.minMidi || midi > range.maxMidi)) {
+        continue;
+      }
+    }
     const item = document.createElement("article");
     item.className = "cheat-item";
     if (!enabledSet.has(symbol.id)) {
@@ -868,6 +1171,8 @@ function renderCheatSheet() {
     item.innerHTML = getCheatSheetMarkup(symbol, alphabet, caseMode);
     refs.cheatGrid.appendChild(item);
   }
+
+  scheduleMusicPreviewHydration();
 }
 
 function getCheatSheetMarkup(symbol, alphabet, caseMode) {
@@ -876,6 +1181,10 @@ function getCheatSheetMarkup(symbol, alphabet, caseMode) {
     ? `<button type="button" class="cheat-note-trigger" aria-label="note about ${symbol.foreign}" aria-expanded="false" data-note="${escapeHtml(note)}">?</button>`
     : "";
   const noteBlock = note ? `<div class="cheat-note-inline">${escapeHtml(note)}</div>` : "";
+
+  if (alphabet?.id === "music-notes" && symbol.music) {
+    return `<div class="cheat-item-head"><span class="cheat-symbol-preview music-preview" data-music-id="${symbol.id}" aria-hidden="true"></span>${noteButton}</div><span>${symbol.latin}</span>${noteBlock}`;
+  }
 
   if (!alphabet.hasCase || caseMode === "lower") {
     return `<div class="cheat-item-head"><strong>${symbol.foreign}</strong>${noteButton}</div><span>${symbol.latin}</span>${noteBlock}`;
@@ -942,7 +1251,15 @@ function getEnabledSymbols() {
   }
 
   const enabledSet = new Set(state.enabledMap[alphabet.id]);
-  return alphabet.symbols.filter((symbol) => enabledSet.has(symbol.id));
+  const base = alphabet.symbols.filter((symbol) => enabledSet.has(symbol.id));
+  if (alphabet.id !== "music-notes") {
+    return base;
+  }
+  const range = getMusicPitchRangeForAlphabet(alphabet);
+  return base.filter((symbol) => {
+    const midi = symbol.music?.midi;
+    return typeof midi === "number" && midi >= range.minMidi && midi <= range.maxMidi;
+  });
 }
 
 function getPromptPool() {
@@ -1082,19 +1399,177 @@ function submitLatinAnswer(forceSubmit) {
     return;
   }
 
-  const answer = refs.latinInput.value.trim().toLowerCase();
+  const rawAnswer = refs.latinInput.value.trim().toLowerCase();
+  const answer = Array.isArray(prompt.acceptedAnswers) ? normalizeNoteAnswer(rawAnswer) : rawAnswer;
   if (!answer && !forceSubmit) {
     return;
   }
 
-  if (answer === prompt.latin) {
+  if (isAcceptedLatinAnswer(prompt, answer)) {
     submitResult(true, prompt.latin);
     return;
   }
 
   if (forceSubmit) {
-    submitResult(false, prompt.latin);
+    submitResult(false, getExpectedLatinAnswer(prompt));
   }
+}
+
+function normalizeNoteAnswer(raw) {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replaceAll("♯", "#")
+    .replaceAll("♭", "b")
+    .replaceAll("♮", "n")
+    .replaceAll(/\s+/g, "")
+    .replaceAll(/[0-9]/g, "");
+}
+
+function isAcceptedLatinAnswer(prompt, answer) {
+  if (!answer) {
+    return false;
+  }
+  if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
+    const normalizedAccepted = prompt.acceptedAnswers.map((entry) => normalizeNoteAnswer(entry));
+    return normalizedAccepted.includes(answer);
+  }
+  return answer === prompt.latin;
+}
+
+function getExpectedLatinAnswer(prompt) {
+  if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
+    return prompt.acceptedAnswers.join(" or ");
+  }
+  return prompt.latin;
+}
+
+function ensureMusicMarkup(symbol) {
+  if (!symbol?.music) {
+    return "";
+  }
+  if (symbol.foreignMarkup && symbol.musicRenderVersion === MUSIC_RENDER_VERSION) {
+    return symbol.foreignMarkup;
+  }
+  symbol.musicRenderVersion = MUSIC_RENDER_VERSION;
+  const abcjs = getAbcjs();
+  if (!abcjs || typeof abcjs.renderAbc !== "function") {
+    symbol.foreignMarkup = `<span>${escapeHtml(symbol.latin)}</span>`;
+    return symbol.foreignMarkup;
+  }
+
+  if (!musicRenderHost) {
+    musicRenderHost = document.createElement("div");
+    musicRenderHost.style.position = "absolute";
+    musicRenderHost.style.left = "-9999px";
+    musicRenderHost.style.top = "-9999px";
+    musicRenderHost.style.width = "1px";
+    musicRenderHost.style.height = "1px";
+    musicRenderHost.style.overflow = "hidden";
+    document.body.appendChild(musicRenderHost);
+  }
+
+  musicRenderHost.innerHTML = "";
+  try {
+    abcjs.renderAbc(musicRenderHost, symbol.music.abc, {
+      add_classes: false,
+      staffwidth: 170,
+      scale: 0.9,
+      paddingleft: 0,
+      paddingright: 0,
+      paddingtop: 0,
+      paddingbottom: 0,
+      responsive: "resize",
+    });
+  } catch {
+    symbol.foreignMarkup = `<span>${escapeHtml(symbol.latin)}</span>`;
+    return symbol.foreignMarkup;
+  }
+
+  const svg = musicRenderHost.querySelector("svg");
+  if (!svg) {
+    symbol.foreignMarkup = `<span>${escapeHtml(symbol.latin)}</span>`;
+    return symbol.foreignMarkup;
+  }
+  svg.classList.add("note-svg");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "musical note");
+  // Let ABCJS manage its own viewBox/metrics; we size with CSS for stability.
+  // Nudge content horizontally so it *looks* centered (ABCJS can leave asymmetric whitespace).
+  try {
+    const viewBox = svg.getAttribute("viewBox");
+    const contentGroup = svg.querySelector("g");
+    if (viewBox && contentGroup) {
+      const [vbX, vbY, vbW] = viewBox.split(/\s+/).map((value) => Number(value));
+      if (Number.isFinite(vbX) && Number.isFinite(vbY) && Number.isFinite(vbW) && vbW > 0) {
+        const bbox = contentGroup.getBBox();
+        if (bbox.width > 0) {
+          const targetCenter = vbX + vbW / 2;
+          const contentCenter = bbox.x + bbox.width / 2;
+          let dx = targetCenter - contentCenter;
+          dx = Math.max(-80, Math.min(80, dx));
+          if (Math.abs(dx) > 0.5) {
+            const existing = contentGroup.getAttribute("transform") || "";
+            contentGroup.setAttribute("transform", `translate(${dx.toFixed(2)} 0) ${existing}`.trim());
+          }
+        }
+      }
+    }
+  } catch {
+    // Ignore bbox/measurement failures.
+  }
+  svg.removeAttribute("width");
+  svg.removeAttribute("height");
+  svg.setAttribute("style", "display:block;margin:0 auto;");
+  symbol.foreignMarkup = `<div class="music-svg-wrap">${svg.outerHTML}</div>`;
+  return symbol.foreignMarkup;
+}
+
+function scheduleMusicPreviewHydration() {
+  const alphabet = getSelectedAlphabet();
+  if (alphabet?.id !== "music-notes") {
+    return;
+  }
+
+  // Only hydrate when the relevant UI is visible; rendering dozens of SVGs can hang slower devices.
+  const cheatOpen = Boolean(refs.cheatDialog?.open || refs.cheatDialog?.hasAttribute("open"));
+  if (!state.settingsOpen && !cheatOpen) {
+    return;
+  }
+
+  if (musicHydrationScheduled) {
+    return;
+  }
+  musicHydrationScheduled = true;
+  const idle = window.requestIdleCallback || ((cb) => window.setTimeout(() => cb({ timeRemaining: () => 0 }), 30));
+  idle(() => {
+    musicHydrationScheduled = false;
+    try {
+      const remaining = hydrateMusicPreviews(10);
+      if (remaining > 0) {
+        scheduleMusicPreviewHydration();
+      }
+    } catch {
+      // Never let preview hydration crash the app.
+    }
+  });
+}
+
+function hydrateMusicPreviews(batchSize) {
+  const alphabet = getSelectedAlphabet();
+  if (alphabet?.id !== "music-notes" || !alphabet.symbolById) {
+    return 0;
+  }
+  const placeholders = [...document.querySelectorAll(".music-preview")].filter((el) => el.childNodes.length === 0);
+  for (const el of placeholders.slice(0, batchSize)) {
+    const symbolId = el.getAttribute("data-music-id");
+    const symbol = alphabet.symbolById[symbolId];
+    if (!symbol) {
+      continue;
+    }
+    el.innerHTML = ensureMusicMarkup(symbol);
+  }
+  return Math.max(0, placeholders.length - batchSize);
 }
 
 function focusLatinInput() {
@@ -1106,6 +1581,13 @@ function focusLatinInput() {
       refs.latinInput.select();
     }
   });
+}
+
+function midiToLabel(midi) {
+  const names = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"];
+  const pitchClass = ((midi % 12) + 12) % 12;
+  const octave = Math.floor(midi / 12) - 1;
+  return `${names[pitchClass]}${octave}`;
 }
 
 function scheduleNextPrompt(delay) {
@@ -1211,8 +1693,24 @@ function ensureEnabledMapShape() {
   saveEnabledMap();
 }
 
+function ensureMusicPitchRangeMapShape() {
+  if (!state.musicPitchRangeMap || typeof state.musicPitchRangeMap !== "object") {
+    state.musicPitchRangeMap = {};
+  }
+  const music = alphabetById["music-notes"];
+  if (!music?.musicMeta) {
+    return;
+  }
+  const next = getMusicPitchRangeForAlphabet(music);
+  state.musicPitchRangeMap[music.id] = next;
+  saveMusicPitchRangeMap();
+}
+
 function getPromptHint(prompt, alphabet) {
   if (state.direction === "foreignToLatin") {
+    if (alphabet?.id === "music-notes") {
+      return "type the note name (c, c#, db, bb)";
+    }
     return "type the latin reading below";
   }
 
@@ -1318,6 +1816,23 @@ function loadEnabledMap() {
 
 function saveEnabledMap() {
   localStorage.setItem(STORAGE_KEYS.enabledMap, JSON.stringify(state.enabledMap));
+}
+
+function loadMusicPitchRangeMap() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.musicPitchRangeMap) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveMusicPitchRangeMap() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.musicPitchRangeMap, JSON.stringify(state.musicPitchRangeMap));
+  } catch {
+    // ignore
+  }
 }
 
 function loadCaseModeMap() {

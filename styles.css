@@ -516,6 +516,9 @@ input[type="text"] {
   --prompt-tilt: 0.6deg;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 10px;
+  grid-template-rows: 1fr auto;
   min-height: 0;
   max-width: calc(100% - clamp(220px, 20vw, 320px));
   padding: 18px 20px;
@@ -545,10 +548,47 @@ input[type="text"] {
   line-height: 0.9;
 }
 
+.prompt-value.graphic {
+  letter-spacing: 0;
+  line-height: 1;
+  width: min(440px, 100%);
+  display: grid;
+  place-items: center;
+  height: clamp(110px, 16vh, 160px);
+  overflow: hidden;
+}
+
+.prompt-value.graphic .note-svg {
+  width: min(440px, 100%);
+  height: auto;
+  display: block;
+  justify-self: center;
+}
+
+.prompt-value.graphic .music-svg-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  align-items: center;
+}
+
+.prompt-value.graphic .music-svg-wrap svg {
+  max-width: min(440px, 100%);
+  height: 120px;
+  width: auto;
+}
+
 .prompt-hint,
 .feedback {
   font-size: 0.78rem;
   letter-spacing: 0.08em;
+  max-width: 100%;
+  text-align: center;
+  padding: 0 16px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .answer-status {
@@ -801,9 +841,52 @@ input[type="text"]::placeholder {
   gap: 10px;
 }
 
+.music-range {
+  display: grid;
+  gap: 10px;
+  padding: 10px 0 14px;
+  border-bottom: 1px solid var(--soft-line);
+}
+
+.music-range-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.music-range-sliders {
+  display: grid;
+  gap: 8px;
+}
+
+.music-range-sliders input[type="range"] {
+  width: 100%;
+}
+
+.setting-symbol-preview .note-svg {
+  width: 96px;
+  height: auto;
+  display: block;
+}
+
+.setting-symbol-preview {
+  display: block;
+  flex: 0 0 auto;
+}
+
 .setting-symbol strong {
   font-size: 1.4rem;
   font-weight: 500;
+}
+
+.setting-clef {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .toggle {
@@ -903,6 +986,16 @@ input[type="text"]::placeholder {
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+}
+
+.cheat-symbol-preview .note-svg {
+  width: 140px;
+  height: auto;
+  display: block;
+}
+
+.cheat-symbol-preview {
+  display: block;
 }
 
 .cheat-item-head strong {

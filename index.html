@@ -11,6 +11,7 @@
     />
     <meta name="robots" content="index,follow" />
     <meta id="theme-color-meta" name="theme-color" content="#17284b" />
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="velhoksi" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -238,7 +239,8 @@
 	          navigator.serviceWorker.register("./sw.js").catch(() => {});
         });
       }
-    </script>
-    <script src="./app.js"></script>
-  </body>
-</html>
+	    </script>
+	    <script src="./vendor/abcjs-basic-min.js"></script>
+	    <script src="./app.js"></script>
+	  </body>
+	</html>
