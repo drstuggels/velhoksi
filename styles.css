@@ -211,6 +211,12 @@ h2 {
   letter-spacing: 0.08em;
 }
 
+.brand-foreign {
+  display: inline-block;
+  transform: translateY(5px) rotate(-2.6deg);
+  transform-origin: left center;
+}
+
 .viewport {
   height: calc(100vh - 92px);
   margin-top: 56px;
