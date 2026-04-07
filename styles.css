@@ -79,8 +79,8 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  background-color: var(--bg);
-  background-image: var(--bg-layer);
+  background-color: #000000;
+  background-image: none;
 }
 
 body {
