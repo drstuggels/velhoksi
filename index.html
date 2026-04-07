@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>velhoksi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header">
+        <div class="brand-lockup">
+          <p class="eyebrow">foreign symbol practice</p>
+          <div class="brand-row">
+            <h1>velhoksi</h1>
+            <span class="brand-quote">"to become a wizard"</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="viewport">
+        <section id="picker-view" class="view view-picker">
+          <div class="intro-copy">
+            <p class="eyebrow">start</p>
+            <h2>pick an alphabet</h2>
+          </div>
+          <div id="alphabet-picker" class="alphabet-picker" aria-label="alphabet picker"></div>
+        </section>
+
+        <section id="game-view" class="view view-game hidden">
+          <div class="floating floating-main">
+            <div class="prompt-meta">
+              <div class="prompt-title-row eyebrow">
+                <span>current language is</span>
+                <span id="alphabet-title">nothing</span>
+                <button id="switch-alphabet" class="text-button hidden" type="button">but you can switch</button>
+              </div>
+              <div class="prompt-tools">
+                <button id="direction-toggle" class="text-button" type="button">
+                  foreign -> latin
+                </button>
+                <span class="nav-separator" aria-hidden="true">/</span>
+                <button
+                  id="settings-toggle"
+                  class="text-button"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="settings-panel"
+                >
+                  settings
+                </button>
+                <span class="nav-separator" aria-hidden="true">/</span>
+                <button id="cheat-toggle" class="text-button" type="button">cheat sheet</button>
+              </div>
+            </div>
+
+            <div id="prompt-card" class="prompt-card">
+              <div id="prompt-value" class="prompt-value">-</div>
+              <div id="prompt-hint" class="prompt-hint">choose an alphabet</div>
+            </div>
+
+            <form id="latin-form" class="answer-form hidden" autocomplete="off">
+              <div class="answer-row">
+                <input
+                  id="latin-input"
+                  name="latin"
+                  type="text"
+                  inputmode="latin"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  maxlength="6"
+                  placeholder="type the latin reading"
+                />
+              </div>
+            </form>
+
+            <section id="symbol-answer" class="answer-form hidden">
+              <div id="symbol-grid" class="symbol-grid"></div>
+            </section>
+
+            <div id="feedback" class="feedback" aria-live="polite"></div>
+            <button id="continue-button" class="text-button continue-button hidden" type="button">
+              continue
+            </button>
+          </div>
+
+          <aside class="floating floating-stats">
+            <div class="stats-row">
+              <div>
+                <span class="stat-label">right</span>
+                <strong id="stat-right">0</strong>
+              </div>
+              <div>
+                <span class="stat-label">wrong</span>
+                <strong id="stat-wrong">0</strong>
+              </div>
+              <div>
+                <span class="stat-label">percent</span>
+                <strong id="stat-percent">0%</strong>
+              </div>
+            </div>
+            <button id="reset-stats" class="text-button" type="button">reset</button>
+          </aside>
+
+          <aside id="settings-panel" class="floating floating-settings hidden" aria-live="polite">
+            <section class="settings-group">
+              <div class="settings-head">
+                <p class="eyebrow">answer reveal</p>
+                <p class="settings-copy">how long the correct answer stays visible after a wrong enter.</p>
+              </div>
+              <label class="duration-control" for="feedback-duration">
+                <select id="feedback-duration">
+                  <option value="1500">1.5s</option>
+                  <option value="2500">2.5s</option>
+                  <option value="3500">3.5s</option>
+                  <option value="5000">5s</option>
+                </select>
+              </label>
+              <label class="duration-control" for="feedback-mode">
+                <span class="eyebrow">after wrong answer</span>
+                <select id="feedback-mode">
+                  <option value="timed">wait automatically</option>
+                  <option value="manual">wait for another enter</option>
+                </select>
+              </label>
+            </section>
+            <section class="settings-group settings-group-symbols">
+              <div class="settings-head">
+                <p class="eyebrow">active symbols</p>
+                <p class="settings-copy">disable anything you do not want to drill yet.</p>
+              </div>
+              <div id="settings-list" class="settings-list"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <button id="theme-toggle" class="text-button" type="button" aria-label="toggle theme">
+          current mode is dark, switch it
+        </button>
+        <a href="https://github.com/drstuggels" target="_blank" rel="noreferrer">made by nuua</a>
+      </footer>
+    </div>
+
+    <dialog id="cheat-dialog" class="cheat-dialog">
+      <div class="dialog-card">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">reference</p>
+            <h2 id="cheat-title">cheat sheet</h2>
+          </div>
+          <button id="close-cheat" class="text-button" type="button">close</button>
+        </div>
+        <div id="cheat-grid" class="cheat-grid"></div>
+      </div>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
