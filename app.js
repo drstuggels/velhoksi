@@ -3,6 +3,7 @@ const STORAGE_KEYS = {
   alphabet: "velhoksi.alphabet",
   direction: "velhoksi.direction",
   enabledMap: "velhoksi.enabledMap",
+  caseModeMap: "velhoksi.caseModeMap",
   stats: "velhoksi.stats",
   feedbackDuration: "velhoksi.feedbackDuration",
   feedbackMode: "velhoksi.feedbackMode",
@@ -42,8 +43,88 @@ const ALPHABETS = [
     ],
   },
   {
+    id: "armenian",
+    label: "armenian",
+    hasCase: true,
+    symbols: [
+      ["ա", "a"], ["բ", "b"], ["գ", "g"], ["դ", "d"], ["ե", "e"],
+      ["զ", "z"], ["է", "ee"], ["ը", "uh"], ["թ", "t'"], ["ժ", "zh"],
+      ["ի", "i"], ["լ", "l"], ["խ", "kh"], ["ծ", "ts"], ["կ", "k"],
+      ["հ", "h"], ["ձ", "dz"], ["ղ", "gh"], ["ճ", "ch"], ["մ", "m"],
+      ["յ", "y"], ["ն", "n"], ["շ", "sh"], ["ո", "vo"], ["չ", "ch'"],
+      ["պ", "p"], ["ջ", "j"], ["ռ", "rr"], ["ս", "s"], ["վ", "v"],
+      ["տ", "t"], ["ր", "r"], ["ց", "ts'"], ["ւ", "w"], ["փ", "p'"],
+      ["ք", "k'"], ["օ", "o"], ["ֆ", "f"],
+    ],
+  },
+  {
+    id: "hangul",
+    label: "hangul",
+    symbols: [
+      ["ㄱ", "g"], ["ㄴ", "n"], ["ㄷ", "d"], ["ㄹ", "r"], ["ㅁ", "m"],
+      ["ㅂ", "b"], ["ㅅ", "s"], ["ㅇ", "ng"], ["ㅈ", "j"], ["ㅊ", "ch"],
+      ["ㅋ", "k"], ["ㅌ", "t"], ["ㅍ", "p"], ["ㅎ", "h"], ["ㅏ", "a"],
+      ["ㅑ", "ya"], ["ㅓ", "eo"], ["ㅕ", "yeo"], ["ㅗ", "o"], ["ㅛ", "yo"],
+      ["ㅜ", "u"], ["ㅠ", "yu"], ["ㅡ", "eu"], ["ㅣ", "i"],
+    ],
+  },
+  {
+    id: "arabic",
+    label: "arabic",
+    symbols: [
+      ["ا", "a"], ["ب", "b"], ["ت", "t"], ["ث", "th"], ["ج", "j"],
+      ["ح", "hh"], ["خ", "kh"], ["د", "d"], ["ذ", "dh"], ["ر", "r"],
+      ["ز", "z"], ["س", "s"], ["ش", "sh"], ["ص", "ss"], ["ض", "dd"],
+      ["ط", "tt"], ["ظ", "zz"], ["ع", "ayn"], ["غ", "gh"], ["ف", "f"],
+      ["ق", "q"], ["ك", "k"], ["ل", "l"], ["م", "m"], ["ن", "n"],
+      ["ه", "h"], ["و", "w"], ["ي", "y"],
+    ],
+  },
+  {
+    id: "hebrew",
+    label: "hebrew",
+    symbols: [
+      ["א", "alef"], ["ב", "b"], ["ג", "g"], ["ד", "d"], ["ה", "h"],
+      ["ו", "v"], ["ז", "z"], ["ח", "kh"], ["ט", "t'"], ["י", "y"],
+      ["כ", "k"], ["ל", "l"], ["מ", "m"], ["נ", "n"], ["ס", "s"],
+      ["ע", "ayn"], ["פ", "p"], ["צ", "ts"], ["ק", "q"], ["ר", "r"],
+      ["ש", "sh"], ["ת", "t"],
+    ],
+  },
+  {
+    id: "syriac",
+    label: "syriac",
+    symbols: [
+      ["ܐ", "a"], ["ܒ", "b"], ["ܓ", "g"], ["ܕ", "d"], ["ܗ", "h"],
+      ["ܘ", "w"], ["ܙ", "z"], ["ܚ", "hh"], ["ܛ", "tt"], ["ܝ", "y"],
+      ["ܟ", "k"], ["ܠ", "l"], ["ܡ", "m"], ["ܢ", "n"], ["ܣ", "s"],
+      ["ܥ", "ayn"], ["ܦ", "p"], ["ܨ", "ss"], ["ܩ", "q"], ["ܪ", "r"],
+      ["ܫ", "sh"], ["ܬ", "t"],
+    ],
+  },
+  {
+    id: "cherokee",
+    label: "cherokee",
+    symbols: [
+      ["Ꭰ", "a"], ["Ꭱ", "e"], ["Ꭲ", "i"], ["Ꭳ", "o"], ["Ꭴ", "u"], ["Ꭵ", "v"],
+      ["Ꭶ", "ga"], ["Ꭷ", "ka"], ["Ꭸ", "ge"], ["Ꭹ", "gi"], ["Ꭺ", "go"], ["Ꭻ", "gu"], ["Ꭼ", "gv"],
+      ["Ꭽ", "ha"], ["Ꭾ", "he"], ["Ꭿ", "hi"], ["Ꮀ", "ho"], ["Ꮁ", "hu"], ["Ꮂ", "hv"],
+      ["Ꮃ", "la"], ["Ꮄ", "le"], ["Ꮅ", "li"], ["Ꮆ", "lo"], ["Ꮇ", "lu"], ["Ꮈ", "lv"],
+      ["Ꮉ", "ma"], ["Ꮊ", "me"], ["Ꮋ", "mi"], ["Ꮌ", "mo"], ["Ꮍ", "mu"],
+      ["Ꮎ", "na"], ["Ꮏ", "hna"], ["Ꮐ", "nah"], ["Ꮑ", "ne"], ["Ꮒ", "ni"], ["Ꮓ", "no"], ["Ꮔ", "nu"], ["Ꮕ", "nv"],
+      ["Ꮖ", "qua"], ["Ꮗ", "que"], ["Ꮘ", "qui"], ["Ꮙ", "quo"], ["Ꮚ", "quu"], ["Ꮛ", "quv"],
+      ["Ꮜ", "sa"], ["Ꮝ", "s"], ["Ꮞ", "se"], ["Ꮟ", "si"], ["Ꮠ", "so"], ["Ꮡ", "su"], ["Ꮢ", "sv"],
+      ["Ꮣ", "da"], ["Ꮤ", "ta"], ["Ꮥ", "de"], ["Ꮦ", "te"], ["Ꮧ", "di"], ["Ꮨ", "ti"], ["Ꮩ", "do"], ["Ꮪ", "du"], ["Ꮫ", "dv"],
+      ["Ꮬ", "dla"], ["Ꮭ", "tla"], ["Ꮮ", "tle"], ["Ꮯ", "tli"], ["Ꮰ", "tlo"], ["Ꮱ", "tlu"], ["Ꮲ", "tlv"],
+      ["Ꮳ", "tsa"], ["Ꮴ", "tse"], ["Ꮵ", "tsi"], ["Ꮶ", "tso"], ["Ꮷ", "tsu"], ["Ꮸ", "tsv"],
+      ["Ꮹ", "wa"], ["Ꮺ", "we"], ["Ꮻ", "wi"], ["Ꮼ", "wo"], ["Ꮽ", "wu"], ["Ꮾ", "wv"],
+      ["Ꮿ", "ya"], ["Ᏸ", "ye"], ["Ᏹ", "yi"], ["Ᏺ", "yo"], ["Ᏻ", "yu"], ["Ᏼ", "yv"],
+    ],
+  },
+  {
     id: "greek",
     label: "greek",
+    hasCase: true,
     symbols: [
       ["α", "a"], ["β", "b"], ["γ", "g"], ["δ", "d"], ["ε", "e"],
       ["ζ", "z"], ["η", "ee"], ["θ", "th"], ["ι", "i"], ["κ", "k"],
@@ -55,6 +136,7 @@ const ALPHABETS = [
   {
     id: "cyrillic",
     label: "cyrillic",
+    hasCase: true,
     symbols: [
       ["а", "a"], ["б", "b"], ["в", "v"], ["г", "g"], ["д", "d"],
       ["е", "e"], ["ё", "yo"], ["ж", "zh"], ["з", "z"], ["и", "i"],
@@ -95,6 +177,7 @@ const state = {
   selectedAlphabet: localStorage.getItem(STORAGE_KEYS.alphabet) || null,
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
   enabledMap: loadEnabledMap(),
+  caseModeMap: loadCaseModeMap(),
   stats: loadStats(),
   feedbackDuration: loadFeedbackDuration(),
   feedbackMode: loadFeedbackMode(),
@@ -120,6 +203,8 @@ const refs = {
   settingsToggle: document.querySelector("#settings-toggle"),
   settingsPanel: document.querySelector("#settings-panel"),
   settingsList: document.querySelector("#settings-list"),
+  caseSettings: document.querySelector("#case-settings"),
+  caseOptions: [...document.querySelectorAll(".case-option")],
   feedbackDuration: document.querySelector("#feedback-duration"),
   feedbackMode: document.querySelector("#feedback-mode"),
   cheatToggle: document.querySelector("#cheat-toggle"),
@@ -249,6 +334,23 @@ function bindEvents() {
     saveFeedbackMode();
   });
 
+  for (const button of refs.caseOptions) {
+    button.addEventListener("click", () => {
+      const alphabet = getSelectedAlphabet();
+      const nextMode = button.dataset.caseMode;
+      if (!alphabet || !alphabet.hasCase || !isValidCaseMode(nextMode)) {
+        return;
+      }
+      state.caseModeMap[alphabet.id] = nextMode;
+      saveCaseModeMap();
+      clearPendingWrongState();
+      state.currentPromptId = null;
+      setFeedback("");
+      nextPrompt();
+      render();
+    });
+  }
+
   refs.continueButton.addEventListener("click", () => {
     continueAfterReveal();
   });
@@ -277,6 +379,7 @@ function bindEvents() {
 
 function render() {
   const alphabet = getSelectedAlphabet();
+  const caseMode = alphabet ? getCaseModeForAlphabet(alphabet) : "lower";
   refs.pickerView.classList.toggle("hidden", Boolean(alphabet));
   refs.gameView.classList.toggle("hidden", !alphabet);
   refs.switchAlphabet.classList.toggle("hidden", !alphabet);
@@ -288,6 +391,12 @@ function render() {
   refs.directionToggle.disabled = !alphabet;
   refs.feedbackDuration.value = String(state.feedbackDuration);
   refs.feedbackMode.value = state.feedbackMode;
+  refs.caseSettings.classList.toggle("hidden", !alphabet || !alphabet.hasCase);
+  for (const button of refs.caseOptions) {
+    const active = button.dataset.caseMode === caseMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  }
   refs.continueButton.classList.toggle("hidden", !state.awaitingManualContinue);
   renderAlphabetPicker();
   renderStats();
@@ -364,10 +473,7 @@ function renderPrompt() {
 
   refs.promptValue.textContent =
     state.direction === "foreignToLatin" ? prompt.foreign : prompt.latin;
-  refs.promptHint.textContent =
-    state.direction === "foreignToLatin"
-      ? "type the latin reading below"
-      : "pick the matching symbol";
+  refs.promptHint.textContent = getPromptHint(prompt, alphabet);
 }
 
 function renderAnswerArea() {
@@ -406,7 +512,7 @@ function renderAnswerArea() {
 function renderSymbolGrid() {
   refs.symbolGrid.innerHTML = "";
 
-  for (const symbol of getEnabledSymbols()) {
+  for (const symbol of getAnswerSymbols()) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "symbol-key";
@@ -417,7 +523,7 @@ function renderSymbolGrid() {
       button.classList.add("selected-correct");
     }
     button.textContent = symbol.foreign;
-    button.setAttribute("aria-label", `${symbol.foreign} for ${symbol.latin}`);
+    button.setAttribute("aria-label", `${symbol.foreign} for ${symbol.latin}${symbol.caseLabel ? `, ${symbol.caseLabel}` : ""}`);
     button.addEventListener("click", () => {
       if (state.awaitingManualContinue || state.feedbackTimeoutId !== null) {
         return;
@@ -477,6 +583,7 @@ function renderCheatSheet() {
 
   refs.cheatTitle.textContent = `${alphabet.label} cheat sheet`;
   const enabledSet = new Set(state.enabledMap[alphabet.id]);
+  const caseMode = getCaseModeForAlphabet(alphabet);
 
   for (const symbol of alphabet.symbols) {
     const item = document.createElement("article");
@@ -484,9 +591,21 @@ function renderCheatSheet() {
     if (!enabledSet.has(symbol.id)) {
       item.classList.add("disabled");
     }
-    item.innerHTML = `<strong>${symbol.foreign}</strong><span>${symbol.latin}</span>`;
+    item.innerHTML = getCheatSheetMarkup(symbol, alphabet, caseMode);
     refs.cheatGrid.appendChild(item);
   }
+}
+
+function getCheatSheetMarkup(symbol, alphabet, caseMode) {
+  if (!alphabet.hasCase || caseMode === "lower") {
+    return `<strong>${symbol.foreign}</strong><span>${symbol.latin}</span>`;
+  }
+
+  if (caseMode === "upper") {
+    return `<strong>${toUpperVariant(symbol.foreign)}</strong><span>${symbol.latin}</span>`;
+  }
+
+  return `<strong>${symbol.foreign}</strong><span class="cheat-case">${toUpperVariant(symbol.foreign)}</span><span>${symbol.latin}</span>`;
 }
 
 function renderStats() {
@@ -500,7 +619,7 @@ function renderStats() {
 }
 
 function nextPrompt() {
-  const symbols = getEnabledSymbols();
+  const symbols = getPromptPool();
   if (symbols.length === 0) {
     state.currentPromptId = null;
     return;
@@ -517,7 +636,7 @@ function nextPrompt() {
 }
 
 function getCurrentPrompt() {
-  return getEnabledSymbols().find((symbol) => symbol.id === state.currentPromptId) || null;
+  return getPromptPool().find((symbol) => symbol.id === state.currentPromptId) || null;
 }
 
 function getSelectedAlphabet() {
@@ -534,11 +653,77 @@ function getEnabledSymbols() {
   return alphabet.symbols.filter((symbol) => enabledSet.has(symbol.id));
 }
 
+function getPromptPool() {
+  return getCaseAwareSymbols(getEnabledSymbols());
+}
+
+function getAnswerSymbols() {
+  return getCaseAwareSymbols(getEnabledSymbols());
+}
+
+function getCaseAwareSymbols(symbols) {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet?.hasCase) {
+    return symbols.map((symbol) => ({
+      ...symbol,
+      baseId: symbol.id,
+      caseMode: "lower",
+      caseLabel: "",
+    }));
+  }
+
+  const caseMode = getCaseModeForAlphabet(alphabet);
+  const variants = [];
+
+  for (const symbol of symbols) {
+    if (caseMode === "lower" || caseMode === "both") {
+      variants.push({
+        ...symbol,
+        id: `${symbol.id}::lower`,
+        baseId: symbol.id,
+        caseMode: "lower",
+        caseLabel: "lowercase",
+      });
+    }
+    if (caseMode === "upper" || caseMode === "both") {
+      variants.push({
+        ...symbol,
+        id: `${symbol.id}::upper`,
+        baseId: symbol.id,
+        foreign: toUpperVariant(symbol.foreign),
+        caseMode: "upper",
+        caseLabel: "uppercase",
+      });
+    }
+  }
+
+  return variants;
+}
+
+function getCaseModeForAlphabet(alphabet) {
+  if (!alphabet?.hasCase) {
+    return "lower";
+  }
+
+  const stored = state.caseModeMap[alphabet.id];
+  return isValidCaseMode(stored) ? stored : "lower";
+}
+
+function isValidCaseMode(value) {
+  return value === "lower" || value === "upper" || value === "both";
+}
+
+function toUpperVariant(value) {
+  return value.toLocaleUpperCase();
+}
+
 function updateEnabledSymbol(symbolId, enabled) {
   const alphabet = getSelectedAlphabet();
   if (!alphabet) {
     return;
   }
+
+  const currentPrompt = getCurrentPrompt();
 
   const nextSet = new Set(state.enabledMap[alphabet.id]);
   if (enabled) {
@@ -550,7 +735,7 @@ function updateEnabledSymbol(symbolId, enabled) {
   state.enabledMap[alphabet.id] = [...nextSet];
   saveEnabledMap();
 
-  if (!nextSet.has(state.currentPromptId)) {
+  if (currentPrompt && !nextSet.has(currentPrompt.baseId || currentPrompt.id)) {
     state.currentPromptId = null;
     nextPrompt();
   }
@@ -575,6 +760,7 @@ function submitResult(correct, expectedAnswer) {
     scheduleSuccessFeedbackClear(2400);
   } else {
     state.stats.wrong += 1;
+    flashPromptFailure();
     state.revealedCorrectSymbolId =
       state.direction === "latinToForeign" && getCurrentPrompt() ? getCurrentPrompt().id : null;
     setFeedback(`correct answer: ${expectedAnswer}`, "error");
@@ -690,9 +876,17 @@ function scheduleSuccessFeedbackClear(delay) {
 }
 
 function flashPromptSuccess() {
+  refs.promptCard.classList.remove("failure-flash");
   refs.promptCard.classList.remove("success-flash");
   void refs.promptCard.offsetWidth;
   refs.promptCard.classList.add("success-flash");
+}
+
+function flashPromptFailure() {
+  refs.promptCard.classList.remove("success-flash");
+  refs.promptCard.classList.remove("failure-flash");
+  void refs.promptCard.offsetWidth;
+  refs.promptCard.classList.add("failure-flash");
 }
 
 function scrollPromptIntoViewIfMobile() {
@@ -719,6 +913,18 @@ function ensureEnabledMapShape() {
   }
 
   saveEnabledMap();
+}
+
+function getPromptHint(prompt, alphabet) {
+  if (state.direction === "foreignToLatin") {
+    return "type the latin reading below";
+  }
+
+  if (alphabet?.hasCase && prompt?.caseLabel) {
+    return `pick the matching ${prompt.caseLabel} symbol`;
+  }
+
+  return "pick the matching symbol";
 }
 
 function applyTheme(theme) {
@@ -752,6 +958,18 @@ function loadEnabledMap() {
 
 function saveEnabledMap() {
   localStorage.setItem(STORAGE_KEYS.enabledMap, JSON.stringify(state.enabledMap));
+}
+
+function loadCaseModeMap() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.caseModeMap) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveCaseModeMap() {
+  localStorage.setItem(STORAGE_KEYS.caseModeMap, JSON.stringify(state.caseModeMap));
 }
 
 function loadStats() {
