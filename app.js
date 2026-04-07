@@ -276,6 +276,7 @@ const state = {
 
 const refs = {
   body: document.body,
+  root: document.documentElement,
   pickerView: document.querySelector("#picker-view"),
   gameView: document.querySelector("#game-view"),
   switchAlphabet: document.querySelector("#switch-alphabet"),
@@ -1183,6 +1184,7 @@ function getWeightedPromptPool(pool) {
 }
 
 function applyTheme(theme) {
+  refs.root.dataset.theme = theme;
   refs.body.dataset.theme = theme;
   if (refs.themeColorMeta) {
     refs.themeColorMeta.setAttribute("content", theme === "dark" ? "#17284b" : "#efe6d4");

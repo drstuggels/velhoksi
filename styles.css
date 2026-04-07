@@ -19,6 +19,7 @@
   --panel-tone: rgba(244, 235, 219, 0.9);
 }
 
+html[data-theme="dark"],
 body[data-theme="dark"] {
   color-scheme: dark;
   --bg: #0d0f14;
@@ -78,13 +79,13 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--bg-layer);
 }
 
 body {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
-  background: var(--bg-layer);
   color: var(--text);
   transition: background 180ms ease, color 180ms ease;
 }
