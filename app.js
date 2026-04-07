@@ -303,6 +303,7 @@ const refs = {
   closeCheat: document.querySelector("#close-cheat"),
   cheatTitle: document.querySelector("#cheat-title"),
   cheatGrid: document.querySelector("#cheat-grid"),
+  cheatTooltip: document.querySelector("#cheat-tooltip"),
   promptCard: document.querySelector("#prompt-card"),
   promptValue: document.querySelector("#prompt-value"),
   promptHint: document.querySelector("#prompt-hint"),
@@ -386,6 +387,103 @@ function bindEvents() {
 
   refs.closeCheat.addEventListener("click", () => refs.cheatDialog.close());
 
+  const isFinePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
+
+  function hideCheatTooltip() {
+    if (!refs.cheatTooltip) {
+      return;
+    }
+    refs.cheatTooltip.classList.add("hidden");
+    refs.cheatTooltip.textContent = "";
+    refs.cheatTooltip.removeAttribute("data-placement");
+    refs.cheatTooltip.style.left = "";
+    refs.cheatTooltip.style.top = "";
+  }
+
+  function showCheatTooltip(trigger) {
+    if (!refs.cheatTooltip || !isFinePointer) {
+      return;
+    }
+
+    const note = trigger?.getAttribute("data-note") || "";
+    if (!note) {
+      hideCheatTooltip();
+      return;
+    }
+
+    refs.cheatTooltip.textContent = note;
+    refs.cheatTooltip.classList.remove("hidden");
+
+    // Measure after un-hiding so we can clamp within viewport.
+    const triggerRect = trigger.getBoundingClientRect();
+    const tooltipRect = refs.cheatTooltip.getBoundingClientRect();
+    const margin = 12;
+    const gap = 10;
+
+    let left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - margin - tooltipRect.width));
+
+    let top = triggerRect.bottom + gap;
+    let placement = "bottom";
+    if (top + tooltipRect.height + margin > window.innerHeight) {
+      top = triggerRect.top - gap - tooltipRect.height;
+      placement = "top";
+    }
+    top = Math.max(margin, Math.min(top, window.innerHeight - margin - tooltipRect.height));
+
+    refs.cheatTooltip.setAttribute("data-placement", placement);
+    refs.cheatTooltip.style.left = `${Math.round(left)}px`;
+    refs.cheatTooltip.style.top = `${Math.round(top)}px`;
+  }
+
+  if (refs.cheatDialog) {
+    refs.cheatDialog.addEventListener("mouseover", (event) => {
+      const trigger = event.target.closest?.(".cheat-note-trigger");
+      if (trigger) {
+        showCheatTooltip(trigger);
+      }
+    });
+
+    refs.cheatDialog.addEventListener("mousemove", (event) => {
+      const trigger = event.target.closest?.(".cheat-note-trigger");
+      if (trigger) {
+        showCheatTooltip(trigger);
+      }
+    });
+
+    refs.cheatDialog.addEventListener("mouseout", (event) => {
+      if (!isFinePointer) {
+        return;
+      }
+      const fromTrigger = event.target.closest?.(".cheat-note-trigger");
+      const toTrigger = event.relatedTarget?.closest?.(".cheat-note-trigger");
+      if (fromTrigger && !toTrigger) {
+        hideCheatTooltip();
+      }
+    });
+
+    refs.cheatDialog.addEventListener("focusin", (event) => {
+      const trigger = event.target.closest?.(".cheat-note-trigger");
+      if (trigger) {
+        showCheatTooltip(trigger);
+      }
+    });
+
+    refs.cheatDialog.addEventListener("focusout", (event) => {
+      if (!isFinePointer) {
+        return;
+      }
+      const fromTrigger = event.target.closest?.(".cheat-note-trigger");
+      const toTrigger = event.relatedTarget?.closest?.(".cheat-note-trigger");
+      if (fromTrigger && !toTrigger) {
+        hideCheatTooltip();
+      }
+    });
+
+    refs.cheatDialog.addEventListener("scroll", hideCheatTooltip, { passive: true });
+    refs.cheatDialog.addEventListener("close", hideCheatTooltip);
+  }
+
   refs.cheatDialog.addEventListener("click", (event) => {
     const noteTrigger = event.target.closest(".cheat-note-trigger");
     if (noteTrigger) {
@@ -405,6 +503,7 @@ function bindEvents() {
         noteTrigger.setAttribute("aria-expanded", "true");
         noteItem?.classList.add("note-open");
       }
+      showCheatTooltip(noteTrigger);
       return;
     }
 
@@ -423,6 +522,7 @@ function bindEvents() {
     refs.cheatGrid
       .querySelectorAll(".cheat-item.note-open")
       .forEach((item) => item.classList.remove("note-open"));
+    hideCheatTooltip();
   });
 
   refs.latinForm.addEventListener("submit", (event) => {

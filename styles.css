@@ -973,6 +973,31 @@ input[type="text"]::placeholder {
   transform: translate(-50%, 0);
 }
 
+.cheat-tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  max-width: min(260px, calc(100vw - 24px));
+  padding: 8px 10px;
+  border: 1px solid var(--soft-line);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-align: left;
+  line-height: 1.45;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 6px 6px 0 var(--line);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cheat-note-trigger::after {
+    display: none;
+  }
+}
+
 .cheat-note-inline {
   display: none;
   margin-top: 10px;

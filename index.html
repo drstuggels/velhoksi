@@ -216,26 +216,26 @@
       </footer>
     </div>
 
-    <dialog id="cheat-dialog" class="cheat-dialog" aria-labelledby="cheat-title">
-      <div class="dialog-card">
-        <div class="dialog-head">
-          <div>
-            <p class="eyebrow">cheat sheet</p>
-            <h2 id="cheat-title">cheat sheet</h2>
-          </div>
-        </div>
-        <button id="close-cheat" class="text-button close-cheat-button" type="button" aria-label="close cheat sheet">
-          close
-        </button>
-        <div id="cheat-grid" class="cheat-grid"></div>
-      </div>
-    </dialog>
-    <div id="cheat-tooltip" class="cheat-tooltip hidden" role="tooltip"></div>
-
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch(() => {});
+	    <dialog id="cheat-dialog" class="cheat-dialog" aria-labelledby="cheat-title">
+	      <div class="dialog-card">
+	        <div class="dialog-head">
+	          <div>
+	            <p class="eyebrow">cheat sheet</p>
+	            <h2 id="cheat-title">cheat sheet</h2>
+	          </div>
+	        </div>
+	        <button id="close-cheat" class="text-button close-cheat-button" type="button" aria-label="close cheat sheet">
+	          close
+	        </button>
+	        <div id="cheat-grid" class="cheat-grid"></div>
+	      </div>
+	      <div id="cheat-tooltip" class="cheat-tooltip hidden" role="tooltip"></div>
+	    </dialog>
+	
+	    <script>
+	      if ("serviceWorker" in navigator) {
+	        window.addEventListener("load", () => {
+	          navigator.serviceWorker.register("./sw.js").catch(() => {});
         });
       }
     </script>
