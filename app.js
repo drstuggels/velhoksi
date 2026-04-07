@@ -280,6 +280,7 @@ const refs = {
   gameView: document.querySelector("#game-view"),
   switchAlphabet: document.querySelector("#switch-alphabet"),
   themeToggle: document.querySelector("#theme-toggle"),
+  themeColorMeta: document.querySelector("#theme-color-meta"),
   alphabetTitle: document.querySelector("#alphabet-title"),
   alphabetPicker: document.querySelector("#alphabet-picker"),
   directionToggle: document.querySelector("#direction-toggle"),
@@ -1183,6 +1184,9 @@ function getWeightedPromptPool(pool) {
 
 function applyTheme(theme) {
   refs.body.dataset.theme = theme;
+  if (refs.themeColorMeta) {
+    refs.themeColorMeta.setAttribute("content", theme === "dark" ? "#17284b" : "#efe6d4");
+  }
   refs.themeToggle.textContent =
     theme === "dark"
       ? "dark, but you can switch"

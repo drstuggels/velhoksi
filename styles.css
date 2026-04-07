@@ -78,6 +78,7 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  background: var(--bg);
 }
 
 body {
@@ -143,7 +144,12 @@ p {
 .app-shell {
   position: relative;
   min-height: 100vh;
-  padding: 20px 32px 18px;
+  min-height: 100dvh;
+  padding:
+    calc(20px + env(safe-area-inset-top))
+    calc(32px + env(safe-area-inset-right))
+    calc(18px + env(safe-area-inset-bottom))
+    calc(32px + env(safe-area-inset-left));
 }
 
 .site-header,
@@ -1144,9 +1150,14 @@ input[type="text"]::placeholder {
 
   .app-shell {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: 18px 18px 20px;
+    padding:
+      calc(18px + env(safe-area-inset-top))
+      calc(18px + env(safe-area-inset-right))
+      calc(20px + env(safe-area-inset-bottom))
+      calc(18px + env(safe-area-inset-left));
   }
 
   .site-header,
