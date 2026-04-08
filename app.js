@@ -416,6 +416,7 @@ const state = {
   feedbackMode: loadFeedbackMode(),
   currentPromptId: null,
   lastPromptId: null,
+  promptQueue: [],
   settingsOpen: false,
   feedbackTimeoutId: null,
   successFeedbackTimeoutId: null,
@@ -1294,14 +1295,45 @@ function nextPrompt() {
     return;
   }
 
-  const pool =
-    symbols.length > 1
-      ? symbols.filter((symbol) => symbol.id !== state.lastPromptId)
-      : symbols;
-  const weightedPool = getWeightedPromptPool(pool);
-  const next = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-  state.lastPromptId = next.id;
-  state.currentPromptId = next.id;
+  const validIds = new Set(symbols.map((symbol) => symbol.id));
+  state.promptQueue = Array.isArray(state.promptQueue)
+    ? state.promptQueue.filter((id) => validIds.has(id))
+    : [];
+
+  if (state.promptQueue.length === 0) {
+    state.promptQueue = buildPromptQueue(symbols);
+  }
+
+  const nextId = state.promptQueue.shift();
+  if (!nextId) {
+    state.currentPromptId = null;
+    return;
+  }
+  state.lastPromptId = nextId;
+  state.currentPromptId = nextId;
+}
+
+function buildPromptQueue(symbols) {
+  const weightedPool = getWeightedPromptPool(symbols);
+  const ids = weightedPool.map((symbol) => symbol.id);
+  shuffleInPlace(ids);
+  if (ids.length > 1 && state.lastPromptId && ids[0] === state.lastPromptId) {
+    const swapIndex = 1 + Math.floor(Math.random() * (ids.length - 1));
+    const temp = ids[0];
+    ids[0] = ids[swapIndex];
+    ids[swapIndex] = temp;
+  }
+  return ids;
+}
+
+function shuffleInPlace(array) {
+  for (let index = array.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    const temp = array[index];
+    array[index] = array[swapIndex];
+    array[swapIndex] = temp;
+  }
+  return array;
 }
 
 function getCurrentPrompt() {
