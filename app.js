@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   missedFocusMap: "velhoksi.missedFocusMap",
   feedbackDuration: "velhoksi.feedbackDuration",
   feedbackMode: "velhoksi.feedbackMode",
+  cyrillicVariant: "velhoksi.cyrillicVariant",
 };
 
 const BASE_ALPHABETS = [
@@ -148,6 +149,9 @@ const BASE_ALPHABETS = [
       ["у", "u"], ["ф", "f"], ["х", "kh"], ["ц", "ts"], ["ч", "ch"],
       ["ш", "sh"], ["щ", "shch"], ["ъ", "hard"], ["ы", "y"], ["ь", "soft"],
       ["э", "eh"], ["ю", "yu"], ["я", "ya"],
+      ["і", "i"], ["ї", "yi"], ["є", "ye"], ["ґ", "g"], ["ў", "w"],
+      ["ј", "j"], ["љ", "lj"], ["њ", "nj"], ["ђ", "dj"], ["ћ", "c"],
+      ["џ", "dzh"], ["ѕ", "dz"], ["ѓ", "gj"], ["ќ", "kj"],
     ],
   },
   {
@@ -401,6 +405,7 @@ const state = {
   theme: loadTheme(),
   selectedAlphabet: localStorage.getItem(STORAGE_KEYS.alphabet) || null,
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
+  cyrillicVariant: loadCyrillicVariant(),
   enabledMap: loadEnabledMap(),
   musicPitchRangeMap: loadMusicPitchRangeMap(),
   caseModeMap: loadCaseModeMap(),
@@ -422,6 +427,7 @@ const state = {
 const refs = {
   body: document.body,
   root: document.documentElement,
+  brandHome: document.querySelector("#brand-home"),
   pickerView: document.querySelector("#picker-view"),
   gameView: document.querySelector("#game-view"),
   switchAlphabet: document.querySelector("#switch-alphabet"),
@@ -432,6 +438,8 @@ const refs = {
   directionToggle: document.querySelector("#direction-toggle"),
   settingsToggle: document.querySelector("#settings-toggle"),
   settingsPanel: document.querySelector("#settings-panel"),
+  cyrillicVariantSettings: document.querySelector("#cyrillic-variant-settings"),
+  cyrillicVariant: document.querySelector("#cyrillic-variant"),
   settingsList: document.querySelector("#settings-list"),
   settingsEmpty: document.querySelector("#settings-empty"),
   allOnButton: document.querySelector("#all-on-button"),
@@ -479,21 +487,61 @@ function init() {
 }
 
 function bindEvents() {
+  if (refs.brandHome) {
+    refs.brandHome.addEventListener("click", () => {
+      goToStartMenu();
+    });
+
+    const prefersReducedMotion = Boolean(
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    );
+
+    const updateBrandPointer = (event) => {
+      const rect = refs.brandHome.getBoundingClientRect();
+      const px = rect.width ? (event.clientX - rect.left) / rect.width : 0.5;
+      const py = rect.height ? (event.clientY - rect.top) / rect.height : 0.5;
+      const x = `${Math.max(0, Math.min(1, px)) * 100}%`;
+      const y = `${Math.max(0, Math.min(1, py)) * 100}%`;
+      refs.brandHome.style.setProperty("--brand-mx", x);
+      refs.brandHome.style.setProperty("--brand-my", y);
+    };
+
+    refs.brandHome.addEventListener("pointerenter", (event) => updateBrandPointer(event));
+    if (!prefersReducedMotion) {
+      refs.brandHome.addEventListener("pointermove", (event) => updateBrandPointer(event));
+    }
+    refs.brandHome.addEventListener("pointerleave", () => {
+      refs.brandHome.style.setProperty("--brand-mx", "50%");
+      refs.brandHome.style.setProperty("--brand-my", "50%");
+    });
+  }
+
   refs.themeToggle.addEventListener("click", () => {
     state.theme = state.theme === "dark" ? "light" : "dark";
     saveTheme();
     applyTheme(state.theme);
   });
 
+  if (refs.cyrillicVariant) {
+    refs.cyrillicVariant.addEventListener("change", () => {
+      const next = refs.cyrillicVariant.value;
+      if (!isValidCyrillicVariant(next)) {
+        return;
+      }
+      state.cyrillicVariant = next;
+      localStorage.setItem(STORAGE_KEYS.cyrillicVariant, next);
+      state.enabledMap.cyrillic = getDefaultEnabledCyrillicIds(next);
+      saveEnabledMap();
+      clearPendingWrongState();
+      state.currentPromptId = null;
+      state.lastPromptId = null;
+      setFeedback("");
+      render();
+    });
+  }
+
   refs.switchAlphabet.addEventListener("click", () => {
-    clearPendingWrongState();
-    state.selectedAlphabet = null;
-    state.currentPromptId = null;
-    state.lastPromptId = null;
-    state.settingsOpen = false;
-    localStorage.removeItem(STORAGE_KEYS.alphabet);
-    setFeedback("");
-    render();
+    goToStartMenu();
   });
 
   refs.directionToggle.addEventListener("click", () => {
@@ -798,6 +846,22 @@ function bindEvents() {
   });
 }
 
+function goToStartMenu() {
+  if (refs.cheatDialog?.open) {
+    refs.cheatDialog.close();
+  }
+  clearPendingWrongState();
+  clearSuccessFeedbackTimer();
+  state.selectedAlphabet = null;
+  state.currentPromptId = null;
+  state.lastPromptId = null;
+  state.settingsOpen = false;
+  localStorage.removeItem(STORAGE_KEYS.alphabet);
+  setFeedback("");
+  render();
+  refs.pickerView?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function render() {
   const alphabet = getSelectedAlphabet();
   const caseMode = alphabet ? getCaseModeForAlphabet(alphabet) : "lower";
@@ -810,6 +874,10 @@ function render() {
   refs.switchAlphabet.classList.toggle("hidden", !alphabet);
   refs.alphabetTitle.textContent = alphabet ? `${alphabet.label},` : `nothing,`;
   refs.settingsPanel.classList.toggle("hidden", !alphabet || !state.settingsOpen);
+  refs.cyrillicVariantSettings?.classList.toggle("hidden", alphabet?.id !== "cyrillic");
+  if (alphabet?.id === "cyrillic" && refs.cyrillicVariant) {
+    refs.cyrillicVariant.value = state.cyrillicVariant;
+  }
   refs.settingsToggle.setAttribute("aria-expanded", String(Boolean(alphabet && state.settingsOpen)));
   refs.cheatToggle.disabled = !alphabet;
   refs.settingsToggle.disabled = !alphabet;
@@ -1720,9 +1788,13 @@ function scrollPromptIntoViewIfMobile() {
 function ensureEnabledMapShape() {
   for (const alphabet of ALPHABETS) {
     if (!Array.isArray(state.enabledMap[alphabet.id])) {
-      state.enabledMap[alphabet.id] = alphabet.symbols
-        .filter((symbol) => symbol.enabledByDefault)
-        .map((symbol) => symbol.id);
+      if (alphabet.id === "cyrillic") {
+        state.enabledMap[alphabet.id] = getDefaultEnabledCyrillicIds(state.cyrillicVariant);
+      } else {
+        state.enabledMap[alphabet.id] = alphabet.symbols
+          .filter((symbol) => symbol.enabledByDefault)
+          .map((symbol) => symbol.id);
+      }
     } else {
       const validIds = new Set(alphabet.symbols.map((symbol) => symbol.id));
       state.enabledMap[alphabet.id] = state.enabledMap[alphabet.id].filter((id) => validIds.has(id));
@@ -1843,6 +1915,52 @@ function loadTheme() {
 
 function saveTheme() {
   localStorage.setItem(STORAGE_KEYS.theme, state.theme);
+}
+
+function loadCyrillicVariant() {
+  const stored = localStorage.getItem(STORAGE_KEYS.cyrillicVariant);
+  return isValidCyrillicVariant(stored) ? stored : "russian";
+}
+
+function isValidCyrillicVariant(value) {
+  return (
+    value === "russian" ||
+    value === "ukrainian" ||
+    value === "belarusian" ||
+    value === "bulgarian" ||
+    value === "serbian" ||
+    value === "macedonian" ||
+    value === "all"
+  );
+}
+
+function getDefaultEnabledCyrillicIds(variant) {
+  const alphabet = alphabetById.cyrillic;
+  if (!alphabet || !Array.isArray(alphabet.symbols)) {
+    return [];
+  }
+  if (variant === "all") {
+    return alphabet.symbols.map((symbol) => symbol.id);
+  }
+
+  const letters = new Set();
+  if (variant === "russian") {
+    "абвгдеёжзийклмнопрстуфхцчшщъыьэюя".split("").forEach((letter) => letters.add(letter));
+  } else if (variant === "ukrainian") {
+    "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя".split("").forEach((letter) => letters.add(letter));
+  } else if (variant === "belarusian") {
+    "абвгдеёжзійклмнопрстуўфхцчшыьэюя".split("").forEach((letter) => letters.add(letter));
+  } else if (variant === "bulgarian") {
+    "абвгдежзийклмнопрстуфхцчшщъьюя".split("").forEach((letter) => letters.add(letter));
+  } else if (variant === "serbian") {
+    "абвгдђежзијклљмнњопрстћуфхцчџш".split("").forEach((letter) => letters.add(letter));
+  } else if (variant === "macedonian") {
+    "абвгдѓежзѕијклљмнњопрстќуфхцчџш".split("").forEach((letter) => letters.add(letter));
+  }
+
+  return alphabet.symbols
+    .filter((symbol) => letters.has(symbol.foreign))
+    .map((symbol) => symbol.id);
 }
 
 function loadEnabledMap() {

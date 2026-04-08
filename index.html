@@ -53,7 +53,11 @@
         <div class="brand-lockup">
           <p class="eyebrow"><span class="brand-foreign">script</span> symbol practice</p>
           <div class="brand-row">
-            <h1>velhoksi</h1>
+            <h1>
+              <button id="brand-home" class="brand-home" type="button" aria-label="back to start menu" data-text="velhoksi">
+                velhoksi
+              </button>
+            </h1>
             <span class="brand-quote">"to become a wizard"</span>
           </div>
         </div>
@@ -179,6 +183,24 @@
               <label class="setting-item setting-item-inline" for="missed-focus-toggle">
                 <span class="setting-symbol"><span>weight misses a bit more</span></span>
                 <input id="missed-focus-toggle" type="checkbox" class="toggle" />
+              </label>
+            </section>
+            <section id="cyrillic-variant-settings" class="settings-group hidden">
+              <div class="settings-head">
+                <p class="eyebrow">cyrillic variant</p>
+                <p class="settings-copy">different cyrillic languages use slightly different letters.</p>
+              </div>
+              <label class="duration-control" for="cyrillic-variant">
+                <span class="eyebrow">alphabet</span>
+                <select id="cyrillic-variant">
+                  <option value="russian">russian</option>
+                  <option value="ukrainian">ukrainian</option>
+                  <option value="belarusian">belarusian</option>
+                  <option value="bulgarian">bulgarian</option>
+                  <option value="serbian">serbian</option>
+                  <option value="macedonian">macedonian</option>
+                  <option value="all">all letters</option>
+                </select>
               </label>
             </section>
             <section id="case-settings" class="settings-group hidden">
