@@ -1317,13 +1317,29 @@ function buildPromptQueue(symbols) {
   const weightedPool = getWeightedPromptPool(symbols);
   const ids = weightedPool.map((symbol) => symbol.id);
   shuffleInPlace(ids);
-  if (ids.length > 1 && state.lastPromptId && ids[0] === state.lastPromptId) {
-    const swapIndex = 1 + Math.floor(Math.random() * (ids.length - 1));
-    const temp = ids[0];
-    ids[0] = ids[swapIndex];
-    ids[swapIndex] = temp;
+
+  const queue = [];
+  const remaining = [...ids];
+  let last = state.lastPromptId || null;
+
+  while (remaining.length > 0) {
+    const candidateIndexes = [];
+    for (let index = 0; index < remaining.length; index += 1) {
+      if (remaining[index] !== last) {
+        candidateIndexes.push(index);
+      }
+    }
+
+    const pickIndex =
+      candidateIndexes.length === 0
+        ? 0
+        : candidateIndexes[Math.floor(Math.random() * candidateIndexes.length)];
+    const [picked] = remaining.splice(pickIndex, 1);
+    queue.push(picked);
+    last = picked;
   }
-  return ids;
+
+  return queue;
 }
 
 function shuffleInPlace(array) {
