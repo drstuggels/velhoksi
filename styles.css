@@ -743,7 +743,7 @@ input[type="text"] {
 
 #symbol-answer {
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 #latin-form,
@@ -782,9 +782,8 @@ input[type="text"]::placeholder {
   grid-auto-rows: minmax(58px, auto);
   min-height: 0;
   height: 100%;
-  padding-bottom: 6px;
+  padding: 14px;
   overflow: auto;
-  padding-right: 4px;
 }
 
 .symbol-key {
@@ -1582,6 +1581,7 @@ input[type="text"]::placeholder {
     max-height: none;
     overflow: visible;
     justify-items: center;
+    padding: 10px;
   }
 
   .symbol-key {
