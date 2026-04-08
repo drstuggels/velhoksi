@@ -258,7 +258,59 @@
 	    <script>
 	      if ("serviceWorker" in navigator) {
 	        window.addEventListener("load", () => {
-	          navigator.serviceWorker.register("./sw.js").catch(() => {});
+	          const updateBanner = document.createElement("div");
+	          updateBanner.id = "update-banner";
+	          updateBanner.className = "update-banner hidden";
+	          updateBanner.setAttribute("role", "status");
+	          updateBanner.setAttribute("aria-live", "polite");
+	          updateBanner.innerHTML = `
+	            <span>update available</span>
+	            <button id="update-reload" class="text-button" type="button">refresh</button>
+	          `;
+	          document.body.appendChild(updateBanner);
+
+	          const showBanner = () => updateBanner.classList.remove("hidden");
+	          let updateRequested = false;
+
+	          navigator.serviceWorker
+	            .register("./sw.js")
+	            .then((registration) => {
+	              const maybeShowUpdate = () => {
+	                if (registration.waiting && navigator.serviceWorker.controller) {
+	                  showBanner();
+	                }
+	              };
+
+	              maybeShowUpdate();
+
+	              registration.addEventListener("updatefound", () => {
+	                const next = registration.installing;
+	                if (!next) return;
+	                next.addEventListener("statechange", () => {
+	                  if (next.state === "installed") {
+	                    maybeShowUpdate();
+	                  }
+	                });
+	              });
+
+	              const reloadButton = updateBanner.querySelector("#update-reload");
+	              reloadButton?.addEventListener("click", () => {
+	                updateRequested = true;
+	                if (registration.waiting) {
+	                  registration.waiting.postMessage({ type: "SKIP_WAITING" });
+	                }
+	              });
+
+	              navigator.serviceWorker.addEventListener("controllerchange", () => {
+	                if (!updateRequested) {
+	                  return;
+	                }
+	                window.location.reload();
+	              });
+
+	              registration.update().catch(() => {});
+	            })
+	            .catch(() => {});
         });
       }
 	    </script>

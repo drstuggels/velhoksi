@@ -209,6 +209,35 @@ p {
   text-align: left;
 }
 
+.update-banner {
+  position: fixed;
+  left: 32px;
+  right: 32px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  background: var(--surface-strong);
+  box-shadow: var(--block-shadow);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+}
+
+.update-banner .text-button {
+  color: var(--text);
+}
+
+.update-banner .text-button:hover,
+.update-banner .text-button:focus-visible {
+  transform: translateX(-2px);
+}
+
 .brand-lockup {
   pointer-events: auto;
 }

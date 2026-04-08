@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v2";
+const CACHE_NAME = "velhoksi-v3";
 const ASSETS = [
   "/",
   "/index.html",
@@ -8,19 +8,33 @@ const ASSETS = [
   "/velhoksi.png",
   "/icon-192.png",
   "/icon-512.png",
-  "/site.webmanifest"
+  "/og-image.png",
+  "/site.webmanifest",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(ASSETS.map((url) => new Request(url, { cache: "reload" })));
+    })()
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
-    )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+      await self.clients.claim();
+    })()
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {
@@ -28,17 +42,53 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  const isNavigation =
+    event.request.mode === "navigate" ||
+    (event.request.headers.get("accept") || "").includes("text/html");
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+
+      if (isNavigation) {
+        try {
+          const fresh = await fetch(event.request, { cache: "no-store" });
+          if (fresh && fresh.ok) {
+            cache.put("/index.html", fresh.clone());
+          }
+          return fresh;
+        } catch {
+          return (await cache.match("/index.html")) || Response.error();
+        }
+      }
+
+      const cached = await cache.match(event.request);
       if (cached) {
+        event.waitUntil(
+          (async () => {
+            try {
+              const fresh = await fetch(event.request);
+              if (fresh && fresh.ok) {
+                await cache.put(event.request, fresh.clone());
+              }
+            } catch {
+              // Ignore network failures.
+            }
+          })()
+        );
         return cached;
       }
 
-      return fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      });
-    })
+      const fresh = await fetch(event.request);
+      if (fresh && fresh.ok) {
+        cache.put(event.request, fresh.clone());
+      }
+      return fresh;
+    })()
   );
 });
