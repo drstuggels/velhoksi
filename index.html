@@ -91,12 +91,23 @@
                   class="text-button"
                   type="button"
                   aria-expanded="false"
-                  aria-controls="settings-panel"
+                  aria-controls="settings-dialog"
                 >
                   settings
                 </button>
                 <span class="nav-separator" aria-hidden="true">/</span>
                 <button id="cheat-toggle" class="text-button" type="button">cheat sheet</button>
+                <span class="nav-separator" aria-hidden="true">/</span>
+                <button
+                  id="shortcuts-toggle"
+                  class="text-button"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="shortcuts-dialog"
+                  aria-label="open keyboard shortcuts"
+                >
+                  shortcuts
+                </button>
               </div>
             </div>
 
@@ -115,7 +126,7 @@
                   inputmode="latin"
                   autocapitalize="none"
                   spellcheck="false"
-                  maxlength="6"
+                  maxlength="48"
                   placeholder="type the latin reading"
                 />
               </div>
@@ -152,7 +163,115 @@
             <button id="reset-stats" class="text-button" type="button">reset</button>
           </aside>
 
-          <aside id="settings-panel" class="floating floating-settings hidden" aria-label="settings" aria-live="polite">
+        </section>
+      </main>
+
+      <footer class="site-footer" aria-label="site footer">
+        <span class="theme-prefix">current mode is</span>
+        <button id="theme-toggle" class="text-button" type="button" aria-label="toggle theme">
+          current mode is dark, switch it
+        </button>
+        <a href="https://github.com/drstuggels" target="_blank" rel="noreferrer">made by nuua</a>
+      </footer>
+    </div>
+
+	    <dialog id="cheat-dialog" class="cheat-dialog" aria-labelledby="cheat-title">
+	      <div class="dialog-card">
+	        <div class="dialog-head">
+	          <div>
+	            <p class="eyebrow">cheat sheet</p>
+	            <h2 id="cheat-title">cheat sheet</h2>
+	          </div>
+            <label id="cheat-font-control" class="duration-control cheat-font-control hidden" for="cheat-font-select">
+              <span class="eyebrow">font</span>
+              <select id="cheat-font-select"></select>
+            </label>
+	        </div>
+	        <button id="close-cheat" class="text-button close-cheat-button" type="button" aria-label="close cheat sheet">
+	          close
+	        </button>
+	        <div id="cheat-grid" class="cheat-grid"></div>
+	      </div>
+	      <div id="cheat-tooltip" class="cheat-tooltip hidden" role="tooltip"></div>
+	    </dialog>
+
+      <dialog id="settings-dialog" class="cheat-dialog settings-dialog" aria-labelledby="settings-title" aria-live="polite">
+        <div class="dialog-card">
+          <div class="dialog-head">
+            <div>
+              <p class="eyebrow">customize drill</p>
+              <h2 id="settings-title">settings</h2>
+            </div>
+          </div>
+          <button id="close-settings" class="text-button close-cheat-button" type="button" aria-label="close settings">
+            close
+          </button>
+          <div id="settings-panel" class="settings-panel" aria-label="settings panel">
+            <section id="practice-mode-settings" class="settings-group hidden">
+              <div class="settings-head">
+                <p class="eyebrow">practice mode</p>
+                <p id="practice-mode-copy" class="settings-copy">switch between symbol drills and word drills.</p>
+              </div>
+              <div class="practice-switch" role="group" aria-label="practice mode">
+                <button type="button" class="practice-mode-option" data-practice-mode="symbols">symbols</button>
+                <button type="button" class="practice-mode-option" data-practice-mode="words">words</button>
+              </div>
+            </section>
+            <section id="prompt-font-settings" class="settings-group hidden">
+              <div class="settings-head">
+                <p class="eyebrow">prompt and cheat sheet font</p>
+                <p id="prompt-font-copy" class="settings-copy">
+                  switch symbol styles to get used to different writing forms.
+                </p>
+              </div>
+              <label class="duration-control" for="prompt-font-select">
+                <span class="eyebrow">style</span>
+                <select id="prompt-font-select"></select>
+              </label>
+              <label class="setting-item setting-item-inline" for="random-font-toggle">
+                <span class="setting-symbol"><span>random font each prompt</span></span>
+                <input id="random-font-toggle" type="checkbox" class="toggle" />
+              </label>
+            </section>
+            <section class="settings-group">
+              <div class="settings-head">
+                <p class="eyebrow">missed symbols</p>
+                <p class="settings-copy">focus on recently missed symbols a bit more.</p>
+              </div>
+              <label class="setting-item setting-item-inline" for="missed-focus-toggle">
+                <span class="setting-symbol"><span>weight misses a bit more</span></span>
+                <input id="missed-focus-toggle" type="checkbox" class="toggle" />
+              </label>
+            </section>
+            <section id="case-settings" class="settings-group hidden">
+              <div class="settings-head">
+                <p class="eyebrow">letter case</p>
+                <p class="settings-copy">choose which letter case appears in drills.</p>
+              </div>
+              <div class="case-switch" role="group" aria-label="letter case">
+                <button type="button" class="case-option" data-case-mode="lower">lower</button>
+                <button type="button" class="case-option" data-case-mode="upper">upper</button>
+                <button type="button" class="case-option" data-case-mode="both">both</button>
+              </div>
+            </section>
+            <section id="cyrillic-variant-settings" class="settings-group hidden">
+              <div class="settings-head">
+                <p class="eyebrow">cyrillic variant</p>
+                <p class="settings-copy">different cyrillic languages use slightly different letters.</p>
+              </div>
+              <label class="duration-control" for="cyrillic-variant">
+                <span class="eyebrow">alphabet</span>
+                <select id="cyrillic-variant">
+                  <option value="russian">russian</option>
+                  <option value="ukrainian">ukrainian</option>
+                  <option value="belarusian">belarusian</option>
+                  <option value="bulgarian">bulgarian</option>
+                  <option value="serbian">serbian</option>
+                  <option value="macedonian">macedonian</option>
+                  <option value="all">all letters</option>
+                </select>
+              </label>
+            </section>
             <section class="settings-group">
               <div class="settings-head">
                 <p class="eyebrow">answer reveal</p>
@@ -177,58 +296,18 @@
             </section>
             <section class="settings-group">
               <div class="settings-head">
-                <p class="eyebrow">missed symbols</p>
-                <p class="settings-copy">focus on recently missed symbols a bit more.</p>
-              </div>
-              <label class="setting-item setting-item-inline" for="missed-focus-toggle">
-                <span class="setting-symbol"><span>weight misses a bit more</span></span>
-                <input id="missed-focus-toggle" type="checkbox" class="toggle" />
-              </label>
-            </section>
-            <section id="cyrillic-variant-settings" class="settings-group hidden">
-              <div class="settings-head">
-                <p class="eyebrow">cyrillic variant</p>
-                <p class="settings-copy">different cyrillic languages use slightly different letters.</p>
-              </div>
-              <label class="duration-control" for="cyrillic-variant">
-                <span class="eyebrow">alphabet</span>
-                <select id="cyrillic-variant">
-                  <option value="russian">russian</option>
-                  <option value="ukrainian">ukrainian</option>
-                  <option value="belarusian">belarusian</option>
-                  <option value="bulgarian">bulgarian</option>
-                  <option value="serbian">serbian</option>
-                  <option value="macedonian">macedonian</option>
-                  <option value="all">all letters</option>
-                </select>
-              </label>
-            </section>
-            <section id="case-settings" class="settings-group hidden">
-              <div class="settings-head">
-                <p class="eyebrow">letter case</p>
-                <p class="settings-copy">choose which letter case appears in drills.</p>
-              </div>
-              <div class="case-switch" role="group" aria-label="letter case">
-                <button type="button" class="case-option" data-case-mode="lower">lower</button>
-                <button type="button" class="case-option" data-case-mode="upper">upper</button>
-                <button type="button" class="case-option" data-case-mode="both">both</button>
-              </div>
-            </section>
-            <section id="prompt-font-settings" class="settings-group hidden">
-              <div class="settings-head">
-                <p class="eyebrow">prompt font</p>
-                <p id="prompt-font-copy" class="settings-copy">
-                  switch symbol styles to get used to different writing forms.
+                <p class="eyebrow">reset app</p>
+                <p class="settings-copy">
+                  force updates the app by clearing downloaded app data and resetting all settings to defaults. if you are
+                  offline after reset, offline mode will not work again until internet is reached.
                 </p>
               </div>
-              <label class="duration-control" for="prompt-font-select">
-                <span class="eyebrow">style</span>
-                <select id="prompt-font-select"></select>
-              </label>
-              <label class="setting-item setting-item-inline" for="random-font-toggle">
-                <span class="setting-symbol"><span>random font each prompt</span></span>
-                <input id="random-font-toggle" type="checkbox" class="toggle" />
-              </label>
+              <div class="settings-actions settings-actions-start">
+                <button id="manual-reset-button" class="text-button danger-button" type="button">
+                  reset app completely
+                </button>
+              </div>
+              <p id="manual-reset-status" class="settings-copy settings-status hidden" aria-live="polite"></p>
             </section>
             <section class="settings-group settings-group-symbols">
               <div class="settings-head">
@@ -242,34 +321,35 @@
               <div id="settings-list" class="settings-list"></div>
               <p id="settings-empty" class="settings-empty hidden">no active symbols. turn some back on to keep drilling.</p>
             </section>
-          </aside>
-        </section>
-      </main>
+          </div>
+        </div>
+      </dialog>
 
-      <footer class="site-footer" aria-label="site footer">
-        <span class="theme-prefix">current mode is</span>
-        <button id="theme-toggle" class="text-button" type="button" aria-label="toggle theme">
-          current mode is dark, switch it
-        </button>
-        <a href="https://github.com/drstuggels" target="_blank" rel="noreferrer">made by nuua</a>
-      </footer>
-    </div>
-
-	    <dialog id="cheat-dialog" class="cheat-dialog" aria-labelledby="cheat-title">
-	      <div class="dialog-card">
-	        <div class="dialog-head">
-	          <div>
-	            <p class="eyebrow">cheat sheet</p>
-	            <h2 id="cheat-title">cheat sheet</h2>
-	          </div>
-	        </div>
-	        <button id="close-cheat" class="text-button close-cheat-button" type="button" aria-label="close cheat sheet">
-	          close
-	        </button>
-	        <div id="cheat-grid" class="cheat-grid"></div>
-	      </div>
-	      <div id="cheat-tooltip" class="cheat-tooltip hidden" role="tooltip"></div>
-	    </dialog>
+      <dialog id="shortcuts-dialog" class="cheat-dialog settings-dialog shortcuts-dialog" aria-labelledby="shortcuts-title">
+        <div class="dialog-card">
+          <div class="dialog-head">
+            <div>
+              <p class="eyebrow">quick commands</p>
+              <h2 id="shortcuts-title">keyboard shortcuts</h2>
+            </div>
+          </div>
+          <button id="close-shortcuts" class="text-button close-cheat-button" type="button" aria-label="close keyboard shortcuts">
+            close
+          </button>
+          <p class="settings-copy shortcuts-intro">shortcuts only run when you are not typing in an input field.</p>
+          <div class="shortcuts-list" role="list" aria-label="keyboard shortcuts list">
+            <div class="shortcut-row" role="listitem"><kbd>enter</kbd><span>skip / give up / submit blank answer</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+s</kbd><span>toggle settings</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+c</kbd><span>toggle cheat sheet</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+h</kbd><span>toggle shortcuts modal</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+d</kbd><span>switch keyboard direction</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+m</kbd><span>toggle word mode / symbol mode</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+r</kbd><span>reset stats</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+l</kbd><span>go to language menu</span></div>
+            <div class="shortcut-row" role="listitem"><kbd>alt+t</kbd><span>toggle theme</span></div>
+          </div>
+        </div>
+      </dialog>
 	
 	    <script>
 	      if ("serviceWorker" in navigator) {

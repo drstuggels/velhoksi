@@ -209,6 +209,41 @@ p {
   text-align: left;
 }
 
+.shortcuts-list {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.shortcuts-intro {
+  margin-top: 12px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--soft-line);
+}
+
+.shortcut-row kbd {
+  min-width: 56px;
+  border: 1px solid var(--soft-line);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  color: var(--text);
+  text-align: center;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  padding: 4px 8px;
+}
+
+.shortcut-row span {
+  color: var(--text);
+}
+
 .update-banner {
   position: fixed;
   left: 32px;
@@ -463,6 +498,31 @@ input[type="text"] {
   -webkit-touch-callout: none;
 }
 
+.alphabet-picker.loading {
+  pointer-events: none;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.alphabet-loading-dots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0;
+}
+
+.alphabet-loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 76%, var(--line));
+  animation: loading-dot-pulse 900ms ease-in-out infinite both;
+  animation-delay: var(--dot-delay, 0ms);
+}
+
 .alphabet-button-label {
   display: block;
 }
@@ -553,7 +613,7 @@ input[type="text"] {
 }
 
 .floating-main.symbol-mode {
-  grid-template-rows: auto minmax(118px, 21vh) auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(98px, calc(21vh - 20px)) auto minmax(0, 1fr) auto;
 }
 
 .floating-stats {
@@ -571,23 +631,15 @@ input[type="text"] {
   box-shadow: none;
 }
 
-.floating-settings {
-  right: 5%;
-  top: 34%;
-  width: 18%;
-  min-width: 220px;
-  max-width: min(320px, 100%);
-  bottom: 8%;
+.settings-panel {
   display: grid;
   gap: 14px;
   align-content: start;
+  margin-top: 16px;
+  max-height: min(72vh, 760px);
   overflow: auto;
   overflow-x: hidden;
-  z-index: 2;
-  padding: 14px;
-  border: 1px solid var(--soft-line);
-  background: color-mix(in srgb, var(--panel-tone) 94%, transparent);
-  box-shadow: none;
+  padding-right: 6px;
 }
 
 .prompt-meta,
@@ -601,6 +653,11 @@ input[type="text"] {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.cheat-font-control {
+  min-width: 180px;
+  max-width: 240px;
 }
 
 .settings-head,
@@ -849,7 +906,7 @@ input[type="text"]::placeholder {
   border-bottom: 0;
 }
 
-.floating-settings .settings-group + .settings-group {
+.settings-panel .settings-group + .settings-group {
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid rgba(127, 127, 127, 0.28);
@@ -860,6 +917,10 @@ input[type="text"]::placeholder {
   justify-content: flex-end;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.settings-actions-start {
+  justify-content: flex-start;
 }
 
 .setting-item-inline {
@@ -875,9 +936,40 @@ input[type="text"]::placeholder {
   color: var(--muted);
 }
 
+.danger-button {
+  color: color-mix(in srgb, var(--feedback-soft) 74%, var(--text));
+}
+
+.danger-button:hover,
+.danger-button:focus-visible {
+  color: var(--feedback-soft);
+  transform: none;
+}
+
+.settings-status {
+  margin: 0;
+}
+
+.settings-status.status-success {
+  color: var(--success);
+}
+
+.settings-status.status-error {
+  color: var(--feedback-soft);
+}
+
 .case-switch {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--soft-line);
+  background: color-mix(in srgb, var(--surface-strong) 38%, transparent);
+  overflow: hidden;
+}
+
+.practice-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   border: 1px solid var(--soft-line);
   background: color-mix(in srgb, var(--surface-strong) 38%, transparent);
@@ -898,7 +990,25 @@ input[type="text"]::placeholder {
   transition: background-color 140ms ease, color 140ms ease;
 }
 
+.practice-mode-option {
+  appearance: none;
+  border: 0;
+  border-right: 1px solid var(--soft-line);
+  background: transparent;
+  color: var(--muted);
+  min-height: 42px;
+  padding: 0 10px;
+  font: inherit;
+  letter-spacing: -0.03em;
+  text-transform: lowercase;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
 .case-option:last-child {
+  border-right: 0;
+}
+
+.practice-mode-option:last-child {
   border-right: 0;
 }
 
@@ -907,8 +1017,19 @@ input[type="text"]::placeholder {
   color: var(--text);
 }
 
+.practice-mode-option.active {
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
 .case-option:hover,
 .case-option:focus-visible {
+  color: var(--text);
+  outline: none;
+}
+
+.practice-mode-option:hover,
+.practice-mode-option:focus-visible {
   color: var(--text);
   outline: none;
 }
@@ -1078,15 +1199,19 @@ input[type="text"]::placeholder {
   overflow: auto;
 }
 
+.settings-dialog {
+  max-width: min(760px, calc(100vw - 48px));
+}
+
 .cheat-dialog::backdrop {
   background: rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(8px);
 }
 
 .dialog-card {
-  border: 1px solid var(--soft-line);
+  border: 2px solid var(--line);
   background: var(--surface-strong);
-  box-shadow: none;
+  box-shadow: var(--block-shadow);
   padding: 24px;
   overflow: visible;
 }
@@ -1225,6 +1350,24 @@ input[type="text"]::placeholder {
 @media (hover: hover) and (pointer: fine) {
   .cheat-note-trigger::after {
     display: none;
+  }
+}
+
+@keyframes loading-dot-pulse {
+  from {
+    transform: scale(0.72);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alphabet-loading-dot {
+    animation: none;
+    opacity: 0.8;
   }
 }
 
@@ -1390,12 +1533,8 @@ input[type="text"]::placeholder {
     width: auto;
   }
 
-  .floating-settings {
-    right: 4%;
-    top: auto;
-    bottom: 8%;
-    width: min(380px, 42vw);
-    max-height: 32vh;
+  .settings-dialog {
+    max-width: min(760px, calc(100vw - 36px));
   }
 }
 
@@ -1562,7 +1701,7 @@ input[type="text"]::placeholder {
 
   .prompt-tools {
     display: grid;
-    grid-template-columns: repeat(3, max-content);
+    grid-template-columns: repeat(4, max-content);
     align-items: center;
     justify-content: start;
     gap: 0 20px;
@@ -1601,12 +1740,13 @@ input[type="text"]::placeholder {
     font-size: 1rem;
   }
 
-  .floating-settings {
-    order: 2;
-    width: 100%;
-    min-width: 0;
-    max-height: none;
-    overflow: visible;
+  .settings-dialog {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .settings-panel {
+    max-height: calc(100vh - 180px);
   }
 
   .settings-list {

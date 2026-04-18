@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
   cyrillicVariant: "velhoksi.cyrillicVariant",
   promptFontMap: "velhoksi.promptFontMap",
   randomFontMap: "velhoksi.randomFontMap",
+  practiceModeMap: "velhoksi.practiceModeMap",
 };
 
 const BASE_ALPHABETS = [
@@ -323,6 +324,33 @@ function createMusicAlphabet() {
 const ALPHABETS = [...normalizeBaseAlphabets(BASE_ALPHABETS), createMusicAlphabet()];
 
 const alphabetById = Object.fromEntries(ALPHABETS.map((alphabet) => [alphabet.id, alphabet]));
+const CYRILLIC_VARIANTS = ["russian", "ukrainian", "belarusian", "bulgarian", "serbian", "macedonian"];
+
+const PRACTICE_MODE_SYMBOLS = "symbols";
+const PRACTICE_MODE_WORDS = "words";
+
+const EMPTY_WORD_LISTS = {
+  version: "empty",
+  byAlphabet: {
+    hiragana: [],
+    katakana: [],
+    armenian: [],
+    arabic: [],
+    hebrew: [],
+    syriac: [],
+    cherokee: [],
+    greek: [],
+    georgian: [],
+    cyrillic: {
+      russian: [],
+      ukrainian: [],
+      belarusian: [],
+      bulgarian: [],
+      serbian: [],
+      macedonian: [],
+    },
+  },
+};
 
 const FONT_OPTION_DEFAULT_ID = "default";
 
@@ -469,6 +497,7 @@ const SYMBOL_NOTES = {
 const state = {
   theme: loadTheme(),
   selectedAlphabet: localStorage.getItem(STORAGE_KEYS.alphabet) || null,
+  bootLoading: true,
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
   cyrillicVariant: loadCyrillicVariant(),
   enabledMap: loadEnabledMap(),
@@ -481,11 +510,12 @@ const state = {
   feedbackMode: loadFeedbackMode(),
   promptFontMap: loadPromptFontMap(),
   randomFontMap: loadRandomFontMap(),
+  practiceModeMap: loadPracticeModeMap(),
+  wordLists: EMPTY_WORD_LISTS,
   currentPromptId: null,
   currentPromptFontId: FONT_OPTION_DEFAULT_ID,
   lastPromptId: null,
   promptQueue: [],
-  settingsOpen: false,
   feedbackTimeoutId: null,
   successFeedbackTimeoutId: null,
   awaitingManualContinue: false,
@@ -501,14 +531,22 @@ const refs = {
   gameView: document.querySelector("#game-view"),
   switchAlphabet: document.querySelector("#switch-alphabet"),
   themeToggle: document.querySelector("#theme-toggle"),
+  shortcutsToggle: document.querySelector("#shortcuts-toggle"),
+  shortcutsDialog: document.querySelector("#shortcuts-dialog"),
+  closeShortcuts: document.querySelector("#close-shortcuts"),
   themeColorMeta: document.querySelector("#theme-color-meta"),
   alphabetTitle: document.querySelector("#alphabet-title"),
   alphabetPicker: document.querySelector("#alphabet-picker"),
   directionToggle: document.querySelector("#direction-toggle"),
   settingsToggle: document.querySelector("#settings-toggle"),
+  settingsDialog: document.querySelector("#settings-dialog"),
+  closeSettings: document.querySelector("#close-settings"),
   settingsPanel: document.querySelector("#settings-panel"),
   cyrillicVariantSettings: document.querySelector("#cyrillic-variant-settings"),
   cyrillicVariant: document.querySelector("#cyrillic-variant"),
+  practiceModeSettings: document.querySelector("#practice-mode-settings"),
+  practiceModeCopy: document.querySelector("#practice-mode-copy"),
+  practiceModeOptions: [...document.querySelectorAll(".practice-mode-option")],
   settingsList: document.querySelector("#settings-list"),
   settingsEmpty: document.querySelector("#settings-empty"),
   allOnButton: document.querySelector("#all-on-button"),
@@ -522,12 +560,16 @@ const refs = {
   promptFontCopy: document.querySelector("#prompt-font-copy"),
   promptFontSelect: document.querySelector("#prompt-font-select"),
   randomFontToggle: document.querySelector("#random-font-toggle"),
+  manualResetButton: document.querySelector("#manual-reset-button"),
+  manualResetStatus: document.querySelector("#manual-reset-status"),
   feedbackDuration: document.querySelector("#feedback-duration"),
   feedbackMode: document.querySelector("#feedback-mode"),
   cheatToggle: document.querySelector("#cheat-toggle"),
   cheatDialog: document.querySelector("#cheat-dialog"),
   closeCheat: document.querySelector("#close-cheat"),
   cheatTitle: document.querySelector("#cheat-title"),
+  cheatFontControl: document.querySelector("#cheat-font-control"),
+  cheatFontSelect: document.querySelector("#cheat-font-select"),
   cheatGrid: document.querySelector("#cheat-grid"),
   cheatTooltip: document.querySelector("#cheat-tooltip"),
   promptCard: document.querySelector("#prompt-card"),
@@ -551,11 +593,15 @@ const MUSIC_RENDER_VERSION = 3;
 
 init();
 
-function init() {
+async function init() {
   applyTheme(state.theme);
+  render();
+  state.wordLists = await loadWordLists();
   ensureEnabledMapShape();
   ensureMusicPitchRangeMapShape();
   ensurePromptFontMapsShape();
+  ensurePracticeModeMapShape();
+  state.bootLoading = false;
   bindEvents();
   render();
 }
@@ -619,7 +665,7 @@ function bindEvents() {
 
   refs.directionToggle.addEventListener("click", () => {
     const alphabet = getSelectedAlphabet();
-    if (!alphabet || alphabet.oneWay) {
+    if (!alphabet || alphabet.oneWay || isWordPracticeModeForAlphabet(alphabet)) {
       return;
     }
     state.direction =
@@ -631,38 +677,36 @@ function bindEvents() {
   });
 
   refs.settingsToggle.addEventListener("click", () => {
-    if (!getSelectedAlphabet()) {
-      return;
-    }
-    state.settingsOpen = !state.settingsOpen;
+    toggleSettingsDialog();
+  });
+
+  refs.closeSettings?.addEventListener("click", () => {
+    refs.settingsDialog?.close();
     render();
-    if (state.settingsOpen) {
-      const shouldAutoScroll = window.matchMedia?.("(hover: none) and (pointer: coarse)")?.matches;
-      if (shouldAutoScroll) {
-        window.requestAnimationFrame(() => {
-          refs.settingsPanel.scrollTop = 0;
-          refs.settingsPanel.scrollIntoView({ behavior: "auto", block: "start" });
-        });
-      } else {
-        refs.settingsPanel.scrollTop = 0;
-      }
+  });
+
+  refs.settingsDialog?.addEventListener("click", (event) => {
+    const card = refs.settingsDialog.querySelector(".dialog-card");
+    if (!card?.contains(event.target)) {
+      refs.settingsDialog.close();
+      render();
     }
+  });
+
+  refs.settingsDialog?.addEventListener("close", () => {
+    render();
   });
 
   refs.cheatToggle.addEventListener("click", () => {
-    if (!getSelectedAlphabet()) {
-      return;
-    }
-    if (typeof refs.cheatDialog.showModal === "function") {
-      refs.cheatDialog.showModal();
-    } else {
-      refs.cheatDialog.setAttribute("open", "open");
-    }
-    renderCheatSheet();
-    scheduleMusicPreviewHydration();
+    toggleCheatDialog();
+  });
+
+  refs.shortcutsToggle?.addEventListener("click", () => {
+    toggleShortcutsDialog();
   });
 
   refs.closeCheat.addEventListener("click", () => refs.cheatDialog.close());
+  refs.closeShortcuts?.addEventListener("click", () => refs.shortcutsDialog?.close());
 
   const isFinePointer = window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
 
@@ -802,6 +846,18 @@ function bindEvents() {
     hideCheatTooltip();
   });
 
+  refs.shortcutsDialog?.addEventListener("click", (event) => {
+    const card = refs.shortcutsDialog.querySelector(".dialog-card");
+    if (!card?.contains(event.target)) {
+      refs.shortcutsDialog.close();
+      render();
+    }
+  });
+
+  refs.shortcutsDialog?.addEventListener("close", () => {
+    render();
+  });
+
   refs.latinForm.addEventListener("submit", (event) => {
     event.preventDefault();
     if (state.awaitingManualContinue) {
@@ -815,7 +871,13 @@ function bindEvents() {
     if (state.awaitingManualContinue || state.feedbackTimeoutId !== null) {
       return;
     }
-    submitLatinAnswer(false);
+    // Defer auto-submit to the next frame so the latest keystroke is fully committed.
+    window.requestAnimationFrame(() => {
+      if (state.awaitingManualContinue || state.feedbackTimeoutId !== null) {
+        return;
+      }
+      submitLatinAnswer(false);
+    });
   });
 
   refs.resetStats.addEventListener("click", () => {
@@ -913,6 +975,53 @@ function bindEvents() {
     });
   }
 
+  if (refs.cheatFontSelect) {
+    refs.cheatFontSelect.addEventListener("change", () => {
+      const alphabet = getSelectedAlphabet();
+      if (!alphabet || !supportsPromptFontSettings(alphabet)) {
+        return;
+      }
+      const options = getPromptFontOptionsForAlphabet(alphabet);
+      const nextId = refs.cheatFontSelect.value;
+      if (!options.some((option) => option.id === nextId)) {
+        return;
+      }
+      state.promptFontMap[alphabet.id] = nextId;
+      savePromptFontMap();
+      clearPendingWrongState();
+      reshufflePromptCollection();
+      setFeedback("");
+      render();
+    });
+  }
+
+  refs.manualResetButton?.addEventListener("click", () => {
+    runManualResetFlow();
+  });
+
+  for (const button of refs.practiceModeOptions) {
+    button.addEventListener("click", () => {
+      const alphabet = getSelectedAlphabet();
+      const nextMode = button.dataset.practiceMode;
+      if (!alphabet || !isValidPracticeMode(nextMode)) {
+        return;
+      }
+      if (nextMode === PRACTICE_MODE_WORDS && !isWordModeSupported(alphabet)) {
+        return;
+      }
+      state.practiceModeMap[alphabet.id] = nextMode;
+      savePracticeModeMap();
+      if (nextMode === PRACTICE_MODE_WORDS && state.direction !== "foreignToLatin") {
+        state.direction = "foreignToLatin";
+        localStorage.setItem(STORAGE_KEYS.direction, state.direction);
+      }
+      clearPendingWrongState();
+      reshufflePromptCollection();
+      setFeedback("");
+      render();
+    });
+  }
+
   for (const button of refs.caseOptions) {
     button.addEventListener("click", () => {
       const alphabet = getSelectedAlphabet();
@@ -934,13 +1043,29 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" || refs.cheatDialog.open) {
+    if (handleGlobalShortcut(event)) {
+      return;
+    }
+    if (event.key !== "Enter" || isAnyDialogOpen()) {
+      return;
+    }
+    if (isTypingTarget(event.target)) {
       return;
     }
 
     if (state.awaitingManualContinue) {
       event.preventDefault();
       continueAfterReveal();
+      return;
+    }
+
+    if (state.direction === "foreignToLatin" && state.feedbackTimeoutId === null) {
+      const prompt = getCurrentPrompt();
+      if (!prompt) {
+        return;
+      }
+      event.preventDefault();
+      submitLatinAnswer(true);
       return;
     }
 
@@ -959,13 +1084,18 @@ function goToStartMenu() {
   if (refs.cheatDialog?.open) {
     refs.cheatDialog.close();
   }
+  if (refs.settingsDialog?.open) {
+    refs.settingsDialog.close();
+  }
+  if (refs.shortcutsDialog?.open) {
+    refs.shortcutsDialog.close();
+  }
   clearPendingWrongState();
   clearSuccessFeedbackTimer();
   state.selectedAlphabet = null;
   state.currentPromptId = null;
   state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
   state.lastPromptId = null;
-  state.settingsOpen = false;
   localStorage.removeItem(STORAGE_KEYS.alphabet);
   setFeedback("");
   render();
@@ -973,9 +1103,46 @@ function goToStartMenu() {
 }
 
 function render() {
+  if (state.bootLoading) {
+    const selectedAlphabet = getSelectedAlphabet();
+    if (selectedAlphabet) {
+      refs.pickerView.classList.add("hidden");
+      refs.gameView.classList.remove("hidden");
+      refs.switchAlphabet.classList.remove("hidden");
+      refs.alphabetTitle.textContent = `${selectedAlphabet.label},`;
+      refs.cheatToggle.disabled = true;
+      refs.settingsToggle.disabled = true;
+      refs.directionToggle.disabled = true;
+      refs.promptCard.classList.remove("success-flash", "failure-flash", "flash");
+      refs.promptValue.classList.remove("graphic", "symbol-font");
+      refs.promptValue.style.removeProperty("--prompt-symbol-font");
+      refs.promptValue.textContent = "...";
+      refs.promptHint.textContent = "loading alphabet data";
+      refs.latinForm.classList.add("hidden");
+      refs.symbolAnswer.classList.add("hidden");
+      refs.continueButton.classList.add("hidden");
+      refs.feedback.textContent = "";
+      renderStats();
+      return;
+    }
+
+    refs.pickerView.classList.remove("hidden");
+    refs.gameView.classList.add("hidden");
+    refs.switchAlphabet.classList.add("hidden");
+    refs.alphabetTitle.textContent = "loading,";
+    refs.cheatToggle.disabled = true;
+    refs.settingsToggle.disabled = true;
+    refs.directionToggle.disabled = true;
+    refs.shortcutsToggle?.setAttribute("aria-expanded", String(Boolean(refs.shortcutsDialog?.open)));
+    renderAlphabetPicker();
+    return;
+  }
+
   const alphabet = getSelectedAlphabet();
   const caseMode = alphabet ? getCaseModeForAlphabet(alphabet) : "lower";
-  if (alphabet?.oneWay && state.direction !== "foreignToLatin") {
+  const practiceMode = alphabet ? getPracticeModeForAlphabet(alphabet) : PRACTICE_MODE_SYMBOLS;
+  const enforceForeignToLatin = Boolean(alphabet?.oneWay || practiceMode === PRACTICE_MODE_WORDS);
+  if (enforceForeignToLatin && state.direction !== "foreignToLatin") {
     state.direction = "foreignToLatin";
     localStorage.setItem(STORAGE_KEYS.direction, state.direction);
   }
@@ -983,15 +1150,18 @@ function render() {
   refs.gameView.classList.toggle("hidden", !alphabet);
   refs.switchAlphabet.classList.toggle("hidden", !alphabet);
   refs.alphabetTitle.textContent = alphabet ? `${alphabet.label},` : `nothing,`;
-  refs.settingsPanel.classList.toggle("hidden", !alphabet || !state.settingsOpen);
+  if (!alphabet && refs.settingsDialog?.open) {
+    refs.settingsDialog.close();
+  }
   refs.cyrillicVariantSettings?.classList.toggle("hidden", alphabet?.id !== "cyrillic");
   if (alphabet?.id === "cyrillic" && refs.cyrillicVariant) {
     refs.cyrillicVariant.value = state.cyrillicVariant;
   }
-  refs.settingsToggle.setAttribute("aria-expanded", String(Boolean(alphabet && state.settingsOpen)));
+  refs.settingsToggle.setAttribute("aria-expanded", String(Boolean(alphabet && refs.settingsDialog?.open)));
   refs.cheatToggle.disabled = !alphabet;
   refs.settingsToggle.disabled = !alphabet;
-  refs.directionToggle.disabled = !alphabet || Boolean(alphabet?.oneWay);
+  refs.directionToggle.disabled = !alphabet || enforceForeignToLatin;
+  refs.shortcutsToggle?.setAttribute("aria-expanded", String(Boolean(refs.shortcutsDialog?.open)));
   refs.feedbackDuration.value = String(state.feedbackDuration);
   refs.feedbackMode.value = state.feedbackMode;
   refs.feedbackDurationControl.classList.toggle("hidden", state.feedbackMode === "manual");
@@ -1006,15 +1176,17 @@ function render() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   }
+  renderPracticeModeSettings(alphabet);
   renderPromptFontSettings(alphabet);
   refs.continueButton.classList.toggle("hidden", !state.awaitingManualContinue);
   refs.latinInput.placeholder = getLatinInputPlaceholder(alphabet);
+  refs.latinInput.maxLength = getLatinInputMaxLength(alphabet);
   renderAlphabetPicker();
   renderStats();
   renderSettings();
   renderCheatSheet();
 
-  if (alphabet && !getCurrentPrompt()) {
+  if (alphabet && state.currentPromptId === null && !getCurrentPrompt()) {
     nextPrompt();
   }
 
@@ -1023,10 +1195,47 @@ function render() {
 }
 
 function getLatinInputPlaceholder(alphabet) {
+  if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
+    return "type the latin transliteration";
+  }
   if (alphabet?.id === "music-notes") {
     return "type the note name (c, c#, db, bb)";
   }
   return "type the latin reading";
+}
+
+function getLatinInputMaxLength(alphabet) {
+  if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
+    return 48;
+  }
+  return alphabet?.id === "music-notes" ? 6 : 6;
+}
+
+function renderPracticeModeSettings(alphabet) {
+  if (!refs.practiceModeSettings || !refs.practiceModeCopy || !Array.isArray(refs.practiceModeOptions)) {
+    return;
+  }
+
+  const show = Boolean(alphabet && !alphabet.oneWay);
+  refs.practiceModeSettings.classList.toggle("hidden", !show);
+  if (!show) {
+    return;
+  }
+
+  const supportsWords = isWordModeSupported(alphabet);
+  const currentMode = getPracticeModeForAlphabet(alphabet);
+  refs.practiceModeCopy.textContent = supportsWords
+    ? "switch between symbol drills and word drills."
+    : "word mode is not available for this alphabet.";
+
+  for (const button of refs.practiceModeOptions) {
+    const mode = button.dataset.practiceMode;
+    const active = mode === currentMode;
+    const disabled = mode === PRACTICE_MODE_WORDS && !supportsWords;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+    button.disabled = disabled;
+  }
 }
 
 function getMusicPitchRangeForAlphabet(alphabet) {
@@ -1135,10 +1344,35 @@ function renderPromptFontSettings(alphabet) {
   refs.promptFontSelect.value = getPromptFontIdForAlphabet(alphabet);
   const randomEnabled = getRandomFontForAlphabet(alphabet);
   refs.randomFontToggle.checked = randomEnabled;
-  refs.promptFontSelect.disabled = randomEnabled;
+  refs.promptFontSelect.disabled = false;
   refs.promptFontCopy.textContent = randomEnabled
-    ? "random mode: prompt changes font every card. cheat sheet stays on default."
+    ? "selected style applies to cheat sheet. random mode changes prompt font every card."
     : "switch symbol styles to get used to different writing forms.";
+}
+
+function renderCheatFontControl(alphabet) {
+  if (!refs.cheatFontControl || !refs.cheatFontSelect) {
+    return;
+  }
+
+  const show = supportsPromptFontSettings(alphabet);
+  refs.cheatFontControl.classList.toggle("hidden", !show);
+  if (!show) {
+    refs.cheatFontSelect.innerHTML = "";
+    refs.cheatFontSelect.disabled = true;
+    return;
+  }
+
+  refs.cheatFontSelect.disabled = false;
+  refs.cheatFontSelect.innerHTML = "";
+  const options = getPromptFontOptionsForAlphabet(alphabet);
+  for (const option of options) {
+    const node = document.createElement("option");
+    node.value = option.id;
+    node.textContent = option.label;
+    refs.cheatFontSelect.appendChild(node);
+  }
+  refs.cheatFontSelect.value = getPromptFontIdForAlphabet(alphabet);
 }
 
 function applyPromptFont(prompt, alphabet, useGraphic) {
@@ -1173,10 +1407,6 @@ function applyCheatSheetFont(alphabet) {
     return;
   }
 
-  if (getRandomFontForAlphabet(alphabet)) {
-    return;
-  }
-
   const option = getPromptFontOptionById(alphabet, getPromptFontIdForAlphabet(alphabet));
   if (!option?.family) {
     return;
@@ -1184,8 +1414,84 @@ function applyCheatSheetFont(alphabet) {
   refs.cheatGrid.style.setProperty("--cheat-symbol-font", option.family);
 }
 
+function setManualResetStatus(message, tone) {
+  if (!refs.manualResetStatus) {
+    return;
+  }
+  refs.manualResetStatus.textContent = message || "";
+  refs.manualResetStatus.classList.remove("hidden", "status-error", "status-success");
+  if (!message) {
+    refs.manualResetStatus.classList.add("hidden");
+    return;
+  }
+  if (tone === "error") {
+    refs.manualResetStatus.classList.add("status-error");
+  } else if (tone === "success") {
+    refs.manualResetStatus.classList.add("status-success");
+  }
+}
+
+async function runManualResetFlow() {
+  const trigger = refs.manualResetButton;
+  if (!trigger) {
+    return;
+  }
+
+  trigger.disabled = true;
+  setManualResetStatus("resetting app data and caches...", "");
+
+  try {
+    if ("serviceWorker" in navigator && typeof navigator.serviceWorker.getRegistrations === "function") {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations.map((registration) =>
+          registration.unregister().catch(() => false)
+        )
+      );
+    }
+
+    if ("caches" in window && typeof caches.keys === "function") {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key).catch(() => false)));
+    }
+
+    localStorage.clear();
+    state.theme = "dark";
+    setManualResetStatus("reset complete. reloading...", "success");
+    window.setTimeout(() => {
+      window.location.reload();
+    }, 220);
+  } catch {
+    setManualResetStatus("reset failed. try again while online.", "error");
+    trigger.disabled = false;
+  }
+}
+
 function renderAlphabetPicker() {
   refs.alphabetPicker.innerHTML = "";
+  refs.alphabetPicker.classList.toggle("loading", state.bootLoading);
+
+  if (state.bootLoading) {
+    const loading = document.createElement("div");
+    loading.className = "alphabet-loading-dots";
+    loading.setAttribute("role", "status");
+    loading.setAttribute("aria-live", "polite");
+
+    const label = document.createElement("span");
+    label.className = "visually-hidden";
+    label.textContent = "loading alphabets";
+
+    for (let index = 0; index < 5; index += 1) {
+      const dot = document.createElement("span");
+      dot.className = "alphabet-loading-dot";
+      dot.setAttribute("aria-hidden", "true");
+      dot.style.setProperty("--dot-delay", `${index * 120}ms`);
+      loading.appendChild(dot);
+    }
+    loading.appendChild(label);
+    refs.alphabetPicker.appendChild(loading);
+    return;
+  }
 
   for (const alphabet of ALPHABETS) {
     const button = document.createElement("button");
@@ -1215,7 +1521,6 @@ function renderAlphabetPicker() {
       state.currentPromptId = null;
       state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
       state.lastPromptId = null;
-      state.settingsOpen = false;
       setFeedback("");
       render();
     });
@@ -1226,16 +1531,25 @@ function renderAlphabetPicker() {
 function renderPrompt() {
   const prompt = getCurrentPrompt();
   const alphabet = getSelectedAlphabet();
+  const isWordMode = Boolean(alphabet && isWordPracticeModeForAlphabet(alphabet));
   const sourceLabel = alphabet ? alphabet.label : "foreign";
   refs.directionToggle.textContent =
-    state.direction === "foreignToLatin" ? `${sourceLabel} -> latin` : `latin -> ${sourceLabel}`;
+    state.direction === "foreignToLatin"
+      ? isWordMode
+        ? `${sourceLabel} words -> latin`
+        : `${sourceLabel} -> latin`
+      : `latin -> ${sourceLabel}`;
 
   if (!prompt) {
     refs.promptCard.classList.remove("success-flash", "failure-flash");
     refs.promptValue.textContent = "-";
     refs.promptValue.classList.remove("graphic");
     applyPromptFont(null, alphabet, false);
-    refs.promptHint.textContent = getSelectedAlphabet() ? "no symbols enabled" : "choose an alphabet";
+    refs.promptHint.textContent = getSelectedAlphabet()
+      ? isWordMode
+        ? "no words available with current settings"
+        : "no symbols enabled"
+      : "choose an alphabet";
     refs.promptCard.dataset.promptId = "";
     return;
   }
@@ -1265,16 +1579,19 @@ function renderPrompt() {
 
 function renderAnswerArea() {
   const prompt = getCurrentPrompt();
-  const useLatinInput = state.direction === "foreignToLatin";
+  const alphabet = getSelectedAlphabet();
+  const forceLatinInput = Boolean(alphabet && isWordPracticeModeForAlphabet(alphabet));
+  const useLatinInput = forceLatinInput || state.direction === "foreignToLatin";
   const showManualContinue = useLatinInput && state.awaitingManualContinue;
 
   const mainPanel = refs.gameView.querySelector(".floating-main");
   mainPanel?.classList.toggle("latin-mode", useLatinInput);
   mainPanel?.classList.toggle("symbol-mode", !useLatinInput);
 
-  refs.latinInput.placeholder = getLatinInputPlaceholder(getSelectedAlphabet());
+  refs.latinInput.placeholder = getLatinInputPlaceholder(alphabet);
+  refs.latinInput.maxLength = getLatinInputMaxLength(alphabet);
   refs.latinForm.classList.toggle("hidden", !useLatinInput || (!prompt && !showManualContinue));
-  refs.symbolAnswer.classList.toggle("hidden", useLatinInput || !prompt);
+  refs.symbolAnswer.classList.toggle("hidden", useLatinInput || !prompt || forceLatinInput);
 
   if (!prompt && !showManualContinue) {
     refs.symbolGrid.innerHTML = "";
@@ -1332,11 +1649,12 @@ function renderSymbolGrid() {
 function renderSettings() {
   const alphabet = getSelectedAlphabet();
   refs.settingsList.innerHTML = "";
+  const settingsOpen = Boolean(refs.settingsDialog?.open || refs.settingsDialog?.hasAttribute("open"));
 
   if (!alphabet) {
     return;
   }
-  if (alphabet.id === "music-notes" && !state.settingsOpen) {
+  if (alphabet.id === "music-notes" && !settingsOpen) {
     return;
   }
 
@@ -1454,12 +1772,14 @@ function renderCheatSheet() {
 
   if (!alphabet) {
     refs.cheatGrid.innerHTML = "";
+    renderCheatFontControl(null);
     applyCheatSheetFont(null);
     refs.cheatTitle.textContent = "cheat sheet";
     return;
   }
 
   refs.cheatTitle.textContent = `${alphabet.label} cheat sheet`;
+  renderCheatFontControl(alphabet);
 
   const cheatOpen = Boolean(refs.cheatDialog?.open || refs.cheatDialog?.hasAttribute("open"));
   if (alphabet.id === "music-notes" && !cheatOpen) {
@@ -1491,6 +1811,193 @@ function renderCheatSheet() {
   }
 
   scheduleMusicPreviewHydration();
+}
+
+function isAnyDialogOpen() {
+  return Boolean(refs.cheatDialog?.open || refs.settingsDialog?.open || refs.shortcutsDialog?.open);
+}
+
+function isTypingTarget(target) {
+  if (!target || !(target instanceof Element)) {
+    return false;
+  }
+  if (target.closest("input, textarea, select")) {
+    return true;
+  }
+  const editable = target.closest("[contenteditable]");
+  return Boolean(editable && editable.getAttribute("contenteditable") !== "false");
+}
+
+function toggleDialog(dialog) {
+  if (!dialog) {
+    return false;
+  }
+  if (dialog.open) {
+    dialog.close();
+    return true;
+  }
+  closeOtherDialogs(dialog);
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+  } else {
+    dialog.setAttribute("open", "open");
+  }
+  return true;
+}
+
+function closeOtherDialogs(exceptDialog) {
+  const dialogs = [refs.cheatDialog, refs.settingsDialog, refs.shortcutsDialog];
+  for (const dialog of dialogs) {
+    if (!dialog || dialog === exceptDialog) {
+      continue;
+    }
+    if (dialog.open) {
+      dialog.close();
+    }
+  }
+}
+
+function toggleSettingsDialog() {
+  if (!getSelectedAlphabet()) {
+    return;
+  }
+  if (toggleDialog(refs.settingsDialog)) {
+    render();
+  }
+}
+
+function toggleCheatDialog() {
+  if (!getSelectedAlphabet()) {
+    return;
+  }
+  const wasOpen = Boolean(refs.cheatDialog?.open);
+  if (!toggleDialog(refs.cheatDialog)) {
+    return;
+  }
+  if (!wasOpen) {
+    renderCheatSheet();
+    scheduleMusicPreviewHydration();
+  }
+  render();
+}
+
+function toggleShortcutsDialog() {
+  if (toggleDialog(refs.shortcutsDialog)) {
+    render();
+  }
+}
+
+function togglePracticeModeShortcut() {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet || alphabet.oneWay) {
+    return;
+  }
+  const currentMode = getPracticeModeForAlphabet(alphabet);
+  const supportsWords = isWordModeSupported(alphabet);
+  let nextMode = PRACTICE_MODE_SYMBOLS;
+  if (supportsWords) {
+    nextMode = currentMode === PRACTICE_MODE_WORDS ? PRACTICE_MODE_SYMBOLS : PRACTICE_MODE_WORDS;
+  }
+  if (nextMode === currentMode) {
+    return;
+  }
+  state.practiceModeMap[alphabet.id] = nextMode;
+  savePracticeModeMap();
+  if (nextMode === PRACTICE_MODE_WORDS && state.direction !== "foreignToLatin") {
+    state.direction = "foreignToLatin";
+    localStorage.setItem(STORAGE_KEYS.direction, state.direction);
+  }
+  clearPendingWrongState();
+  reshufflePromptCollection();
+  setFeedback("");
+  render();
+}
+
+function toggleDirectionShortcut() {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet || alphabet.oneWay || isWordPracticeModeForAlphabet(alphabet)) {
+    return;
+  }
+  state.direction =
+    state.direction === "foreignToLatin" ? "latinToForeign" : "foreignToLatin";
+  localStorage.setItem(STORAGE_KEYS.direction, state.direction);
+  reshufflePromptCollection();
+  setFeedback("");
+  render();
+}
+
+function handleGlobalShortcut(event) {
+  if (event.defaultPrevented) {
+    return false;
+  }
+
+  const hasAltLikeModifier = Boolean(event.altKey || event.getModifierState?.("AltGraph"));
+  if (!hasAltLikeModifier) {
+    return false;
+  }
+
+  const code = String(event.code || "");
+  const isShortcutsToggle = code === "KeyH";
+
+  if (isShortcutsToggle) {
+    event.preventDefault();
+    toggleShortcutsDialog();
+    return true;
+  }
+
+  if (event.shiftKey) {
+    return false;
+  }
+
+  if (code === "KeyS") {
+    event.preventDefault();
+    toggleSettingsDialog();
+    return true;
+  }
+  if (code === "KeyC") {
+    event.preventDefault();
+    toggleCheatDialog();
+    return true;
+  }
+  if (code === "KeyD") {
+    event.preventDefault();
+    toggleDirectionShortcut();
+    return true;
+  }
+  if (code === "KeyM") {
+    event.preventDefault();
+    togglePracticeModeShortcut();
+    return true;
+  }
+  if (code === "KeyR") {
+    if (!getSelectedAlphabet()) {
+      return false;
+    }
+    event.preventDefault();
+    resetStatsState();
+    reshufflePromptCollection();
+    renderStats();
+    setFeedback("stats reset.", "success");
+    render();
+    return true;
+  }
+  if (code === "KeyL") {
+    if (!getSelectedAlphabet()) {
+      return false;
+    }
+    event.preventDefault();
+    goToStartMenu();
+    return true;
+  }
+  if (code === "KeyT") {
+    event.preventDefault();
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    saveTheme();
+    applyTheme(state.theme);
+    return true;
+  }
+
+  return false;
 }
 
 function getCheatSheetMarkup(symbol, alphabet, caseMode) {
@@ -1638,11 +2145,96 @@ function getEnabledSymbols() {
 }
 
 function getPromptPool() {
+  const alphabet = getSelectedAlphabet();
+  if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
+    return getCaseAwareSymbols(getEnabledWords());
+  }
   return getCaseAwareSymbols(getEnabledSymbols());
 }
 
 function getAnswerSymbols() {
+  const alphabet = getSelectedAlphabet();
+  if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
+    return [];
+  }
   return getCaseAwareSymbols(getEnabledSymbols());
+}
+
+function getEnabledWords() {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet || !isWordPracticeModeForAlphabet(alphabet)) {
+    return [];
+  }
+
+  const rows = getWordRowsForAlphabet(alphabet);
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return [];
+  }
+
+  const enabledSymbolIds = new Set(state.enabledMap[alphabet.id] || []);
+  const enabledLetters = new Set(
+    alphabet.symbols
+      .filter((symbol) => enabledSymbolIds.has(symbol.id))
+      .map((symbol) => symbol.foreign)
+  );
+
+  return rows
+    .filter((row) => {
+      const foreign = String(row.foreign || "");
+      if (!foreign) {
+        return false;
+      }
+      for (const ch of foreign) {
+        if (!enabledLetters.has(ch)) {
+          return false;
+        }
+      }
+      return true;
+    })
+    .map((row) => {
+      const foreign = String(row.foreign || "");
+      const source = String(row.source || "");
+      const idSource = source.replace(/[^a-z0-9-]/gi, "-");
+      const idForeign = foreign.replace(/\s+/g, "");
+      const baseId = `word:${alphabet.id}:${idSource}:${idForeign}`;
+      return {
+        id: baseId,
+        baseId,
+        foreign,
+        latin: String(row.latin || ""),
+        source,
+      };
+    });
+}
+
+function getWordRowsForAlphabet(alphabet) {
+  if (!alphabet) {
+    return [];
+  }
+  const byAlphabet = state.wordLists?.byAlphabet || {};
+
+  if (alphabet.id === "cyrillic") {
+    const cyr = byAlphabet.cyrillic || {};
+    if (state.cyrillicVariant === "all") {
+      const merged = [];
+      const seen = new Set();
+      for (const variant of CYRILLIC_VARIANTS) {
+        const rows = Array.isArray(cyr[variant]) ? cyr[variant] : [];
+        for (const row of rows) {
+          const foreign = String(row?.foreign || "");
+          if (!foreign || seen.has(foreign)) {
+            continue;
+          }
+          seen.add(foreign);
+          merged.push(row);
+        }
+      }
+      return merged;
+    }
+    return Array.isArray(cyr[state.cyrillicVariant]) ? cyr[state.cyrillicVariant] : [];
+  }
+
+  return Array.isArray(byAlphabet[alphabet.id]) ? byAlphabet[alphabet.id] : [];
 }
 
 function getCaseAwareSymbols(symbols) {
@@ -1699,6 +2291,40 @@ function getCaseModeForAlphabet(alphabet) {
 
 function isValidCaseMode(value) {
   return value === "lower" || value === "upper" || value === "both";
+}
+
+function isValidPracticeMode(value) {
+  return value === PRACTICE_MODE_SYMBOLS || value === PRACTICE_MODE_WORDS;
+}
+
+function isWordModeSupported(alphabet) {
+  if (!alphabet) {
+    return false;
+  }
+  if (alphabet.id === "music-notes" || alphabet.id === "hangul") {
+    return false;
+  }
+  return getWordRowsForAlphabet(alphabet).length > 0;
+}
+
+function getPracticeModeForAlphabet(alphabet) {
+  if (!alphabet) {
+    return PRACTICE_MODE_SYMBOLS;
+  }
+  const stored = state.practiceModeMap?.[alphabet.id];
+  if (stored === PRACTICE_MODE_WORDS && isWordModeSupported(alphabet)) {
+    return PRACTICE_MODE_WORDS;
+  }
+  return PRACTICE_MODE_SYMBOLS;
+}
+
+function isWordPracticeModeForAlphabet(alphabet) {
+  return getPracticeModeForAlphabet(alphabet) === PRACTICE_MODE_WORDS;
+}
+
+function getCurrentPracticeModeNamespace() {
+  const alphabet = getSelectedAlphabet();
+  return isWordPracticeModeForAlphabet(alphabet) ? PRACTICE_MODE_WORDS : PRACTICE_MODE_SYMBOLS;
 }
 
 function toUpperVariant(value) {
@@ -1982,7 +2608,8 @@ function scheduleMusicPreviewHydration() {
 
   // Only hydrate when the relevant UI is visible; rendering dozens of SVGs can hang slower devices.
   const cheatOpen = Boolean(refs.cheatDialog?.open || refs.cheatDialog?.hasAttribute("open"));
-  if (!state.settingsOpen && !cheatOpen) {
+  const settingsOpen = Boolean(refs.settingsDialog?.open || refs.settingsDialog?.hasAttribute("open"));
+  if (!settingsOpen && !cheatOpen) {
     return;
   }
 
@@ -2183,7 +2810,27 @@ function ensurePromptFontMapsShape() {
   saveRandomFontMap();
 }
 
+function ensurePracticeModeMapShape() {
+  if (!state.practiceModeMap || typeof state.practiceModeMap !== "object") {
+    state.practiceModeMap = {};
+  }
+
+  for (const alphabet of ALPHABETS) {
+    const stored = state.practiceModeMap[alphabet.id];
+    const canUseWords = isWordModeSupported(alphabet);
+    if (stored === PRACTICE_MODE_WORDS && canUseWords) {
+      continue;
+    }
+    state.practiceModeMap[alphabet.id] = PRACTICE_MODE_SYMBOLS;
+  }
+
+  savePracticeModeMap();
+}
+
 function getPromptHint(prompt, alphabet) {
+  if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
+    return "type the latin transliteration";
+  }
   if (state.direction === "foreignToLatin") {
     if (alphabet?.id === "music-notes") {
       return "type the note name (c, c#, db, bb)";
@@ -2203,7 +2850,8 @@ function getCurrentStats() {
   if (!alphabet) {
     return { right: 0, wrong: 0 };
   }
-  return state.statsMap[alphabet.id] || { right: 0, wrong: 0 };
+  const mode = getCurrentPracticeModeNamespace();
+  return state.statsMap?.[mode]?.[alphabet.id] || { right: 0, wrong: 0 };
 }
 
 function setCurrentStats(stats) {
@@ -2211,7 +2859,11 @@ function setCurrentStats(stats) {
   if (!alphabet) {
     return;
   }
-  state.statsMap[alphabet.id] = stats;
+  const mode = getCurrentPracticeModeNamespace();
+  if (!state.statsMap[mode]) {
+    state.statsMap[mode] = {};
+  }
+  state.statsMap[mode][alphabet.id] = stats;
   saveStatsMap();
 }
 
@@ -2224,7 +2876,8 @@ function getMissCountForBaseId(baseId) {
   if (!alphabet) {
     return 0;
   }
-  return state.missesMap[alphabet.id]?.[baseId] || 0;
+  const mode = getCurrentPracticeModeNamespace();
+  return state.missesMap?.[mode]?.[alphabet.id]?.[baseId] || 0;
 }
 
 function bumpMissForCurrentPrompt() {
@@ -2233,11 +2886,15 @@ function bumpMissForCurrentPrompt() {
   if (!alphabet || !prompt) {
     return;
   }
+  const mode = getCurrentPracticeModeNamespace();
   const baseId = prompt.baseId || prompt.id;
-  if (!state.missesMap[alphabet.id]) {
-    state.missesMap[alphabet.id] = {};
+  if (!state.missesMap[mode]) {
+    state.missesMap[mode] = {};
   }
-  state.missesMap[alphabet.id][baseId] = (state.missesMap[alphabet.id][baseId] || 0) + 1;
+  if (!state.missesMap[mode][alphabet.id]) {
+    state.missesMap[mode][alphabet.id] = {};
+  }
+  state.missesMap[mode][alphabet.id][baseId] = (state.missesMap[mode][alphabet.id][baseId] || 0) + 1;
   saveMissesMap();
 }
 
@@ -2268,6 +2925,76 @@ function applyTheme(theme) {
     theme === "dark"
       ? "dark, but you can switch"
       : "light, but you can switch";
+}
+
+async function loadWordLists() {
+  try {
+    const response = await fetch("./data/word-lists.json");
+    if (!response.ok) {
+      return EMPTY_WORD_LISTS;
+    }
+    const parsed = await response.json();
+    return normalizeWordLists(parsed);
+  } catch {
+    return EMPTY_WORD_LISTS;
+  }
+}
+
+function normalizeWordLists(payload) {
+  if (!payload || typeof payload !== "object") {
+    return EMPTY_WORD_LISTS;
+  }
+  const byAlphabet = payload.byAlphabet && typeof payload.byAlphabet === "object"
+    ? payload.byAlphabet
+    : {};
+  const normalized = {
+    version: EMPTY_WORD_LISTS.version,
+    byAlphabet: {
+      hiragana: [],
+      katakana: [],
+      armenian: [],
+      arabic: [],
+      hebrew: [],
+      syriac: [],
+      cherokee: [],
+      greek: [],
+      georgian: [],
+      cyrillic: {
+        russian: [],
+        ukrainian: [],
+        belarusian: [],
+        bulgarian: [],
+        serbian: [],
+        macedonian: [],
+      },
+    },
+  };
+  normalized.version = String(payload.version || EMPTY_WORD_LISTS.version);
+
+  for (const alphabetId of Object.keys(normalized.byAlphabet)) {
+    if (alphabetId === "cyrillic") {
+      const source = byAlphabet.cyrillic && typeof byAlphabet.cyrillic === "object" ? byAlphabet.cyrillic : {};
+      for (const variant of CYRILLIC_VARIANTS) {
+        normalized.byAlphabet.cyrillic[variant] = normalizeWordRows(source[variant]);
+      }
+      continue;
+    }
+    normalized.byAlphabet[alphabetId] = normalizeWordRows(byAlphabet[alphabetId]);
+  }
+  return normalized;
+}
+
+function normalizeWordRows(rows) {
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+  return rows
+    .map((row) => ({
+      foreign: String(row?.foreign || ""),
+      latin: String(row?.latin || ""),
+      source: String(row?.source || ""),
+    }))
+    .filter((row) => row.foreign && row.latin);
 }
 
 function loadTheme() {
@@ -2396,20 +3123,55 @@ function saveRandomFontMap() {
   localStorage.setItem(STORAGE_KEYS.randomFontMap, JSON.stringify(state.randomFontMap));
 }
 
+function loadPracticeModeMap() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.practiceModeMap) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePracticeModeMap() {
+  localStorage.setItem(STORAGE_KEYS.practiceModeMap, JSON.stringify(state.practiceModeMap));
+}
+
 function loadStatsMap() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.statsMap) || "{}");
-    const next = {};
+    const legacy = parsed && typeof parsed === "object" ? parsed : {};
+    const namespaced = {
+      [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_WORDS]: {},
+    };
+
+    const hasNamespacedShape =
+      legacy &&
+      typeof legacy[PRACTICE_MODE_SYMBOLS] === "object" &&
+      typeof legacy[PRACTICE_MODE_WORDS] === "object";
+
     for (const alphabet of ALPHABETS) {
-      const item = parsed[alphabet.id] || {};
-      next[alphabet.id] = {
-        right: Number.isFinite(item.right) ? item.right : 0,
-        wrong: Number.isFinite(item.wrong) ? item.wrong : 0,
+      const symbolItem = hasNamespacedShape
+        ? legacy[PRACTICE_MODE_SYMBOLS]?.[alphabet.id] || {}
+        : legacy[alphabet.id] || {};
+      const wordItem = hasNamespacedShape
+        ? legacy[PRACTICE_MODE_WORDS]?.[alphabet.id] || {}
+        : {};
+      namespaced[PRACTICE_MODE_SYMBOLS][alphabet.id] = {
+        right: Number.isFinite(symbolItem.right) ? symbolItem.right : 0,
+        wrong: Number.isFinite(symbolItem.wrong) ? symbolItem.wrong : 0,
+      };
+      namespaced[PRACTICE_MODE_WORDS][alphabet.id] = {
+        right: Number.isFinite(wordItem.right) ? wordItem.right : 0,
+        wrong: Number.isFinite(wordItem.wrong) ? wordItem.wrong : 0,
       };
     }
-    return next;
+    return namespaced;
   } catch {
-    return {};
+    return {
+      [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_WORDS]: {},
+    };
   }
 }
 
@@ -2422,17 +3184,46 @@ function resetStatsState() {
   if (!alphabet) {
     return;
   }
-  state.statsMap[alphabet.id] = { right: 0, wrong: 0 };
-  state.missesMap[alphabet.id] = {};
+  const mode = getCurrentPracticeModeNamespace();
+  if (!state.statsMap[mode]) {
+    state.statsMap[mode] = {};
+  }
+  if (!state.missesMap[mode]) {
+    state.missesMap[mode] = {};
+  }
+  state.statsMap[mode][alphabet.id] = { right: 0, wrong: 0 };
+  state.missesMap[mode][alphabet.id] = {};
   saveStatsMap();
   saveMissesMap();
 }
 
 function loadMissesMap() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.missesMap) || "{}");
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.missesMap) || "{}");
+    const legacy = parsed && typeof parsed === "object" ? parsed : {};
+    const namespaced = {
+      [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_WORDS]: {},
+    };
+    const hasNamespacedShape =
+      legacy &&
+      typeof legacy[PRACTICE_MODE_SYMBOLS] === "object" &&
+      typeof legacy[PRACTICE_MODE_WORDS] === "object";
+
+    for (const alphabet of ALPHABETS) {
+      namespaced[PRACTICE_MODE_SYMBOLS][alphabet.id] = hasNamespacedShape
+        ? { ...(legacy[PRACTICE_MODE_SYMBOLS]?.[alphabet.id] || {}) }
+        : { ...(legacy[alphabet.id] || {}) };
+      namespaced[PRACTICE_MODE_WORDS][alphabet.id] = hasNamespacedShape
+        ? { ...(legacy[PRACTICE_MODE_WORDS]?.[alphabet.id] || {}) }
+        : {};
+    }
+    return namespaced;
   } catch {
-    return {};
+    return {
+      [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_WORDS]: {},
+    };
   }
 }
 
