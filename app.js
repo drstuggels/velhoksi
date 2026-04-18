@@ -11,6 +11,8 @@ const STORAGE_KEYS = {
   feedbackDuration: "velhoksi.feedbackDuration",
   feedbackMode: "velhoksi.feedbackMode",
   cyrillicVariant: "velhoksi.cyrillicVariant",
+  promptFontMap: "velhoksi.promptFontMap",
+  randomFontMap: "velhoksi.randomFontMap",
 };
 
 const BASE_ALPHABETS = [
@@ -322,6 +324,69 @@ const ALPHABETS = [...normalizeBaseAlphabets(BASE_ALPHABETS), createMusicAlphabe
 
 const alphabetById = Object.fromEntries(ALPHABETS.map((alphabet) => [alphabet.id, alphabet]));
 
+const FONT_OPTION_DEFAULT_ID = "default";
+
+const PROMPT_FONT_OPTIONS = {
+  hiragana: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans-jp", label: "noto sans jp", family: "'Noto Sans JP', sans-serif" },
+    { id: "noto-serif-jp", label: "noto serif jp", family: "'Noto Serif JP', serif" },
+  ],
+  katakana: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans-jp", label: "noto sans jp", family: "'Noto Sans JP', sans-serif" },
+    { id: "noto-serif-jp", label: "noto serif jp", family: "'Noto Serif JP', serif" },
+  ],
+  armenian: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans-armenian", label: "noto sans armenian", family: "'Noto Sans Armenian', sans-serif" },
+    { id: "noto-serif-armenian", label: "noto serif armenian", family: "'Noto Serif Armenian', serif" },
+  ],
+  hangul: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans-kr", label: "noto sans kr", family: "'Noto Sans KR', sans-serif" },
+    { id: "noto-serif-kr", label: "noto serif kr", family: "'Noto Serif KR', serif" },
+  ],
+  arabic: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-naskh-arabic", label: "noto naskh arabic", family: "'Noto Naskh Arabic', serif" },
+    { id: "noto-kufi-arabic", label: "noto kufi arabic", family: "'Noto Kufi Arabic', sans-serif" },
+    { id: "noto-sans-arabic", label: "noto sans arabic", family: "'Noto Sans Arabic', sans-serif" },
+  ],
+  hebrew: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans-hebrew", label: "noto sans hebrew", family: "'Noto Sans Hebrew', sans-serif" },
+    { id: "frank-ruhl-libre", label: "frank ruhl libre", family: "'Frank Ruhl Libre', serif" },
+    { id: "noto-rashi-hebrew", label: "noto rashi hebrew", family: "'Noto Rashi Hebrew', serif" },
+  ],
+  syriac: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-syriac-eastern", label: "noto syriac eastern", family: "'Noto Sans Syriac Eastern', 'Noto Sans Syriac', serif" },
+    { id: "noto-syriac-western", label: "noto syriac western", family: "'Noto Sans Syriac Western', 'Noto Sans Syriac', serif" },
+    { id: "noto-syriac", label: "noto syriac", family: "'Noto Sans Syriac', serif" },
+  ],
+  cherokee: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans-cherokee", label: "noto sans cherokee", family: "'Noto Sans Cherokee', sans-serif" },
+    { id: "noto-sans-unified", label: "noto sans", family: "'Noto Sans', 'Noto Sans Cherokee', sans-serif" },
+  ],
+  greek: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans", label: "noto sans", family: "'Noto Sans', sans-serif" },
+    { id: "noto-serif", label: "noto serif", family: "'Noto Serif', serif" },
+  ],
+  cyrillic: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans", label: "noto sans", family: "'Noto Sans', sans-serif" },
+    { id: "noto-serif", label: "noto serif", family: "'Noto Serif', serif" },
+  ],
+  georgian: [
+    { id: FONT_OPTION_DEFAULT_ID, label: "default" },
+    { id: "noto-sans-georgian", label: "noto sans georgian", family: "'Noto Sans Georgian', sans-serif" },
+    { id: "noto-serif-georgian", label: "noto serif georgian", family: "'Noto Serif Georgian', serif" },
+  ],
+};
+
 const SYMBOL_NOTES = {
   hiragana: {
     "し": "usually romanized as shi, not si.",
@@ -414,7 +479,10 @@ const state = {
   missedFocusMap: loadMissedFocusMap(),
   feedbackDuration: loadFeedbackDuration(),
   feedbackMode: loadFeedbackMode(),
+  promptFontMap: loadPromptFontMap(),
+  randomFontMap: loadRandomFontMap(),
   currentPromptId: null,
+  currentPromptFontId: FONT_OPTION_DEFAULT_ID,
   lastPromptId: null,
   promptQueue: [],
   settingsOpen: false,
@@ -450,6 +518,10 @@ const refs = {
   feedbackSettingsCopy: document.querySelector("#feedback-settings-copy"),
   caseSettings: document.querySelector("#case-settings"),
   caseOptions: [...document.querySelectorAll(".case-option")],
+  promptFontSettings: document.querySelector("#prompt-font-settings"),
+  promptFontCopy: document.querySelector("#prompt-font-copy"),
+  promptFontSelect: document.querySelector("#prompt-font-select"),
+  randomFontToggle: document.querySelector("#random-font-toggle"),
   feedbackDuration: document.querySelector("#feedback-duration"),
   feedbackMode: document.querySelector("#feedback-mode"),
   cheatToggle: document.querySelector("#cheat-toggle"),
@@ -483,6 +555,7 @@ function init() {
   applyTheme(state.theme);
   ensureEnabledMapShape();
   ensureMusicPitchRangeMapShape();
+  ensurePromptFontMapsShape();
   bindEvents();
   render();
 }
@@ -534,8 +607,7 @@ function bindEvents() {
       state.enabledMap.cyrillic = getDefaultEnabledCyrillicIds(next);
       saveEnabledMap();
       clearPendingWrongState();
-      state.currentPromptId = null;
-      state.lastPromptId = null;
+      reshufflePromptCollection();
       setFeedback("");
       render();
     });
@@ -553,9 +625,8 @@ function bindEvents() {
     state.direction =
       state.direction === "foreignToLatin" ? "latinToForeign" : "foreignToLatin";
     localStorage.setItem(STORAGE_KEYS.direction, state.direction);
-    state.currentPromptId = null;
+    reshufflePromptCollection();
     setFeedback("");
-    nextPrompt();
     render();
   });
 
@@ -749,8 +820,10 @@ function bindEvents() {
 
   refs.resetStats.addEventListener("click", () => {
     resetStatsState();
+    reshufflePromptCollection();
     renderStats();
     setFeedback("stats reset.", "success");
+    render();
   });
 
   refs.allOffButton.addEventListener("click", () => {
@@ -761,7 +834,7 @@ function bindEvents() {
     state.enabledMap[alphabet.id] = [];
     saveEnabledMap();
     clearPendingWrongState();
-    state.currentPromptId = null;
+    reshufflePromptCollection();
     setFeedback("");
     render();
   });
@@ -774,9 +847,8 @@ function bindEvents() {
     state.enabledMap[alphabet.id] = alphabet.symbols.map((symbol) => symbol.id);
     saveEnabledMap();
     clearPendingWrongState();
-    state.currentPromptId = null;
+    reshufflePromptCollection();
     setFeedback("");
-    nextPrompt();
     render();
   });
 
@@ -787,22 +859,59 @@ function bindEvents() {
     }
     state.missedFocusMap[alphabet.id] = refs.missedFocusToggle.checked;
     saveMissedFocusMap();
-    state.currentPromptId = null;
+    reshufflePromptCollection();
     setFeedback("");
-    nextPrompt();
     render();
   });
 
   refs.feedbackDuration.addEventListener("change", () => {
     state.feedbackDuration = Number(refs.feedbackDuration.value);
     saveFeedbackDuration();
+    reshufflePromptCollection();
+    render();
   });
 
   refs.feedbackMode.addEventListener("change", () => {
     state.feedbackMode = refs.feedbackMode.value === "manual" ? "manual" : "timed";
     saveFeedbackMode();
+    reshufflePromptCollection();
     render();
   });
+
+  if (refs.promptFontSelect) {
+    refs.promptFontSelect.addEventListener("change", () => {
+      const alphabet = getSelectedAlphabet();
+      if (!alphabet || !supportsPromptFontSettings(alphabet)) {
+        return;
+      }
+      const options = getPromptFontOptionsForAlphabet(alphabet);
+      const nextId = refs.promptFontSelect.value;
+      if (!options.some((option) => option.id === nextId)) {
+        return;
+      }
+      state.promptFontMap[alphabet.id] = nextId;
+      savePromptFontMap();
+      clearPendingWrongState();
+      reshufflePromptCollection();
+      setFeedback("");
+      render();
+    });
+  }
+
+  if (refs.randomFontToggle) {
+    refs.randomFontToggle.addEventListener("change", () => {
+      const alphabet = getSelectedAlphabet();
+      if (!alphabet || !supportsPromptFontSettings(alphabet)) {
+        return;
+      }
+      state.randomFontMap[alphabet.id] = refs.randomFontToggle.checked;
+      saveRandomFontMap();
+      clearPendingWrongState();
+      reshufflePromptCollection();
+      setFeedback("");
+      render();
+    });
+  }
 
   for (const button of refs.caseOptions) {
     button.addEventListener("click", () => {
@@ -814,9 +923,8 @@ function bindEvents() {
       state.caseModeMap[alphabet.id] = nextMode;
       saveCaseModeMap();
       clearPendingWrongState();
-      state.currentPromptId = null;
+      reshufflePromptCollection();
       setFeedback("");
-      nextPrompt();
       render();
     });
   }
@@ -855,6 +963,7 @@ function goToStartMenu() {
   clearSuccessFeedbackTimer();
   state.selectedAlphabet = null;
   state.currentPromptId = null;
+  state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
   state.lastPromptId = null;
   state.settingsOpen = false;
   localStorage.removeItem(STORAGE_KEYS.alphabet);
@@ -897,6 +1006,7 @@ function render() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   }
+  renderPromptFontSettings(alphabet);
   refs.continueButton.classList.toggle("hidden", !state.awaitingManualContinue);
   refs.latinInput.placeholder = getLatinInputPlaceholder(alphabet);
   renderAlphabetPicker();
@@ -934,6 +1044,146 @@ function getMusicPitchRangeForAlphabet(alphabet) {
   return minMidi <= maxMidi ? { minMidi, maxMidi } : { minMidi: meta.minMidi, maxMidi: meta.maxMidi };
 }
 
+function supportsPromptFontSettings(alphabet) {
+  if (!alphabet || alphabet.id === "music-notes") {
+    return false;
+  }
+  const options = PROMPT_FONT_OPTIONS[alphabet.id];
+  return Array.isArray(options) && options.length > 0;
+}
+
+function getPromptFontOptionsForAlphabet(alphabet) {
+  if (!supportsPromptFontSettings(alphabet)) {
+    return [{ id: FONT_OPTION_DEFAULT_ID, label: "default" }];
+  }
+  return PROMPT_FONT_OPTIONS[alphabet.id];
+}
+
+function getPromptFontIdForAlphabet(alphabet) {
+  const options = getPromptFontOptionsForAlphabet(alphabet);
+  const stored = state.promptFontMap?.[alphabet?.id];
+  if (options.some((option) => option.id === stored)) {
+    return stored;
+  }
+  return FONT_OPTION_DEFAULT_ID;
+}
+
+function getPromptFontOptionById(alphabet, fontId) {
+  const options = getPromptFontOptionsForAlphabet(alphabet);
+  return options.find((option) => option.id === fontId) || options[0] || { id: FONT_OPTION_DEFAULT_ID, label: "default" };
+}
+
+function getRandomFontForAlphabet(alphabet) {
+  if (!supportsPromptFontSettings(alphabet)) {
+    return false;
+  }
+  return Boolean(state.randomFontMap?.[alphabet.id]);
+}
+
+function pickRandomPromptFontId(alphabet) {
+  const options = getPromptFontOptionsForAlphabet(alphabet);
+  const pool = options.filter((option) => option.id !== FONT_OPTION_DEFAULT_ID);
+  const source = pool.length > 0 ? pool : options;
+  if (source.length === 0) {
+    return FONT_OPTION_DEFAULT_ID;
+  }
+
+  const current = state.currentPromptFontId;
+  if (source.length === 1) {
+    return source[0].id;
+  }
+
+  const filtered = source.filter((option) => option.id !== current);
+  const pickable = filtered.length > 0 ? filtered : source;
+  const index = Math.floor(Math.random() * pickable.length);
+  return pickable[index].id;
+}
+
+function pickPromptFontIdForAlphabet(alphabet) {
+  if (!supportsPromptFontSettings(alphabet)) {
+    return FONT_OPTION_DEFAULT_ID;
+  }
+  if (getRandomFontForAlphabet(alphabet)) {
+    return pickRandomPromptFontId(alphabet);
+  }
+  return getPromptFontIdForAlphabet(alphabet);
+}
+
+function renderPromptFontSettings(alphabet) {
+  if (!refs.promptFontSettings || !refs.promptFontSelect || !refs.randomFontToggle || !refs.promptFontCopy) {
+    return;
+  }
+
+  const show = supportsPromptFontSettings(alphabet);
+  refs.promptFontSettings.classList.toggle("hidden", !show);
+  if (!show) {
+    refs.promptFontSelect.innerHTML = "";
+    refs.randomFontToggle.checked = false;
+    refs.promptFontSelect.disabled = true;
+    return;
+  }
+
+  const options = getPromptFontOptionsForAlphabet(alphabet);
+  refs.promptFontSelect.innerHTML = "";
+  for (const option of options) {
+    const node = document.createElement("option");
+    node.value = option.id;
+    node.textContent = option.label;
+    refs.promptFontSelect.appendChild(node);
+  }
+
+  refs.promptFontSelect.value = getPromptFontIdForAlphabet(alphabet);
+  const randomEnabled = getRandomFontForAlphabet(alphabet);
+  refs.randomFontToggle.checked = randomEnabled;
+  refs.promptFontSelect.disabled = randomEnabled;
+  refs.promptFontCopy.textContent = randomEnabled
+    ? "random mode: prompt changes font every card. cheat sheet stays on default."
+    : "switch symbol styles to get used to different writing forms.";
+}
+
+function applyPromptFont(prompt, alphabet, useGraphic) {
+  refs.promptValue.classList.remove("symbol-font");
+  refs.promptValue.style.removeProperty("--prompt-symbol-font");
+
+  const shouldApply =
+    Boolean(prompt) &&
+    Boolean(alphabet) &&
+    state.direction === "foreignToLatin" &&
+    !useGraphic &&
+    supportsPromptFontSettings(alphabet);
+  if (!shouldApply) {
+    return;
+  }
+
+  const option = getPromptFontOptionById(alphabet, state.currentPromptFontId);
+  if (!option?.family) {
+    return;
+  }
+  refs.promptValue.classList.add("symbol-font");
+  refs.promptValue.style.setProperty("--prompt-symbol-font", option.family);
+}
+
+function applyCheatSheetFont(alphabet) {
+  if (!refs.cheatGrid) {
+    return;
+  }
+  refs.cheatGrid.style.removeProperty("--cheat-symbol-font");
+
+  if (!supportsPromptFontSettings(alphabet)) {
+    return;
+  }
+
+  if (getRandomFontForAlphabet(alphabet)) {
+    return;
+  }
+
+  const option = getPromptFontOptionById(alphabet, getPromptFontIdForAlphabet(alphabet));
+  if (!option?.family) {
+    return;
+  }
+  refs.cheatGrid.style.setProperty("--cheat-symbol-font", option.family);
+}
+
 function renderAlphabetPicker() {
   refs.alphabetPicker.innerHTML = "";
 
@@ -963,6 +1213,7 @@ function renderAlphabetPicker() {
       state.selectedAlphabet = alphabet.id;
       localStorage.setItem(STORAGE_KEYS.alphabet, state.selectedAlphabet);
       state.currentPromptId = null;
+      state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
       state.lastPromptId = null;
       state.settingsOpen = false;
       setFeedback("");
@@ -983,6 +1234,7 @@ function renderPrompt() {
     refs.promptCard.classList.remove("success-flash", "failure-flash");
     refs.promptValue.textContent = "-";
     refs.promptValue.classList.remove("graphic");
+    applyPromptFont(null, alphabet, false);
     refs.promptHint.textContent = getSelectedAlphabet() ? "no symbols enabled" : "choose an alphabet";
     refs.promptCard.dataset.promptId = "";
     return;
@@ -998,6 +1250,7 @@ function renderPrompt() {
 
   const useGraphic = Boolean(state.direction === "foreignToLatin" && (prompt.music || prompt.foreignMarkup));
   refs.promptValue.classList.toggle("graphic", useGraphic);
+  applyPromptFont(prompt, alphabet, useGraphic);
   if (useGraphic && state.direction === "foreignToLatin") {
     if (prompt.music) {
       refs.promptValue.innerHTML = ensureMusicMarkup(prompt);
@@ -1147,14 +1400,8 @@ function renderSettings() {
     maxInput.addEventListener("input", syncInputs);
 
     const commit = () => {
-      const { minMidi: fixedMin, maxMidi: fixedMax } = syncInputs();
-      // If current prompt is outside the filtered pool, force a new one.
-      const current = getCurrentPrompt();
-      if (current?.music?.midi && (current.music.midi < fixedMin || current.music.midi > fixedMax)) {
-        state.currentPromptId = null;
-        state.lastPromptId = null;
-        nextPrompt();
-      }
+      syncInputs();
+      reshufflePromptCollection();
       render();
     };
 
@@ -1207,6 +1454,7 @@ function renderCheatSheet() {
 
   if (!alphabet) {
     refs.cheatGrid.innerHTML = "";
+    applyCheatSheetFont(null);
     refs.cheatTitle.textContent = "cheat sheet";
     return;
   }
@@ -1220,6 +1468,7 @@ function renderCheatSheet() {
   }
 
   refs.cheatGrid.innerHTML = "";
+  applyCheatSheetFont(alphabet);
 
   const enabledSet = new Set(state.enabledMap[alphabet.id]);
   const caseMode = getCaseModeForAlphabet(alphabet);
@@ -1289,9 +1538,17 @@ function renderStats() {
 }
 
 function nextPrompt() {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet) {
+    state.currentPromptId = null;
+    state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
+    return;
+  }
+
   const symbols = getPromptPool();
   if (symbols.length === 0) {
     state.currentPromptId = null;
+    state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
     return;
   }
 
@@ -1307,10 +1564,12 @@ function nextPrompt() {
   const nextId = state.promptQueue.shift();
   if (!nextId) {
     state.currentPromptId = null;
+    state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
     return;
   }
   state.lastPromptId = nextId;
   state.currentPromptId = nextId;
+  state.currentPromptFontId = pickPromptFontIdForAlphabet(alphabet);
 }
 
 function buildPromptQueue(symbols) {
@@ -1422,6 +1681,10 @@ function getCaseAwareSymbols(symbols) {
     }
   }
 
+  if (caseMode === "both") {
+    shuffleInPlace(variants);
+  }
+
   return variants;
 }
 
@@ -1448,8 +1711,6 @@ function updateEnabledSymbol(symbolId, enabled) {
     return;
   }
 
-  const currentPrompt = getCurrentPrompt();
-
   const nextSet = new Set(state.enabledMap[alphabet.id]);
   if (enabled) {
     nextSet.add(symbolId);
@@ -1460,10 +1721,7 @@ function updateEnabledSymbol(symbolId, enabled) {
   state.enabledMap[alphabet.id] = [...nextSet];
   saveEnabledMap();
 
-  if (currentPrompt && !nextSet.has(currentPrompt.baseId || currentPrompt.id)) {
-    state.currentPromptId = null;
-    nextPrompt();
-  }
+  reshufflePromptCollection();
 
   render();
 }
@@ -1517,7 +1775,9 @@ function submitLatinAnswer(forceSubmit) {
 
   const rawAnswer = refs.latinInput.value.trim().toLowerCase();
   const answer = Array.isArray(prompt.acceptedAnswers) ? normalizeNoteAnswer(rawAnswer) : rawAnswer;
-  if (!answer && !forceSubmit) {
+  const shouldForceSubmit = forceSubmit || shouldAutoSubmitByLength(prompt, answer);
+
+  if (!answer && !shouldForceSubmit) {
     return;
   }
 
@@ -1526,9 +1786,43 @@ function submitLatinAnswer(forceSubmit) {
     return;
   }
 
-  if (forceSubmit) {
+  if (shouldForceSubmit) {
     submitResult(false, getExpectedLatinAnswer(prompt));
   }
+}
+
+function shouldAutoSubmitByLength(prompt, answer) {
+  if (!answer) {
+    return false;
+  }
+  const targetLength = getAutoSubmitTargetLength(prompt);
+  if (!Number.isFinite(targetLength) || targetLength <= 0) {
+    return false;
+  }
+  return answer.length >= targetLength;
+}
+
+function getAutoSubmitTargetLength(prompt) {
+  if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
+    const normalized = prompt.acceptedAnswers
+      .map((entry) => normalizeNoteAnswer(entry))
+      .filter(Boolean);
+    if (normalized.length === 0) {
+      return 0;
+    }
+    return Math.min(...normalized.map((entry) => entry.length));
+  }
+  return String(prompt.latin || "")
+    .trim()
+    .toLowerCase().length;
+}
+
+function reshufflePromptCollection() {
+  state.promptQueue = [];
+  state.currentPromptId = null;
+  state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
+  state.lastPromptId = null;
+  nextPrompt();
 }
 
 function normalizeNoteAnswer(raw) {
@@ -1865,6 +2159,30 @@ function ensureMusicPitchRangeMapShape() {
   saveMusicPitchRangeMap();
 }
 
+function ensurePromptFontMapsShape() {
+  if (!state.promptFontMap || typeof state.promptFontMap !== "object") {
+    state.promptFontMap = {};
+  }
+  if (!state.randomFontMap || typeof state.randomFontMap !== "object") {
+    state.randomFontMap = {};
+  }
+
+  for (const alphabet of ALPHABETS) {
+    if (!supportsPromptFontSettings(alphabet)) {
+      continue;
+    }
+    const options = getPromptFontOptionsForAlphabet(alphabet);
+    const storedFontId = state.promptFontMap[alphabet.id];
+    if (!options.some((option) => option.id === storedFontId)) {
+      state.promptFontMap[alphabet.id] = FONT_OPTION_DEFAULT_ID;
+    }
+    state.randomFontMap[alphabet.id] = Boolean(state.randomFontMap[alphabet.id]);
+  }
+
+  savePromptFontMap();
+  saveRandomFontMap();
+}
+
 function getPromptHint(prompt, alphabet) {
   if (state.direction === "foreignToLatin") {
     if (alphabet?.id === "music-notes") {
@@ -2050,6 +2368,32 @@ function loadCaseModeMap() {
 
 function saveCaseModeMap() {
   localStorage.setItem(STORAGE_KEYS.caseModeMap, JSON.stringify(state.caseModeMap));
+}
+
+function loadPromptFontMap() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.promptFontMap) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePromptFontMap() {
+  localStorage.setItem(STORAGE_KEYS.promptFontMap, JSON.stringify(state.promptFontMap));
+}
+
+function loadRandomFontMap() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.randomFontMap) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveRandomFontMap() {
+  localStorage.setItem(STORAGE_KEYS.randomFontMap, JSON.stringify(state.randomFontMap));
 }
 
 function loadStatsMap() {
