@@ -44,6 +44,10 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans:wght@400;500&family=Noto+Serif:wght@400;500&family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@400;500&family=Noto+Sans+Armenian:wght@400;500&family=Noto+Serif+Armenian:wght@400;500&family=Noto+Sans+KR:wght@400;500&family=Noto+Serif+KR:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500&family=Noto+Kufi+Arabic:wght@400;500&family=Noto+Sans+Arabic:wght@400;500&family=Noto+Sans+Hebrew:wght@400;500&family=Frank+Ruhl+Libre:wght@400;500&family=Noto+Rashi+Hebrew:wght@400;500&family=Noto+Sans+Syriac:wght@400;500&family=Noto+Sans+Syriac+Eastern:wght@400;500&family=Noto+Sans+Syriac+Western:wght@400;500&family=Noto+Sans+Cherokee:wght@400;500&family=Noto+Sans+Georgian:wght@400;500&family=Noto+Serif+Georgian:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans&family=Handjet:wght@400;500&family=DotGothic16&family=Rampart+One&family=Yusei+Magic&family=Zen+Maru+Gothic:wght@400;500&family=Kaisei+Decol:wght@400;500&family=RocknRoll+One&family=Black+Han+Sans&family=Gowun+Dodum&family=Nanum+Brush+Script&family=Gaegu:wght@400;700&family=Gugi&family=Dokdo&family=Single+Day&family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Aref+Ruqaa+Ink:wght@400;700&family=Reem+Kufi+Fun:wght@400;500&family=Reem+Kufi+Ink&family=Cairo+Play:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400;500&family=Heebo:wght@400;500;700&family=Assistant:wght@400;500;700&family=David+Libre:wght@400;500;700&family=Suez+One&family=Secular+One&family=Playpen+Sans+Hebrew:wght@400;500&family=Idiqlat&family=Ramsina&family=Explora&family=Genos:wght@400;500&family=GFS+Didot&family=GFS+Neohellenic:wght@400;500;700&family=Alegreya:wght@400;500;700&family=Russo+One&family=Marck+Script&family=Rubik+Bubbles&family=Lobster&family=Cormorant+Garamond:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -206,6 +210,7 @@
           <button id="close-settings" class="text-button close-cheat-button" type="button" aria-label="close settings">
             close
           </button>
+          <hr class="dialog-separator" aria-hidden="true" />
           <div id="settings-panel" class="settings-panel" aria-label="settings panel">
             <section id="practice-mode-settings" class="settings-group hidden">
               <div class="settings-head">
@@ -336,7 +341,7 @@
           <button id="close-shortcuts" class="text-button close-cheat-button" type="button" aria-label="close keyboard shortcuts">
             close
           </button>
-          <p class="settings-copy shortcuts-intro">shortcuts only run when you are not typing in an input field.</p>
+
           <div class="shortcuts-list" role="list" aria-label="keyboard shortcuts list">
             <div class="shortcut-row" role="listitem"><kbd>enter</kbd><span>skip / give up / submit blank answer</span></div>
             <div class="shortcut-row" role="listitem"><kbd>alt+s</kbd><span>toggle settings</span></div>
@@ -348,6 +353,7 @@
             <div class="shortcut-row" role="listitem"><kbd>alt+l</kbd><span>go to language menu</span></div>
             <div class="shortcut-row" role="listitem"><kbd>alt+t</kbd><span>toggle theme</span></div>
           </div>
+          <p class="shortcuts-key-note eyebrow">alt = option = altgr</p>
         </div>
       </dialog>
 	

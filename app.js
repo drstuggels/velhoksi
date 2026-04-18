@@ -357,61 +357,112 @@ const FONT_OPTION_DEFAULT_ID = "default";
 const PROMPT_FONT_OPTIONS = {
   hiragana: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans-jp", label: "noto sans jp", family: "'Noto Sans JP', sans-serif" },
-    { id: "noto-serif-jp", label: "noto serif jp", family: "'Noto Serif JP', serif" },
+    { id: "noto-sans-jp", label: "paperback (noto sans jp)", family: "'Noto Sans JP', sans-serif" },
+    { id: "noto-serif-jp", label: "classic print (noto serif jp)", family: "'Noto Serif JP', serif" },
+    { id: "dotgothic16", label: "pixel manga (dotgothic16)", family: "'DotGothic16', sans-serif" },
+    { id: "rampart-one", label: "festival sign (rampart one)", family: "'Rampart One', sans-serif" },
+    { id: "yusei-magic", label: "marker note (yusei magic)", family: "'Yusei Magic', sans-serif" },
+    { id: "zen-maru-gothic", label: "round retro (zen maru gothic)", family: "'Zen Maru Gothic', sans-serif" },
+    { id: "kaisei-decol", label: "vintage headline (kaisei decol)", family: "'Kaisei Decol', serif" },
+    { id: "rocknroll-one", label: "street poster (rocknroll one)", family: "'RocknRoll One', sans-serif" },
   ],
   katakana: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans-jp", label: "noto sans jp", family: "'Noto Sans JP', sans-serif" },
-    { id: "noto-serif-jp", label: "noto serif jp", family: "'Noto Serif JP', serif" },
+    { id: "noto-sans-jp", label: "paperback (noto sans jp)", family: "'Noto Sans JP', sans-serif" },
+    { id: "noto-serif-jp", label: "classic print (noto serif jp)", family: "'Noto Serif JP', serif" },
+    { id: "dotgothic16", label: "pixel manga (dotgothic16)", family: "'DotGothic16', sans-serif" },
+    { id: "rampart-one", label: "festival sign (rampart one)", family: "'Rampart One', sans-serif" },
+    { id: "yusei-magic", label: "marker note (yusei magic)", family: "'Yusei Magic', sans-serif" },
+    { id: "zen-maru-gothic", label: "round retro (zen maru gothic)", family: "'Zen Maru Gothic', sans-serif" },
+    { id: "kaisei-decol", label: "vintage headline (kaisei decol)", family: "'Kaisei Decol', serif" },
+    { id: "rocknroll-one", label: "street poster (rocknroll one)", family: "'RocknRoll One', sans-serif" },
   ],
   armenian: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans-armenian", label: "noto sans armenian", family: "'Noto Sans Armenian', sans-serif" },
-    { id: "noto-serif-armenian", label: "noto serif armenian", family: "'Noto Serif Armenian', serif" },
+    { id: "noto-sans-armenian", label: "textbook sans (noto sans armenian)", family: "'Noto Sans Armenian', sans-serif" },
+    { id: "noto-serif-armenian", label: "inscription serif (noto serif armenian)", family: "'Noto Serif Armenian', serif" },
+    { id: "google-sans", label: "metro ui (google sans)", family: "'Google Sans', sans-serif" },
+    { id: "handjet", label: "wireframe display (handjet)", family: "'Handjet', sans-serif" },
   ],
   hangul: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans-kr", label: "noto sans kr", family: "'Noto Sans KR', sans-serif" },
-    { id: "noto-serif-kr", label: "noto serif kr", family: "'Noto Serif KR', serif" },
+    { id: "noto-sans-kr", label: "modern sans (noto sans kr)", family: "'Noto Sans KR', sans-serif" },
+    { id: "noto-serif-kr", label: "book serif (noto serif kr)", family: "'Noto Serif KR', serif" },
+    { id: "black-han-sans", label: "poster block (black han sans)", family: "'Black Han Sans', sans-serif" },
+    { id: "gowun-dodum", label: "clean signage (gowun dodum)", family: "'Gowun Dodum', sans-serif" },
+    { id: "nanum-brush-script", label: "brush pen (nanum brush script)", family: "'Nanum Brush Script', cursive" },
+    { id: "gaegu", label: "playful hand (gaegu)", family: "'Gaegu', cursive" },
+    { id: "gugi", label: "comic sign (gugi)", family: "'Gugi', sans-serif" },
+    { id: "dokdo", label: "chalk graffiti (dokdo)", family: "'Dokdo', cursive" },
+    { id: "single-day", label: "casual note (single day)", family: "'Single Day', cursive" },
   ],
   arabic: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-naskh-arabic", label: "noto naskh arabic", family: "'Noto Naskh Arabic', serif" },
-    { id: "noto-kufi-arabic", label: "noto kufi arabic", family: "'Noto Kufi Arabic', sans-serif" },
-    { id: "noto-sans-arabic", label: "noto sans arabic", family: "'Noto Sans Arabic', sans-serif" },
+    { id: "noto-naskh-arabic", label: "book naskh (noto naskh arabic)", family: "'Noto Naskh Arabic', serif" },
+    { id: "noto-kufi-arabic", label: "square kufi (noto kufi arabic)", family: "'Noto Kufi Arabic', sans-serif" },
+    { id: "noto-sans-arabic", label: "modern sans (noto sans arabic)", family: "'Noto Sans Arabic', sans-serif" },
+    { id: "amiri", label: "classical manuscript (amiri)", family: "'Amiri', serif" },
+    { id: "aref-ruqaa", label: "ruqaa hand (aref ruqaa)", family: "'Aref Ruqaa', serif" },
+    { id: "aref-ruqaa-ink", label: "ink ruqaa (aref ruqaa ink)", family: "'Aref Ruqaa Ink', serif" },
+    { id: "reem-kufi-fun", label: "fun kufi (reem kufi fun)", family: "'Reem Kufi Fun', sans-serif" },
+    { id: "reem-kufi-ink", label: "ink kufi (reem kufi ink)", family: "'Reem Kufi Ink', sans-serif" },
+    { id: "cairo-play", label: "display cairo (cairo play)", family: "'Cairo Play', sans-serif" },
+    { id: "noto-nastaliq-urdu", label: "nastaliq flow (noto nastaliq urdu)", family: "'Noto Nastaliq Urdu', serif" },
   ],
   hebrew: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans-hebrew", label: "noto sans hebrew", family: "'Noto Sans Hebrew', sans-serif" },
-    { id: "frank-ruhl-libre", label: "frank ruhl libre", family: "'Frank Ruhl Libre', serif" },
-    { id: "noto-rashi-hebrew", label: "noto rashi hebrew", family: "'Noto Rashi Hebrew', serif" },
+    { id: "noto-sans-hebrew", label: "clean sans (noto sans hebrew)", family: "'Noto Sans Hebrew', sans-serif" },
+    { id: "frank-ruhl-libre", label: "press serif (frank ruhl libre)", family: "'Frank Ruhl Libre', serif" },
+    { id: "noto-rashi-hebrew", label: "rashi script (noto rashi hebrew)", family: "'Noto Rashi Hebrew', serif" },
+    { id: "heebo", label: "modern web (heebo)", family: "'Heebo', sans-serif" },
+    { id: "assistant", label: "editorial sans (assistant)", family: "'Assistant', sans-serif" },
+    { id: "david-libre", label: "tanakh serif (david libre)", family: "'David Libre', serif" },
+    { id: "suez-one", label: "headline serif (suez one)", family: "'Suez One', serif" },
+    { id: "secular-one", label: "billboard sans (secular one)", family: "'Secular One', sans-serif" },
+    { id: "playpen-sans-hebrew", label: "playpen hand (playpen sans hebrew)", family: "'Playpen Sans Hebrew', cursive" },
   ],
   syriac: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-syriac-eastern", label: "noto syriac eastern", family: "'Noto Sans Syriac Eastern', 'Noto Sans Syriac', serif" },
-    { id: "noto-syriac-western", label: "noto syriac western", family: "'Noto Sans Syriac Western', 'Noto Sans Syriac', serif" },
-    { id: "noto-syriac", label: "noto syriac", family: "'Noto Sans Syriac', serif" },
+    { id: "noto-syriac", label: "estrangelo (noto syriac)", family: "'Noto Sans Syriac', serif" },
+    { id: "noto-syriac-eastern", label: "eastern church (noto syriac eastern)", family: "'Noto Sans Syriac Eastern', 'Noto Sans Syriac', serif" },
+    { id: "noto-syriac-western", label: "western church (noto syriac western)", family: "'Noto Sans Syriac Western', 'Noto Sans Syriac', serif" },
+    { id: "idiqlat", label: "modern manuscript (idiqlat)", family: "'Idiqlat', serif" },
+    { id: "ramsina", label: "angular inscription (ramsina)", family: "'Ramsina', serif" },
   ],
   cherokee: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans-cherokee", label: "noto sans cherokee", family: "'Noto Sans Cherokee', sans-serif" },
-    { id: "noto-sans-unified", label: "noto sans", family: "'Noto Sans', 'Noto Sans Cherokee', sans-serif" },
+    { id: "noto-sans-cherokee", label: "learning sans (noto sans cherokee)", family: "'Noto Sans Cherokee', sans-serif" },
+    { id: "explora", label: "light script (explora)", family: "'Explora', cursive" },
+    { id: "genos", label: "neo sans (genos)", family: "'Genos', sans-serif" },
   ],
   greek: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans", label: "noto sans", family: "'Noto Sans', sans-serif" },
-    { id: "noto-serif", label: "noto serif", family: "'Noto Serif', serif" },
+    { id: "noto-sans", label: "humanist sans (noto sans)", family: "'Noto Sans', sans-serif" },
+    { id: "noto-serif", label: "classical serif (noto serif)", family: "'Noto Serif', serif" },
+    { id: "gfs-didot", label: "hellenic didot (gfs didot)", family: "'GFS Didot', serif" },
+    { id: "gfs-neohellenic", label: "neohellenic text (gfs neohellenic)", family: "'GFS Neohellenic', sans-serif" },
+    { id: "alegreya", label: "bookish serif (alegreya)", family: "'Alegreya', serif" },
+    { id: "google-sans", label: "square modern (google sans)", family: "'Google Sans', sans-serif" },
+    { id: "handjet", label: "wireframe display (handjet)", family: "'Handjet', sans-serif" },
   ],
   cyrillic: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans", label: "noto sans", family: "'Noto Sans', sans-serif" },
-    { id: "noto-serif", label: "noto serif", family: "'Noto Serif', serif" },
+    { id: "noto-sans", label: "humanist sans (noto sans)", family: "'Noto Sans', sans-serif" },
+    { id: "noto-serif", label: "literary serif (noto serif)", family: "'Noto Serif', serif" },
+    { id: "russo-one", label: "street stencil (russo one)", family: "'Russo One', sans-serif" },
+    { id: "marck-script", label: "shop script (marck script)", family: "'Marck Script', cursive" },
+    { id: "rubik-bubbles", label: "bulb sign (rubik bubbles)", family: "'Rubik Bubbles', sans-serif" },
+    { id: "lobster", label: "retro ad (lobster)", family: "'Lobster', cursive" },
+    { id: "alegreya", label: "book serif (alegreya)", family: "'Alegreya', serif" },
+    { id: "cormorant-garamond", label: "newspaper serif (cormorant garamond)", family: "'Cormorant Garamond', serif" },
+    { id: "google-sans", label: "ui modern (google sans)", family: "'Google Sans', sans-serif" },
+    { id: "handjet", label: "wireframe display (handjet)", family: "'Handjet', sans-serif" },
   ],
   georgian: [
     { id: FONT_OPTION_DEFAULT_ID, label: "default" },
-    { id: "noto-sans-georgian", label: "noto sans georgian", family: "'Noto Sans Georgian', sans-serif" },
-    { id: "noto-serif-georgian", label: "noto serif georgian", family: "'Noto Serif Georgian', serif" },
+    { id: "noto-sans-georgian", label: "street sans (noto sans georgian)", family: "'Noto Sans Georgian', sans-serif" },
+    { id: "noto-serif-georgian", label: "classic serif (noto serif georgian)", family: "'Noto Serif Georgian', serif" },
+    { id: "google-sans", label: "metro ui (google sans)", family: "'Google Sans', sans-serif" },
   ],
 };
 
@@ -2011,14 +2062,11 @@ function getCheatSheetMarkup(symbol, alphabet, caseMode) {
     return `<div class="cheat-item-head"><span class="cheat-symbol-preview music-preview" data-music-id="${symbol.id}" aria-hidden="true"></span>${noteButton}</div><span>${symbol.latin}</span>${noteBlock}`;
   }
 
-  if (!alphabet.hasCase || caseMode === "lower") {
+  if (!alphabet.hasCase) {
     return `<div class="cheat-item-head"><strong>${symbol.foreign}</strong>${noteButton}</div><span>${symbol.latin}</span>${noteBlock}`;
   }
 
-  if (caseMode === "upper") {
-    return `<div class="cheat-item-head"><strong>${toUpperVariant(symbol.foreign)}</strong>${noteButton}</div><span>${symbol.latin}</span>${noteBlock}`;
-  }
-
+  // Always show both cases in cheat sheet regardless of settings
   return `<div class="cheat-item-head"><strong>${symbol.foreign}</strong>${noteButton}</div><span class="cheat-case">${toUpperVariant(symbol.foreign)}</span><span>${symbol.latin}</span>${noteBlock}`;
 }
 

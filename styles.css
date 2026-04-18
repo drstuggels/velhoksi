@@ -215,8 +215,10 @@ p {
   gap: 8px;
 }
 
-.shortcuts-intro {
+.shortcuts-key-note {
   margin-top: 12px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
 }
 
 .shortcut-row {
@@ -241,7 +243,10 @@ p {
 }
 
 .shortcut-row span {
-  color: var(--text);
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
 }
 
 .update-banner {
@@ -581,6 +586,12 @@ input[type="text"] {
 
 .close-cheat-button {
   margin-top: 8px;
+}
+
+.dialog-separator {
+  border: none;
+  border-top: 1px solid var(--soft-line);
+  margin: 16px 0 0;
 }
 
 .nav-separator {

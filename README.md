@@ -32,11 +32,10 @@ python3 scripts/generate_word_lists.py
 - [x] loading animation
 - [x] settings modal like cheat sheet
 - [x] keyboard shortcuts
-- [ ] more stylized fonts for each language
-    - japanese retro
-    - greek, arabic, hebrew ancient
-    - handwriting
-    - corporate bulbous
+- [x] more stylized fonts for each language
+- [x] setting line between close and first setting
+- [ ] fix sw not caching html
+- [ ] responsiveness (stats overflow, / separated menu, don't display shortcuts on mobile)
 - [ ] morse
 - [ ] "mastery mode"
     - demand consistent time sub few seconds
