@@ -584,6 +584,16 @@ input[type="text"] {
   outline: none;
 }
 
+#direction-toggle .direction-arrow {
+  display: inline-block;
+  transition: transform 120ms ease;
+}
+
+#direction-toggle:hover .direction-arrow,
+#direction-toggle:focus-visible .direction-arrow {
+  transform: scaleX(-1);
+}
+
 .close-cheat-button {
   margin-top: 8px;
 }
@@ -600,23 +610,28 @@ input[type="text"] {
 
 .view-game {
   position: relative;
+  --stats-reserve: clamp(220px, 22vw, 360px);
+  overflow: visible;
 }
 
 .floating {
   position: absolute;
   background: var(--surface);
   backdrop-filter: blur(12px);
+  overflow: visible;
 }
 
 .floating-main {
   left: 5%;
   right: 8%;
   top: 10%;
-  bottom: 6%;
+  bottom: 10%;
   display: grid;
   grid-template-rows: auto minmax(150px, 28vh) auto minmax(0, 1fr) auto;
   gap: 22px;
   min-height: 0;
+  min-width: 0;
+  overflow: visible;
 }
 
 .floating-main.latin-mode {
@@ -630,8 +645,8 @@ input[type="text"] {
 .floating-stats {
   right: 5%;
   top: 18%;
-  width: 18%;
-  min-width: 180px;
+  width: var(--stats-reserve);
+  min-width: 200px;
   display: grid;
   gap: 18px;
   align-content: start;
@@ -664,6 +679,7 @@ input[type="text"] {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
 }
 
 .cheat-font-control {
@@ -698,6 +714,7 @@ input[type="text"] {
 .prompt-tools {
   gap: 18px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .prompt-title-prefix,
@@ -709,6 +726,7 @@ input[type="text"] {
   justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .prompt-card {
@@ -719,7 +737,7 @@ input[type="text"] {
   gap: 10px;
   grid-template-rows: 1fr auto;
   min-height: 0;
-  max-width: calc(100% - clamp(220px, 20vw, 320px));
+  max-width: calc(100% - var(--stats-reserve) - 32px);
   padding: 18px 20px;
   border: 2px solid var(--line);
   background: var(--surface-strong);
@@ -1077,6 +1095,9 @@ input[type="text"]::placeholder {
 }
 
 .stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
   align-items: flex-start;
 }
 
@@ -1525,27 +1546,236 @@ input[type="text"]::placeholder {
 }
 
 @media (max-width: 1100px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .app-shell {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .site-header,
+  .site-footer {
+    position: static;
+    left: auto;
+    right: auto;
+  }
+
+  .viewport {
+    margin-top: 28px;
+    height: auto;
+    display: block;
+    flex: 1 0 auto;
+    overflow: visible;
+    place-items: initial;
+  }
+
+  .view {
+    height: auto;
+  }
+
   .prompt-card {
     max-width: 100%;
   }
 
-  .floating-main {
-    left: 4%;
-    right: 4%;
-    top: 10%;
-    bottom: 18%;
+  .view-game {
+    display: grid;
+    gap: 16px;
+    padding-bottom: 16px;
+    --stats-reserve: 0px;
+    align-items: start;
+    align-content: start;
+    height: auto;
+  }
+
+  .floating {
+    position: relative;
+    inset: auto;
   }
 
   .floating-stats {
-    left: 4%;
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 2px;
+    gap: 12px;
+    align-self: start;
+    padding-bottom: 12px;
+  }
+
+  .floating-main {
+    order: 3;
+    left: auto;
     right: auto;
     top: auto;
-    bottom: 10%;
-    width: auto;
+    bottom: auto;
+    width: 100%;
+    grid-template-rows: auto auto auto auto auto;
+    gap: 16px;
+    align-self: start;
+    padding: 12px 12px 16px;
+  }
+
+  .answer-form {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .symbol-grid {
+    padding-left: 0;
+    padding-right: 0;
+    justify-items: stretch;
+  }
+
+  .symbol-key {
+    width: 100%;
+  }
+
+  .floating-main.latin-mode {
+    grid-template-rows: auto auto auto 1fr;
+  }
+
+  .floating-main.symbol-mode {
+    grid-template-rows: auto minmax(108px, 18vh) auto minmax(0, 1fr) auto;
   }
 
   .settings-dialog {
     max-width: min(760px, calc(100vw - 36px));
+  }
+}
+
+@media (max-width: 1200px) {
+  .brand-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .brand-quote {
+    white-space: nowrap;
+  }
+
+  .prompt-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .prompt-tools {
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .prompt-card {
+    width: 100%;
+    max-width: min(860px, calc(100% - 32px));
+    justify-self: center;
+  }
+}
+
+@media (max-width: 1100px) {
+  .prompt-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    align-items: flex-start;
+    border: 1px solid var(--soft-line);
+    background: var(--panel-tone);
+  }
+
+  .prompt-title-row {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    border: 0;
+    border-bottom: 1px solid var(--soft-line);
+    padding: 10px 12px;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .prompt-title-row .text-button {
+    flex: 0 0 auto;
+    text-align: left;
+    padding: 0;
+    color: var(--muted);
+  }
+
+  #alphabet-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .prompt-title-row .text-button:hover,
+  .prompt-title-row .text-button:focus-visible {
+    transform: none;
+    color: var(--text);
+  }
+
+  .prompt-value {
+    max-width: 100%;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .prompt-tools {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    justify-content: stretch;
+    border: 0;
+    background: transparent;
+    padding: 2px 0 0;
+  }
+
+  .prompt-tools .text-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    padding: 10px 12px;
+    line-height: 1.1;
+  }
+
+  .prompt-tools .text-button:hover,
+  .prompt-tools .text-button:focus-visible {
+    transform: none;
+  }
+
+  .nav-separator {
+    display: none;
+  }
+
+  #settings-toggle,
+  #cheat-toggle,
+  #shortcuts-toggle {
+    border-top: 1px solid var(--soft-line);
+  }
+
+  #shortcuts-toggle {
+    display: none;
   }
 }
 
@@ -1651,6 +1881,7 @@ input[type="text"]::placeholder {
     grid-template-rows: auto auto auto auto auto;
     gap: 16px;
     width: 100%;
+    padding: 12px 12px 16px;
   }
 
   .floating-main.latin-mode {
@@ -1674,8 +1905,6 @@ input[type="text"]::placeholder {
   }
 
   .answer-form {
-    padding-left: 12px;
-    padding-right: 12px;
     margin-left: 0;
     width: 100%;
   }
@@ -1695,27 +1924,24 @@ input[type="text"]::placeholder {
     box-shadow: 8px 8px 0 var(--line);
   }
 
+  .prompt-value {
+    font-size: clamp(2.6rem, 14vw, 5.2rem);
+  }
+
   .prompt-meta {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    align-items: flex-start;
+    gap: 0;
+    border: 1px solid var(--soft-line);
+    background: var(--panel-tone);
   }
 
   .prompt-title-row {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 4px 8px;
-    align-items: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--soft-line);
   }
 
   .prompt-tools {
-    display: grid;
-    grid-template-columns: repeat(4, max-content);
-    align-items: center;
-    justify-content: start;
-    gap: 0 20px;
+    padding: 2px 0 0;
   }
 
   .nav-separator {
@@ -1741,8 +1967,12 @@ input[type="text"]::placeholder {
     height: auto;
     max-height: none;
     overflow: visible;
-    justify-items: center;
-    padding: 10px;
+    justify-items: stretch;
+    padding: 10px 0;
+  }
+
+  .symbol-key {
+    width: 100%;
   }
 
   .symbol-key {
@@ -1772,11 +2002,7 @@ input[type="text"]::placeholder {
   }
 
   .stats-row {
-    flex-direction: row;
     width: 100%;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
   }
 
   .stats-row > div {
@@ -1794,13 +2020,12 @@ input[type="text"]::placeholder {
   }
 
   .site-footer {
-    margin-top: auto;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-end;
-    padding-bottom: 0;
-    gap: 6px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
   }
 
   .site-footer .theme-prefix {
@@ -1810,11 +2035,7 @@ input[type="text"]::placeholder {
   .site-footer a,
   .site-footer .text-button {
     max-width: 100%;
-  }
-
-  .site-footer a {
-    align-self: flex-end;
-    text-align: right;
+    white-space: nowrap;
   }
 
   .continue-hint {

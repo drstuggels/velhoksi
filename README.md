@@ -34,10 +34,18 @@ python3 scripts/generate_word_lists.py
 - [x] keyboard shortcuts
 - [x] more stylized fonts for each language
 - [x] setting line between close and first setting
+- [x] make cheat sheet font match the previous prompt font by default if on random mode
+- [x] upper case / lower case words should have correct answer in lower case / upper case
+- [x] hovering greek -> latin should flip the arrow
 - [ ] fix sw not caching html
-- [ ] responsiveness (stats overflow, / separated menu, don't display shortcuts on mobile)
+- [x] responsiveness (stats overflow, / separated menu, don't display shortcuts on mobile)
+- [ ] hangul grapheme->syllable->word mode
 - [ ] morse
 - [ ] "mastery mode"
     - demand consistent time sub few seconds
     - demand streak of 2-3 rounds
     - green bubble that fills up
+
+for more fonts:
+https://typeface.ge/en
+https://www.freejapanesefont.com/category/handwriting/

@@ -561,6 +561,7 @@ const state = {
   feedbackMode: loadFeedbackMode(),
   promptFontMap: loadPromptFontMap(),
   randomFontMap: loadRandomFontMap(),
+  cheatFontMap: {},
   practiceModeMap: loadPracticeModeMap(),
   wordLists: EMPTY_WORD_LISTS,
   currentPromptId: null,
@@ -1019,6 +1020,9 @@ function bindEvents() {
       }
       state.randomFontMap[alphabet.id] = refs.randomFontToggle.checked;
       saveRandomFontMap();
+      if (!state.randomFontMap[alphabet.id]) {
+        delete state.cheatFontMap[alphabet.id];
+      }
       clearPendingWrongState();
       reshufflePromptCollection();
       setFeedback("");
@@ -1037,8 +1041,14 @@ function bindEvents() {
       if (!options.some((option) => option.id === nextId)) {
         return;
       }
-      state.promptFontMap[alphabet.id] = nextId;
-      savePromptFontMap();
+      if (getRandomFontForAlphabet(alphabet)) {
+        state.cheatFontMap[alphabet.id] = nextId;
+        render();
+        return;
+      } else {
+        state.promptFontMap[alphabet.id] = nextId;
+        savePromptFontMap();
+      }
       clearPendingWrongState();
       reshufflePromptCollection();
       setFeedback("");
@@ -1340,6 +1350,23 @@ function getRandomFontForAlphabet(alphabet) {
   return Boolean(state.randomFontMap?.[alphabet.id]);
 }
 
+function getCheatFontIdForAlphabet(alphabet) {
+  if (!supportsPromptFontSettings(alphabet)) {
+    return FONT_OPTION_DEFAULT_ID;
+  }
+  if (getRandomFontForAlphabet(alphabet)) {
+    const override = state.cheatFontMap?.[alphabet.id];
+    const options = getPromptFontOptionsForAlphabet(alphabet);
+    if (options.some((option) => option.id === override)) {
+      return override;
+    }
+    if (options.some((option) => option.id === state.currentPromptFontId)) {
+      return state.currentPromptFontId;
+    }
+  }
+  return getPromptFontIdForAlphabet(alphabet);
+}
+
 function pickRandomPromptFontId(alphabet) {
   const options = getPromptFontOptionsForAlphabet(alphabet);
   const pool = options.filter((option) => option.id !== FONT_OPTION_DEFAULT_ID);
@@ -1397,7 +1424,7 @@ function renderPromptFontSettings(alphabet) {
   refs.randomFontToggle.checked = randomEnabled;
   refs.promptFontSelect.disabled = false;
   refs.promptFontCopy.textContent = randomEnabled
-    ? "selected style applies to cheat sheet. random mode changes prompt font every card."
+    ? "random mode changes prompt font every card. cheat sheet defaults to the current prompt font."
     : "switch symbol styles to get used to different writing forms.";
 }
 
@@ -1423,7 +1450,7 @@ function renderCheatFontControl(alphabet) {
     node.textContent = option.label;
     refs.cheatFontSelect.appendChild(node);
   }
-  refs.cheatFontSelect.value = getPromptFontIdForAlphabet(alphabet);
+  refs.cheatFontSelect.value = getCheatFontIdForAlphabet(alphabet);
 }
 
 function applyPromptFont(prompt, alphabet, useGraphic) {
@@ -1458,7 +1485,7 @@ function applyCheatSheetFont(alphabet) {
     return;
   }
 
-  const option = getPromptFontOptionById(alphabet, getPromptFontIdForAlphabet(alphabet));
+  const option = getPromptFontOptionById(alphabet, getCheatFontIdForAlphabet(alphabet));
   if (!option?.family) {
     return;
   }
@@ -1584,12 +1611,25 @@ function renderPrompt() {
   const alphabet = getSelectedAlphabet();
   const isWordMode = Boolean(alphabet && isWordPracticeModeForAlphabet(alphabet));
   const sourceLabel = alphabet ? alphabet.label : "foreign";
-  refs.directionToggle.textContent =
+  const leftLabel =
     state.direction === "foreignToLatin"
       ? isWordMode
-        ? `${sourceLabel} words -> latin`
-        : `${sourceLabel} -> latin`
-      : `latin -> ${sourceLabel}`;
+        ? `${sourceLabel} words`
+        : sourceLabel
+      : "latin";
+  const rightLabel = state.direction === "foreignToLatin" ? "latin" : sourceLabel;
+  const directionKey = `${leftLabel}::${rightLabel}`;
+  if (refs.directionToggle.dataset.directionKey !== directionKey) {
+    refs.directionToggle.dataset.directionKey = directionKey;
+    refs.directionToggle.textContent = "";
+    refs.directionToggle.append(document.createTextNode(`${leftLabel} `));
+    const arrow = document.createElement("span");
+    arrow.className = "direction-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = "→";
+    refs.directionToggle.append(arrow);
+    refs.directionToggle.append(document.createTextNode(` ${rightLabel}`));
+  }
 
   if (!prompt) {
     refs.promptCard.classList.remove("success-flash", "failure-flash");
@@ -1918,7 +1958,8 @@ function toggleSettingsDialog() {
 }
 
 function toggleCheatDialog() {
-  if (!getSelectedAlphabet()) {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet) {
     return;
   }
   const wasOpen = Boolean(refs.cheatDialog?.open);
@@ -1926,8 +1967,21 @@ function toggleCheatDialog() {
     return;
   }
   if (!wasOpen) {
+    if (supportsPromptFontSettings(alphabet) && getRandomFontForAlphabet(alphabet)) {
+      delete state.cheatFontMap[alphabet.id];
+    }
     renderCheatSheet();
     scheduleMusicPreviewHydration();
+    if (refs.closeCheat) {
+      const isCoarsePointer = Boolean(
+        window.matchMedia?.("(pointer: coarse)")?.matches
+      );
+      if (isCoarsePointer) {
+        window.requestAnimationFrame(() => {
+          refs.closeCheat?.focus?.({ preventScroll: true });
+        });
+      }
+    }
   }
   render();
 }
@@ -2370,6 +2424,11 @@ function isWordPracticeModeForAlphabet(alphabet) {
   return getPracticeModeForAlphabet(alphabet) === PRACTICE_MODE_WORDS;
 }
 
+function isWordPrompt(prompt) {
+  const id = String(prompt?.baseId || prompt?.id || "");
+  return id.startsWith("word:");
+}
+
 function getCurrentPracticeModeNamespace() {
   const alphabet = getSelectedAlphabet();
   return isWordPracticeModeForAlphabet(alphabet) ? PRACTICE_MODE_WORDS : PRACTICE_MODE_SYMBOLS;
@@ -2564,7 +2623,10 @@ function getExpectedLatinAnswer(prompt) {
   if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
     return prompt.acceptedAnswers.join(" or ");
   }
-  return prompt.latin;
+  if (isWordPrompt(prompt) && prompt.caseMode === "upper") {
+    return toUpperVariant(String(prompt.latin || ""));
+  }
+  return String(prompt.latin || "");
 }
 
 function ensureMusicMarkup(symbol) {
@@ -3038,8 +3100,8 @@ function normalizeWordRows(rows) {
   }
   return rows
     .map((row) => ({
-      foreign: String(row?.foreign || ""),
-      latin: String(row?.latin || ""),
+      foreign: String(row?.foreign || "").trim(),
+      latin: String(row?.latin || "").trim().toLocaleLowerCase(),
       source: String(row?.source || ""),
     }))
     .filter((row) => row.foreign && row.latin);
