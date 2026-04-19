@@ -327,6 +327,7 @@ const alphabetById = Object.fromEntries(ALPHABETS.map((alphabet) => [alphabet.id
 const CYRILLIC_VARIANTS = ["russian", "ukrainian", "belarusian", "bulgarian", "serbian", "macedonian"];
 
 const PRACTICE_MODE_SYMBOLS = "symbols";
+const PRACTICE_MODE_SYLLABLES = "syllables";
 const PRACTICE_MODE_WORDS = "words";
 
 const EMPTY_WORD_LISTS = {
@@ -335,6 +336,7 @@ const EMPTY_WORD_LISTS = {
     hiragana: [],
     katakana: [],
     armenian: [],
+    hangul: [],
     arabic: [],
     hebrew: [],
     syriac: [],
@@ -353,6 +355,113 @@ const EMPTY_WORD_LISTS = {
 };
 
 const FONT_OPTION_DEFAULT_ID = "default";
+
+const HANGUL = {
+  base: 0xac00,
+  lCount: 19,
+  vCount: 21,
+  tCount: 28,
+  nCount: 21 * 28,
+};
+
+const HANGUL_L_INDEX_BY_JAMO = {
+  "ㄱ": 0,
+  "ㄴ": 2,
+  "ㄷ": 3,
+  "ㄹ": 5,
+  "ㅁ": 6,
+  "ㅂ": 7,
+  "ㅅ": 9,
+  "ㅇ": 11,
+  "ㅈ": 12,
+  "ㅊ": 14,
+  "ㅋ": 15,
+  "ㅌ": 16,
+  "ㅍ": 17,
+  "ㅎ": 18,
+};
+
+const HANGUL_V_INDEX_BY_JAMO = {
+  "ㅏ": 0,
+  "ㅑ": 2,
+  "ㅓ": 4,
+  "ㅕ": 6,
+  "ㅗ": 8,
+  "ㅛ": 12,
+  "ㅜ": 13,
+  "ㅠ": 17,
+  "ㅡ": 18,
+  "ㅣ": 20,
+};
+
+const HANGUL_T_INDEX_BY_JAMO = {
+  "": 0,
+  "ㄱ": 1,
+  "ㄴ": 4,
+  "ㄷ": 7,
+  "ㄹ": 8,
+  "ㅁ": 16,
+  "ㅂ": 17,
+  "ㅅ": 19,
+  "ㅇ": 21,
+  "ㅈ": 22,
+  "ㅊ": 23,
+  "ㅋ": 24,
+  "ㅌ": 25,
+  "ㅍ": 26,
+  "ㅎ": 27,
+};
+
+const HANGUL_JAMO_TO_LATIN = {
+  "ㄱ": "g",
+  "ㄴ": "n",
+  "ㄷ": "d",
+  "ㄹ": "r",
+  "ㅁ": "m",
+  "ㅂ": "b",
+  "ㅅ": "s",
+  "ㅇ": "ng",
+  "ㅈ": "j",
+  "ㅊ": "ch",
+  "ㅋ": "k",
+  "ㅌ": "t",
+  "ㅍ": "p",
+  "ㅎ": "h",
+  "ㅏ": "a",
+  "ㅑ": "ya",
+  "ㅓ": "eo",
+  "ㅕ": "yeo",
+  "ㅗ": "o",
+  "ㅛ": "yo",
+  "ㅜ": "u",
+  "ㅠ": "yu",
+  "ㅡ": "eu",
+  "ㅣ": "i",
+};
+
+const HANGUL_CODA_JAMO_TO_LATIN = {
+  "": "",
+  "ㄱ": "k",
+  "ㄴ": "n",
+  "ㄷ": "t",
+  "ㄹ": "l",
+  "ㅁ": "m",
+  "ㅂ": "p",
+  "ㅅ": "t",
+  "ㅇ": "ng",
+  "ㅈ": "t",
+  "ㅊ": "t",
+  "ㅋ": "k",
+  "ㅌ": "t",
+  "ㅍ": "p",
+  "ㅎ": "t",
+};
+
+const HANGUL_PRACTICE_CONSONANTS = ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ", "ㅂ", "ㅅ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"];
+const HANGUL_PRACTICE_VOWELS = ["ㅏ", "ㅑ", "ㅓ", "ㅕ", "ㅗ", "ㅛ", "ㅜ", "ㅠ", "ㅡ", "ㅣ"];
+
+let hangulSyllableCacheKey = "";
+let hangulSyllableCache = [];
 
 const PROMPT_FONT_OPTIONS = {
   hiragana: [
@@ -490,6 +599,14 @@ const SYMBOL_NOTES = {
   },
   hangul: {
     "ㅇ": "silent at the start of a syllable block, ng at the end. here it is shown with its final-sound value.",
+    "ㄹ": "in syllable/word mode, ㄹ is r at the start of a syllable and l at the end (e.g. 라=ra, 을=eul). answers accept either r or l.",
+    "ㄱ": "in syllable/word mode, final ㄱ is written as k, but before a vowel it can sound/appear like g (e.g. 각=gak, 먹어=meogeo).",
+    "ㄷ": "in syllable/word mode, final ㄷ is written as t, but before a vowel it can sound/appear like d (e.g. 닫=dat, 닫아=dada).",
+    "ㅂ": "in syllable/word mode, final ㅂ is written as p, but before a vowel it can sound/appear like b (e.g. 밥=bap, 밥을=babeul).",
+    "ㅅ": "in syllable/word mode, final ㅅ is written as t, but before a vowel it can sound/appear like s (e.g. 옷=ot, 옷이=osi).",
+    "ㅈ": "in syllable/word mode, final ㅈ is written as t, but before a vowel it can sound/appear like j (e.g. 찾=chat, 찾을=chajeul).",
+    "ㅊ": "in syllable/word mode, final ㅊ is written as t, but before a vowel it can sound/appear like ch (e.g. 꽃=kkot, 꽃이=kkochi).",
+    "ㅎ": "in syllable/word mode, final ㅎ is written as t, but before a vowel it can sound/appear like h (e.g. 좋=jot, 좋아=joha). it can also surface from final ㄶ/ㅀ before vowels (e.g. 많은=manheun).",
     "ㅓ": "eo is the standard romanization; it is not english eo literally.",
     "ㅕ": "yeo is the standard romanization; it is not english yeo literally.",
     "ㅡ": "eu is the standard romanization for this vowel."
@@ -717,7 +834,7 @@ function bindEvents() {
 
   refs.directionToggle.addEventListener("click", () => {
     const alphabet = getSelectedAlphabet();
-    if (!alphabet || alphabet.oneWay || isWordPracticeModeForAlphabet(alphabet)) {
+    if (!alphabet || alphabet.oneWay || isWordPracticeModeForAlphabet(alphabet) || isSyllablePracticeModeForAlphabet(alphabet)) {
       return;
     }
     state.direction =
@@ -1070,9 +1187,12 @@ function bindEvents() {
       if (nextMode === PRACTICE_MODE_WORDS && !isWordModeSupported(alphabet)) {
         return;
       }
+      if (nextMode === PRACTICE_MODE_SYLLABLES && !isSyllableModeSupported(alphabet)) {
+        return;
+      }
       state.practiceModeMap[alphabet.id] = nextMode;
       savePracticeModeMap();
-      if (nextMode === PRACTICE_MODE_WORDS && state.direction !== "foreignToLatin") {
+      if ((nextMode === PRACTICE_MODE_WORDS || nextMode === PRACTICE_MODE_SYLLABLES) && state.direction !== "foreignToLatin") {
         state.direction = "foreignToLatin";
         localStorage.setItem(STORAGE_KEYS.direction, state.direction);
       }
@@ -1202,7 +1322,9 @@ function render() {
   const alphabet = getSelectedAlphabet();
   const caseMode = alphabet ? getCaseModeForAlphabet(alphabet) : "lower";
   const practiceMode = alphabet ? getPracticeModeForAlphabet(alphabet) : PRACTICE_MODE_SYMBOLS;
-  const enforceForeignToLatin = Boolean(alphabet?.oneWay || practiceMode === PRACTICE_MODE_WORDS);
+  const enforceForeignToLatin = Boolean(
+    alphabet?.oneWay || practiceMode === PRACTICE_MODE_WORDS || practiceMode === PRACTICE_MODE_SYLLABLES
+  );
   if (enforceForeignToLatin && state.direction !== "foreignToLatin") {
     state.direction = "foreignToLatin";
     localStorage.setItem(STORAGE_KEYS.direction, state.direction);
@@ -1259,6 +1381,9 @@ function getLatinInputPlaceholder(alphabet) {
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
     return "type the latin transliteration";
   }
+  if (alphabet && isSyllablePracticeModeForAlphabet(alphabet)) {
+    return "type the latin syllable";
+  }
   if (alphabet?.id === "music-notes") {
     return "type the note name (c, c#, db, bb)";
   }
@@ -1269,7 +1394,10 @@ function getLatinInputMaxLength(alphabet) {
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
     return 48;
   }
-  return alphabet?.id === "music-notes" ? 6 : 6;
+  if (alphabet && isSyllablePracticeModeForAlphabet(alphabet)) {
+    return 16;
+  }
+  return 6;
 }
 
 function renderPracticeModeSettings(alphabet) {
@@ -1284,18 +1412,28 @@ function renderPracticeModeSettings(alphabet) {
   }
 
   const supportsWords = isWordModeSupported(alphabet);
+  const supportsSyllables = isSyllableModeSupported(alphabet);
   const currentMode = getPracticeModeForAlphabet(alphabet);
-  refs.practiceModeCopy.textContent = supportsWords
-    ? "switch between symbol drills and word drills."
-    : "word mode is not available for this alphabet.";
+  if (supportsSyllables) {
+    refs.practiceModeCopy.textContent = supportsWords
+      ? "switch between symbol, syllable, and word drills."
+      : "switch between symbol drills and syllable drills.";
+  } else {
+    refs.practiceModeCopy.textContent = supportsWords
+      ? "switch between symbol drills and word drills."
+      : "word mode is not available for this alphabet.";
+  }
 
   for (const button of refs.practiceModeOptions) {
     const mode = button.dataset.practiceMode;
     const active = mode === currentMode;
-    const disabled = mode === PRACTICE_MODE_WORDS && !supportsWords;
+    const disabled =
+      (mode === PRACTICE_MODE_WORDS && !supportsWords) ||
+      (mode === PRACTICE_MODE_SYLLABLES && !supportsSyllables);
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
     button.disabled = disabled;
+    button.classList.toggle("hidden", mode === PRACTICE_MODE_SYLLABLES && !supportsSyllables);
   }
 }
 
@@ -1999,16 +2137,22 @@ function togglePracticeModeShortcut() {
   }
   const currentMode = getPracticeModeForAlphabet(alphabet);
   const supportsWords = isWordModeSupported(alphabet);
-  let nextMode = PRACTICE_MODE_SYMBOLS;
-  if (supportsWords) {
-    nextMode = currentMode === PRACTICE_MODE_WORDS ? PRACTICE_MODE_SYMBOLS : PRACTICE_MODE_WORDS;
+  const supportsSyllables = isSyllableModeSupported(alphabet);
+  const modes = [PRACTICE_MODE_SYMBOLS];
+  if (supportsSyllables) {
+    modes.push(PRACTICE_MODE_SYLLABLES);
   }
+  if (supportsWords) {
+    modes.push(PRACTICE_MODE_WORDS);
+  }
+  const currentIndex = Math.max(0, modes.indexOf(currentMode));
+  const nextMode = modes[(currentIndex + 1) % modes.length];
   if (nextMode === currentMode) {
     return;
   }
   state.practiceModeMap[alphabet.id] = nextMode;
   savePracticeModeMap();
-  if (nextMode === PRACTICE_MODE_WORDS && state.direction !== "foreignToLatin") {
+  if ((nextMode === PRACTICE_MODE_WORDS || nextMode === PRACTICE_MODE_SYLLABLES) && state.direction !== "foreignToLatin") {
     state.direction = "foreignToLatin";
     localStorage.setItem(STORAGE_KEYS.direction, state.direction);
   }
@@ -2020,7 +2164,7 @@ function togglePracticeModeShortcut() {
 
 function toggleDirectionShortcut() {
   const alphabet = getSelectedAlphabet();
-  if (!alphabet || alphabet.oneWay || isWordPracticeModeForAlphabet(alphabet)) {
+  if (!alphabet || alphabet.oneWay || isWordPracticeModeForAlphabet(alphabet) || isSyllablePracticeModeForAlphabet(alphabet)) {
     return;
   }
   state.direction =
@@ -2248,18 +2392,96 @@ function getEnabledSymbols() {
 
 function getPromptPool() {
   const alphabet = getSelectedAlphabet();
-  if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
-    return getCaseAwareSymbols(getEnabledWords());
+  if (alphabet) {
+    if (isWordPracticeModeForAlphabet(alphabet)) {
+      return getCaseAwareSymbols(getEnabledWords());
+    }
+    if (isSyllablePracticeModeForAlphabet(alphabet)) {
+      return getCaseAwareSymbols(getEnabledSyllables());
+    }
   }
   return getCaseAwareSymbols(getEnabledSymbols());
 }
 
 function getAnswerSymbols() {
   const alphabet = getSelectedAlphabet();
-  if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
+  if (alphabet && (isWordPracticeModeForAlphabet(alphabet) || isSyllablePracticeModeForAlphabet(alphabet))) {
     return [];
   }
   return getCaseAwareSymbols(getEnabledSymbols());
+}
+
+function composeHangulSyllable(initialJamo, vowelJamo, finalJamo) {
+  const lIndex = HANGUL_L_INDEX_BY_JAMO[initialJamo];
+  const vIndex = HANGUL_V_INDEX_BY_JAMO[vowelJamo];
+  const tIndex = HANGUL_T_INDEX_BY_JAMO[finalJamo];
+  if (typeof lIndex !== "number" || typeof vIndex !== "number" || typeof tIndex !== "number") {
+    return "";
+  }
+  const code = HANGUL.base + (lIndex * HANGUL.nCount + vIndex * HANGUL.tCount + tIndex);
+  return String.fromCharCode(code);
+}
+
+function hangulSyllableToLatin(initialJamo, vowelJamo, finalJamo) {
+  const initial = initialJamo === "ㅇ" ? "" : (HANGUL_JAMO_TO_LATIN[initialJamo] || "");
+  const vowel = HANGUL_JAMO_TO_LATIN[vowelJamo] || "";
+  const final = finalJamo ? (HANGUL_CODA_JAMO_TO_LATIN[finalJamo] || "") : "";
+  return `${initial}${vowel}${final}`;
+}
+
+function normalizeHangulLatinAnswer(raw) {
+  return String(raw || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll(/\s+/g, "")
+    // Hangul ㄹ is often taught as r/l depending on position. We accept either.
+    .replaceAll("l", "r");
+}
+
+function getEnabledSyllables() {
+  const alphabet = getSelectedAlphabet();
+  if (!alphabet || alphabet.id !== "hangul" || !isSyllablePracticeModeForAlphabet(alphabet)) {
+    return [];
+  }
+
+  const enabledForeign = new Set(getEnabledSymbols().map((symbol) => symbol.foreign));
+  const enabledConsonants = HANGUL_PRACTICE_CONSONANTS.filter((jamo) => enabledForeign.has(jamo));
+  const enabledVowels = HANGUL_PRACTICE_VOWELS.filter((jamo) => enabledForeign.has(jamo));
+  const finals = ["", ...enabledConsonants];
+
+  const key = `c:${enabledConsonants.join("")}|v:${enabledVowels.join("")}|f:${finals.join("")}`;
+  if (key === hangulSyllableCacheKey && Array.isArray(hangulSyllableCache)) {
+    return hangulSyllableCache;
+  }
+
+  const pool = [];
+  for (const initialJamo of enabledConsonants) {
+    for (const vowelJamo of enabledVowels) {
+      for (const finalJamo of finals) {
+        const foreign = composeHangulSyllable(initialJamo, vowelJamo, finalJamo);
+        if (!foreign) {
+          continue;
+        }
+        const latin = hangulSyllableToLatin(initialJamo, vowelJamo, finalJamo).toLowerCase();
+        if (!latin) {
+          continue;
+        }
+        const hex = foreign.codePointAt(0).toString(16);
+        const baseId = `syllable:hangul:${hex}`;
+        pool.push({
+          id: baseId,
+          baseId,
+          foreign,
+          latin,
+          source: "generated",
+        });
+      }
+    }
+  }
+
+  hangulSyllableCacheKey = key;
+  hangulSyllableCache = pool;
+  return pool;
 }
 
 function getEnabledWords() {
@@ -2271,6 +2493,24 @@ function getEnabledWords() {
   const rows = getWordRowsForAlphabet(alphabet);
   if (!Array.isArray(rows) || rows.length === 0) {
     return [];
+  }
+
+  if (alphabet.id === "hangul") {
+    return rows.map((row) => {
+      const foreign = String(row.foreign || "");
+      const source = String(row.source || "");
+      const idSource = source.replace(/[^a-z0-9-]/gi, "-");
+      const idForeign = foreign.replace(/\s+/g, "");
+      const baseId = `word:${alphabet.id}:${idSource}:${idForeign}`;
+      const latin = String(row.latin || "").toLowerCase();
+      return {
+        id: baseId,
+        baseId,
+        foreign,
+        latin,
+        source,
+      };
+    });
   }
 
   const enabledSymbolIds = new Set(state.enabledMap[alphabet.id] || []);
@@ -2396,17 +2636,21 @@ function isValidCaseMode(value) {
 }
 
 function isValidPracticeMode(value) {
-  return value === PRACTICE_MODE_SYMBOLS || value === PRACTICE_MODE_WORDS;
+  return value === PRACTICE_MODE_SYMBOLS || value === PRACTICE_MODE_SYLLABLES || value === PRACTICE_MODE_WORDS;
 }
 
 function isWordModeSupported(alphabet) {
   if (!alphabet) {
     return false;
   }
-  if (alphabet.id === "music-notes" || alphabet.id === "hangul") {
+  if (alphabet.id === "music-notes") {
     return false;
   }
   return getWordRowsForAlphabet(alphabet).length > 0;
+}
+
+function isSyllableModeSupported(alphabet) {
+  return Boolean(alphabet && alphabet.id === "hangul");
 }
 
 function getPracticeModeForAlphabet(alphabet) {
@@ -2417,11 +2661,18 @@ function getPracticeModeForAlphabet(alphabet) {
   if (stored === PRACTICE_MODE_WORDS && isWordModeSupported(alphabet)) {
     return PRACTICE_MODE_WORDS;
   }
+  if (stored === PRACTICE_MODE_SYLLABLES && isSyllableModeSupported(alphabet)) {
+    return PRACTICE_MODE_SYLLABLES;
+  }
   return PRACTICE_MODE_SYMBOLS;
 }
 
 function isWordPracticeModeForAlphabet(alphabet) {
   return getPracticeModeForAlphabet(alphabet) === PRACTICE_MODE_WORDS;
+}
+
+function isSyllablePracticeModeForAlphabet(alphabet) {
+  return getPracticeModeForAlphabet(alphabet) === PRACTICE_MODE_SYLLABLES;
 }
 
 function isWordPrompt(prompt) {
@@ -2431,7 +2682,13 @@ function isWordPrompt(prompt) {
 
 function getCurrentPracticeModeNamespace() {
   const alphabet = getSelectedAlphabet();
-  return isWordPracticeModeForAlphabet(alphabet) ? PRACTICE_MODE_WORDS : PRACTICE_MODE_SYMBOLS;
+  if (isWordPracticeModeForAlphabet(alphabet)) {
+    return PRACTICE_MODE_WORDS;
+  }
+  if (isSyllablePracticeModeForAlphabet(alphabet)) {
+    return PRACTICE_MODE_SYLLABLES;
+  }
+  return PRACTICE_MODE_SYMBOLS;
 }
 
 function toUpperVariant(value) {
@@ -2602,6 +2859,10 @@ function noteNameToPitchClass(raw) {
 function isAcceptedLatinAnswer(prompt, answer) {
   if (!answer) {
     return false;
+  }
+  const baseId = String(prompt?.baseId || prompt?.id || "");
+  if (baseId.startsWith("word:hangul:") || baseId.startsWith("syllable:hangul:")) {
+    return normalizeHangulLatinAnswer(answer) === normalizeHangulLatinAnswer(prompt.latin);
   }
   if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
     const answerPitchClass = noteNameToPitchClass(answer);
@@ -2928,7 +3189,11 @@ function ensurePracticeModeMapShape() {
   for (const alphabet of ALPHABETS) {
     const stored = state.practiceModeMap[alphabet.id];
     const canUseWords = isWordModeSupported(alphabet);
+    const canUseSyllables = isSyllableModeSupported(alphabet);
     if (stored === PRACTICE_MODE_WORDS && canUseWords) {
+      continue;
+    }
+    if (stored === PRACTICE_MODE_SYLLABLES && canUseSyllables) {
       continue;
     }
     state.practiceModeMap[alphabet.id] = PRACTICE_MODE_SYMBOLS;
@@ -2940,6 +3205,9 @@ function ensurePracticeModeMapShape() {
 function getPromptHint(prompt, alphabet) {
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
     return "type the latin transliteration";
+  }
+  if (alphabet && isSyllablePracticeModeForAlphabet(alphabet)) {
+    return "type the latin syllable";
   }
   if (state.direction === "foreignToLatin") {
     if (alphabet?.id === "music-notes") {
@@ -3063,6 +3331,7 @@ function normalizeWordLists(payload) {
       hiragana: [],
       katakana: [],
       armenian: [],
+      hangul: [],
       arabic: [],
       hebrew: [],
       syriac: [],
@@ -3252,6 +3521,7 @@ function loadStatsMap() {
     const legacy = parsed && typeof parsed === "object" ? parsed : {};
     const namespaced = {
       [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_SYLLABLES]: {},
       [PRACTICE_MODE_WORDS]: {},
     };
 
@@ -3264,12 +3534,19 @@ function loadStatsMap() {
       const symbolItem = hasNamespacedShape
         ? legacy[PRACTICE_MODE_SYMBOLS]?.[alphabet.id] || {}
         : legacy[alphabet.id] || {};
+      const syllableItem = hasNamespacedShape
+        ? legacy[PRACTICE_MODE_SYLLABLES]?.[alphabet.id] || {}
+        : {};
       const wordItem = hasNamespacedShape
         ? legacy[PRACTICE_MODE_WORDS]?.[alphabet.id] || {}
         : {};
       namespaced[PRACTICE_MODE_SYMBOLS][alphabet.id] = {
         right: Number.isFinite(symbolItem.right) ? symbolItem.right : 0,
         wrong: Number.isFinite(symbolItem.wrong) ? symbolItem.wrong : 0,
+      };
+      namespaced[PRACTICE_MODE_SYLLABLES][alphabet.id] = {
+        right: Number.isFinite(syllableItem.right) ? syllableItem.right : 0,
+        wrong: Number.isFinite(syllableItem.wrong) ? syllableItem.wrong : 0,
       };
       namespaced[PRACTICE_MODE_WORDS][alphabet.id] = {
         right: Number.isFinite(wordItem.right) ? wordItem.right : 0,
@@ -3280,6 +3557,7 @@ function loadStatsMap() {
   } catch {
     return {
       [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_SYLLABLES]: {},
       [PRACTICE_MODE_WORDS]: {},
     };
   }
@@ -3313,6 +3591,7 @@ function loadMissesMap() {
     const legacy = parsed && typeof parsed === "object" ? parsed : {};
     const namespaced = {
       [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_SYLLABLES]: {},
       [PRACTICE_MODE_WORDS]: {},
     };
     const hasNamespacedShape =
@@ -3324,6 +3603,9 @@ function loadMissesMap() {
       namespaced[PRACTICE_MODE_SYMBOLS][alphabet.id] = hasNamespacedShape
         ? { ...(legacy[PRACTICE_MODE_SYMBOLS]?.[alphabet.id] || {}) }
         : { ...(legacy[alphabet.id] || {}) };
+      namespaced[PRACTICE_MODE_SYLLABLES][alphabet.id] = hasNamespacedShape
+        ? { ...(legacy[PRACTICE_MODE_SYLLABLES]?.[alphabet.id] || {}) }
+        : {};
       namespaced[PRACTICE_MODE_WORDS][alphabet.id] = hasNamespacedShape
         ? { ...(legacy[PRACTICE_MODE_WORDS]?.[alphabet.id] || {}) }
         : {};
@@ -3332,6 +3614,7 @@ function loadMissesMap() {
   } catch {
     return {
       [PRACTICE_MODE_SYMBOLS]: {},
+      [PRACTICE_MODE_SYLLABLES]: {},
       [PRACTICE_MODE_WORDS]: {},
     };
   }

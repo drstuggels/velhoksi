@@ -39,7 +39,7 @@ python3 scripts/generate_word_lists.py
 - [x] hovering greek -> latin should flip the arrow
 - [x] fix sw not caching html
 - [x] responsiveness (stats overflow, / separated menu, don't display shortcuts on mobile)
-- [ ] hangul grapheme->syllable->word mode
+- [x] hangul grapheme->syllable->word mode
 - [ ] morse
 - [ ] "mastery mode"
     - demand consistent time sub few seconds

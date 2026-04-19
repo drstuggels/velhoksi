@@ -144,6 +144,91 @@ ALPHABETS_MIN_LEN = {
     "default_syllabary": 2,
 }
 
+HANGUL_BASE = 0xAC00
+HANGUL_LAST = 0xD7A3
+HANGUL_L_COUNT = 19
+HANGUL_V_COUNT = 21
+HANGUL_T_COUNT = 28
+HANGUL_N_COUNT = HANGUL_V_COUNT * HANGUL_T_COUNT
+HANGUL_S_COUNT = HANGUL_L_COUNT * HANGUL_N_COUNT
+
+# velhoksi-style hangul romanization:
+# - designed to be easy to type, without diacritics
+# - roughly follows common RR shapes, but keeps ㄹ as "r" and simple consonant mnemonics
+HANGUL_INITIAL_ROMA = [
+    "g", "kk", "n", "d", "tt", "r", "m", "b", "pp", "s", "ss", "", "j", "jj", "ch", "k", "t", "p", "h"
+]
+HANGUL_VOWEL_ROMA = [
+    "a", "ae", "ya", "yae", "eo", "e", "yeo", "ye", "o", "wa", "wae", "oe", "yo",
+    "u", "wo", "we", "wi", "yu", "eu", "ui", "i"
+]
+# Coda (받침) collapse (RR-ish). Used when no vowel-initial liaison applies.
+HANGUL_CODA_ROMA = [
+    "",    # (none)
+    "k",   # ㄱ
+    "k",   # ㄲ
+    "k",   # ㄳ
+    "n",   # ㄴ
+    "n",   # ㄵ
+    "n",   # ㄶ
+    "t",   # ㄷ
+    "l",   # ㄹ
+    "k",   # ㄺ
+    "m",   # ㄻ
+    "p",   # ㄼ
+    "t",   # ㄽ
+    "t",   # ㄾ
+    "p",   # ㄿ
+    "l",   # ㅀ
+    "m",   # ㅁ
+    "p",   # ㅂ
+    "p",   # ㅄ
+    "t",   # ㅅ
+    "t",   # ㅆ
+    "ng",  # ㅇ
+    "t",   # ㅈ
+    "t",   # ㅊ
+    "k",   # ㅋ
+    "t",   # ㅌ
+    "p",   # ㅍ
+    "t",   # ㅎ
+]
+
+# Vowel-initial liaison when the next syllable starts with ㅇ.
+HANGUL_LIAISON_ONSET_BY_T_INDEX = {
+    1: "g",   # ㄱ
+    2: "kk",  # ㄲ
+    4: "n",   # ㄴ
+    7: "d",   # ㄷ
+    8: "r",   # ㄹ
+    16: "m",  # ㅁ
+    17: "b",  # ㅂ
+    19: "s",  # ㅅ
+    20: "ss", # ㅆ
+    22: "j",  # ㅈ
+    23: "ch", # ㅊ
+    24: "k",  # ㅋ
+    25: "t",  # ㅌ
+    26: "p",  # ㅍ
+    27: "h",  # ㅎ
+}
+
+# Composite codas: keep the first part as coda, move the second part to the next onset.
+# A pragmatic subset for common learner words (e.g. 앉아=anja, 읽어=ilgeo, 없어=eopseo, 많은=manheun).
+HANGUL_LIAISON_COMPOSITE: Dict[int, Tuple[str, str]] = {
+    3: ("k", "s"),    # ㄳ
+    5: ("n", "j"),    # ㄵ
+    6: ("n", "h"),    # ㄶ
+    9: ("l", "g"),    # ㄺ
+    10: ("l", "m"),   # ㄻ
+    11: ("l", "b"),   # ㄼ
+    12: ("l", "s"),   # ㄽ
+    13: ("l", "t"),   # ㄾ
+    14: ("l", "p"),   # ㄿ
+    15: ("l", "h"),   # ㅀ
+    18: ("p", "s"),   # ㅄ
+}
+
 KAIKKI_PROPER_TAG_RE = re.compile(
     r"(proper|name|given-name|surname|abbrev|abbreviation|initialism|acronym)",
     re.IGNORECASE,
@@ -166,6 +251,7 @@ SOURCE_SPECS: List[SourceSpec] = [
     SourceSpec("katakana", "frequencywords:ja_full", "frequency", "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/ja/ja_full.txt"),
     SourceSpec("armenian", "frequencywords:hy_full", "frequency", "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/hy/hy_full.txt"),
     SourceSpec("greek", "frequencywords:el_50k", "frequency", "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/el/el_50k.txt"),
+    SourceSpec("hangul", "frequencywords:ko_50k", "frequency", "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/ko/ko_50k.txt"),
     SourceSpec("arabic", "frequencywords:ar_50k", "frequency", "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/ar/ar_50k.txt"),
     SourceSpec("hebrew", "frequencywords:he_50k", "frequency", "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/he/he_50k.txt"),
     SourceSpec("georgian", "kaikki:georgian", "kaikki", "https://kaikki.org/dictionary/Georgian/kaikki.org-dictionary-Georgian.jsonl"),
@@ -291,9 +377,23 @@ def iter_kaikki_words(url: str) -> Iterator[Tuple[str, dict]]:
 
 
 def min_len_for_alphabet(alphabet_id: str) -> int:
+    if alphabet_id == "hangul":
+        return 2
     if alphabet_id in SYLLABARY_ALPHABETS:
         return ALPHABETS_MIN_LEN["default_syllabary"]
     return ALPHABETS_MIN_LEN["default_alpha"]
+
+
+def is_hangul_syllable(ch: str) -> bool:
+    if len(ch) != 1:
+        return False
+    code = ord(ch)
+    return HANGUL_BASE <= code <= HANGUL_LAST
+
+
+def iter_hangul_syllables() -> Iterator[str]:
+    for code in range(HANGUL_BASE, HANGUL_LAST + 1):
+        yield chr(code)
 
 
 def get_alphabet_charset(alphabet_id: str, cyrillic_variant: Optional[str]) -> Set[str]:
@@ -301,13 +401,63 @@ def get_alphabet_charset(alphabet_id: str, cyrillic_variant: Optional[str]) -> S
         if not cyrillic_variant:
             raise ValueError("cyrillic variant required")
         return set(CYRILLIC_VARIANT_LETTERS[cyrillic_variant])
+    if alphabet_id == "hangul":
+        return set(iter_hangul_syllables())
     return set(SYMBOL_MAPS[alphabet_id].keys())
+
+
+def transliterate_hangul(token: str) -> Optional[str]:
+    syllables: List[Tuple[int, int, int]] = []
+    for ch in token:
+        if not is_hangul_syllable(ch):
+            return None
+        s_index = ord(ch) - HANGUL_BASE
+        if s_index < 0 or s_index >= HANGUL_S_COUNT:
+            return None
+        l_index = s_index // HANGUL_N_COUNT
+        v_index = (s_index % HANGUL_N_COUNT) // HANGUL_T_COUNT
+        t_index = s_index % HANGUL_T_COUNT
+        syllables.append((l_index, v_index, t_index))
+
+    parts: List[str] = []
+    pending_onset = ""
+    for idx, (l_index, v_index, t_index) in enumerate(syllables):
+        onset = pending_onset
+        pending_onset = ""
+        if not onset:
+            onset = HANGUL_INITIAL_ROMA[l_index]
+
+        vowel = HANGUL_VOWEL_ROMA[v_index]
+
+        next_starts_with_ieung = False
+        if idx + 1 < len(syllables):
+            next_l, _, _ = syllables[idx + 1]
+            next_starts_with_ieung = next_l == 11  # ㅇ
+
+        if t_index != 0 and next_starts_with_ieung:
+            composite = HANGUL_LIAISON_COMPOSITE.get(t_index)
+            if composite:
+                keep_coda, moved_onset = composite
+                parts.append(f"{onset}{vowel}{keep_coda}")
+                pending_onset = moved_onset
+                continue
+            moved = HANGUL_LIAISON_ONSET_BY_T_INDEX.get(t_index)
+            if moved:
+                parts.append(f"{onset}{vowel}")
+                pending_onset = moved
+                continue
+
+        coda = HANGUL_CODA_ROMA[t_index]
+        parts.append(f"{onset}{vowel}{coda}")
+    return "".join(parts)
 
 
 def collect_from_source(spec: SourceSpec) -> List[dict]:
     alphabet_id = spec.alphabet_id
     lower = alphabet_id in CASED_ALPHABETS or alphabet_id == "cyrillic"
-    symbol_map = SYMBOL_MAPS["cyrillic"] if alphabet_id == "cyrillic" else SYMBOL_MAPS[alphabet_id]
+    symbol_map = None
+    if alphabet_id not in {"hangul"}:
+        symbol_map = SYMBOL_MAPS["cyrillic"] if alphabet_id == "cyrillic" else SYMBOL_MAPS[alphabet_id]
     charset = get_alphabet_charset(alphabet_id, spec.cyrillic_variant)
     min_len = min_len_for_alphabet(alphabet_id)
 
@@ -334,7 +484,11 @@ def collect_from_source(spec: SourceSpec) -> List[dict]:
         if normalized in seen:
             continue
 
-        latin = transliterate(normalized, symbol_map)
+        if alphabet_id == "hangul":
+            latin = transliterate_hangul(normalized)
+        else:
+            assert symbol_map is not None
+            latin = transliterate(normalized, symbol_map)
         if not latin:
             continue
         if not has_usable_latin_shape(latin, alphabet_id):
@@ -401,7 +555,9 @@ def validate_rows(alphabet_id: str, rows: List[dict], cyrillic_variant: Optional
 
     lower = alphabet_id in CASED_ALPHABETS or alphabet_id == "cyrillic"
     charset = get_alphabet_charset(alphabet_id, cyrillic_variant)
-    symbol_map = SYMBOL_MAPS["cyrillic"] if alphabet_id == "cyrillic" else SYMBOL_MAPS[alphabet_id]
+    symbol_map = None
+    if alphabet_id not in {"hangul"}:
+        symbol_map = SYMBOL_MAPS["cyrillic"] if alphabet_id == "cyrillic" else SYMBOL_MAPS[alphabet_id]
     min_len = min_len_for_alphabet(alphabet_id)
 
     seen: Set[str] = set()
@@ -416,7 +572,11 @@ def validate_rows(alphabet_id: str, rows: List[dict], cyrillic_variant: Optional
             raise ValueError(f"noisy repetition in {alphabet_id}/{cyrillic_variant or '-'}: {foreign}")
         if not has_required_script_signals(foreign, alphabet_id):
             raise ValueError(f"missing script signal in {alphabet_id}/{cyrillic_variant or '-'}: {foreign}")
-        expected = transliterate(foreign, symbol_map)
+        if alphabet_id == "hangul":
+            expected = transliterate_hangul(foreign)
+        else:
+            assert symbol_map is not None
+            expected = transliterate(foreign, symbol_map)
         if not expected:
             raise ValueError(f"failed translit for {alphabet_id}/{cyrillic_variant or '-'}: {foreign}")
         if row.get("latin") != expected:

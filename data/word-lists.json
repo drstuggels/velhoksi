@@ -27524,6 +27524,2508 @@
         "source": "frequencywords:el_50k"
       }
     ],
+    "hangul": [
+      {
+        "foreign": "내가",
+        "latin": "naega",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거야",
+        "latin": "geoya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그래",
+        "latin": "geurae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있어",
+        "latin": "isseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그리고",
+        "latin": "geurigo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "우리",
+        "latin": "uri",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "무슨",
+        "latin": "museun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하지만",
+        "latin": "hajiman",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어떻게",
+        "latin": "eotteotge",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그냥",
+        "latin": "geunyang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "정말",
+        "latin": "jeongmal",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그럼",
+        "latin": "geureom",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있어요",
+        "latin": "isseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있는",
+        "latin": "itneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여기",
+        "latin": "yeogi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "제가",
+        "latin": "jega",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "우리가",
+        "latin": "uriga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이제",
+        "latin": "ije",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "지금",
+        "latin": "jigeum",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그게",
+        "latin": "geuge",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니",
+        "latin": "ani",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "네가",
+        "latin": "nega",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없어",
+        "latin": "eopseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "우린",
+        "latin": "urin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "좋아",
+        "latin": "joha",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신이",
+        "latin": "dangsini",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "다른",
+        "latin": "dareun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그런",
+        "latin": "geureon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그건",
+        "latin": "geugeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너무",
+        "latin": "neomu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그래서",
+        "latin": "geuraeseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그렇게",
+        "latin": "geureotge",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "다시",
+        "latin": "dasi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이건",
+        "latin": "igeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이런",
+        "latin": "ireon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나도",
+        "latin": "nado",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "모든",
+        "latin": "modeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신",
+        "latin": "dangsin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거예요",
+        "latin": "geoyeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신은",
+        "latin": "dangsineun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "좋은",
+        "latin": "joheun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하는",
+        "latin": "haneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하고",
+        "latin": "hago",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아냐",
+        "latin": "anya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나는",
+        "latin": "naneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니야",
+        "latin": "aniya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알아",
+        "latin": "ara",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "같이",
+        "latin": "gati",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이게",
+        "latin": "ige",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없어요",
+        "latin": "eopseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "괜찮아",
+        "latin": "gwaenchanha",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "오늘",
+        "latin": "oneul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말이야",
+        "latin": "mariya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "누가",
+        "latin": "nuga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어떤",
+        "latin": "eotteon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아주",
+        "latin": "aju",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아직",
+        "latin": "ajik",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "안돼",
+        "latin": "andwae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "진짜",
+        "latin": "jinjja",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "모두",
+        "latin": "modu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "같은",
+        "latin": "gateun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여기서",
+        "latin": "yeogiseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어서",
+        "latin": "eoseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그는",
+        "latin": "geuneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "위해",
+        "latin": "wihae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "해요",
+        "latin": "haeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "일이",
+        "latin": "iri",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하지",
+        "latin": "haji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "엄마",
+        "latin": "eomma",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "바로",
+        "latin": "baro",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "근데",
+        "latin": "geunde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알고",
+        "latin": "algo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이렇게",
+        "latin": "ireotge",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "빨리",
+        "latin": "ppalri",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있습니다",
+        "latin": "itseupnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이거",
+        "latin": "igeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "전에",
+        "latin": "jeone",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아뇨",
+        "latin": "anyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "계속",
+        "latin": "gyesok",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "닥터",
+        "latin": "dakteo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "얼마나",
+        "latin": "eolmana",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알았어",
+        "latin": "arasseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않아",
+        "latin": "anha",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "제발",
+        "latin": "jebal",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있지",
+        "latin": "itji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "겁니다",
+        "latin": "geopnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어디",
+        "latin": "eodi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람이",
+        "latin": "sarami",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그가",
+        "latin": "geuga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "안녕",
+        "latin": "annyeong",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "좋아요",
+        "latin": "johayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "같아",
+        "latin": "gata",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "우리는",
+        "latin": "urineun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그래요",
+        "latin": "geuraeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신을",
+        "latin": "dangsineul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그걸",
+        "latin": "geugeol",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니에요",
+        "latin": "anieyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있을",
+        "latin": "isseul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "때문에",
+        "latin": "ttaemune",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "대해",
+        "latin": "daehae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아빠",
+        "latin": "appa",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람",
+        "latin": "saram",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "했어",
+        "latin": "haesseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뭐야",
+        "latin": "mwoya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "수도",
+        "latin": "sudo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "많이",
+        "latin": "manhi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "집에",
+        "latin": "jibe",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거지",
+        "latin": "geoji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "일을",
+        "latin": "ireul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "저는",
+        "latin": "jeoneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그렇지",
+        "latin": "geureotji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "함께",
+        "latin": "hamkke",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "만약",
+        "latin": "manyak",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하나",
+        "latin": "hana",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "저기",
+        "latin": "jeogi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "고마워요",
+        "latin": "gomawoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "항상",
+        "latin": "hangsang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나한테",
+        "latin": "nahante",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "잠깐",
+        "latin": "jamkkan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가서",
+        "latin": "gaseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가장",
+        "latin": "gajang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "돼요",
+        "latin": "dwaeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거죠",
+        "latin": "geojyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가자",
+        "latin": "gaja",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "맞아",
+        "latin": "maja",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "보고",
+        "latin": "bogo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그거",
+        "latin": "geugeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말을",
+        "latin": "mareul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "괜찮아요",
+        "latin": "gwaenchanhayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아무도",
+        "latin": "amudo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없는",
+        "latin": "eopneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "안녕하세요",
+        "latin": "annyeonghaseyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "몰라",
+        "latin": "molra",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "많은",
+        "latin": "manheun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신의",
+        "latin": "dangsinui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아무것도",
+        "latin": "amugeotdo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그러니까",
+        "latin": "geureonikka",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알아요",
+        "latin": "arayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그의",
+        "latin": "geuui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뭐가",
+        "latin": "mwoga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "고마워",
+        "latin": "gomawo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그만",
+        "latin": "geuman",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "했어요",
+        "latin": "haesseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "젠장",
+        "latin": "jenjang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람들이",
+        "latin": "saramdeuri",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거에요",
+        "latin": "geoeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이걸",
+        "latin": "igeol",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그럴",
+        "latin": "geureol",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "것도",
+        "latin": "geotdo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말이",
+        "latin": "mari",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이미",
+        "latin": "imi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그를",
+        "latin": "geureul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뭔가",
+        "latin": "mwonga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이봐",
+        "latin": "ibwa",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니면",
+        "latin": "animyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "같아요",
+        "latin": "gatayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그런데",
+        "latin": "geureonde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니라",
+        "latin": "anira",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "세상에",
+        "latin": "sesange",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있다고",
+        "latin": "itdago",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있고",
+        "latin": "itgo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뭐라고",
+        "latin": "mworago",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "절대",
+        "latin": "jeoldae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말야",
+        "latin": "marya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당장",
+        "latin": "dangjang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그래도",
+        "latin": "geuraedo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "대한",
+        "latin": "daehan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말은",
+        "latin": "mareun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거기",
+        "latin": "geogi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "전부",
+        "latin": "jeonbu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그녀는",
+        "latin": "geunyeoneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "니가",
+        "latin": "niga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않아요",
+        "latin": "anhayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "자기",
+        "latin": "jagi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있죠",
+        "latin": "itjyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하면",
+        "latin": "hamyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가지고",
+        "latin": "gajigo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그들이",
+        "latin": "geudeuri",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너도",
+        "latin": "neodo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "됐어",
+        "latin": "dwaesseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "미안해",
+        "latin": "mianhae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "것을",
+        "latin": "geoseul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여긴",
+        "latin": "yeogin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아무",
+        "latin": "amu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람은",
+        "latin": "sarameun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "감사합니다",
+        "latin": "gamsahapnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "다들",
+        "latin": "dadeul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어때",
+        "latin": "eottae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "엄마가",
+        "latin": "eommaga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나를",
+        "latin": "nareul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이젠",
+        "latin": "ijen",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아마",
+        "latin": "ama",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그들은",
+        "latin": "geudeureun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "얘기",
+        "latin": "yaegi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있잖아",
+        "latin": "itjanha",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "저도",
+        "latin": "jeodo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "지금은",
+        "latin": "jigeumeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그녀가",
+        "latin": "geunyeoga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있다",
+        "latin": "itda",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "시간",
+        "latin": "sigan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "먼저",
+        "latin": "meonjeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "우릴",
+        "latin": "uril",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말고",
+        "latin": "malgo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람을",
+        "latin": "sarameul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "수가",
+        "latin": "suga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "봐요",
+        "latin": "bwayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있는데",
+        "latin": "itneunde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알았어요",
+        "latin": "arasseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "해야",
+        "latin": "haeya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있었어",
+        "latin": "isseosseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "우리의",
+        "latin": "uriui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않을",
+        "latin": "anheul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "방금",
+        "latin": "banggeum",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "완전",
+        "latin": "wanjeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "동안",
+        "latin": "dongan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "시간이",
+        "latin": "sigani",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "싶어",
+        "latin": "sipeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "일은",
+        "latin": "ireun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "친구",
+        "latin": "chingu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "들어",
+        "latin": "deureo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "안에",
+        "latin": "ane",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "자네",
+        "latin": "jane",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "합니다",
+        "latin": "hapnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사실",
+        "latin": "sasil",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "한번",
+        "latin": "hanbeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "대체",
+        "latin": "daeche",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "같은데",
+        "latin": "gateunde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "생각해",
+        "latin": "saenggakhae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "맞아요",
+        "latin": "majayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "혼자",
+        "latin": "honja",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "자네가",
+        "latin": "janega",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그러니",
+        "latin": "geureoni",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "선생님",
+        "latin": "seonsaengnim",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람들은",
+        "latin": "saramdeureun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "문제가",
+        "latin": "munjega",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "다음",
+        "latin": "daeum",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "물론",
+        "latin": "mulron",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거의",
+        "latin": "geoui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "일이야",
+        "latin": "iriya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없습니다",
+        "latin": "eopseupnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아빠가",
+        "latin": "appaga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "되는",
+        "latin": "doeneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그러면",
+        "latin": "geureomyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가는",
+        "latin": "ganeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말도",
+        "latin": "maldo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이리",
+        "latin": "iri",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있었어요",
+        "latin": "isseosseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "맙소사",
+        "latin": "mapsosa",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "내일",
+        "latin": "naeil",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있으면",
+        "latin": "isseumyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "잠깐만",
+        "latin": "jamkkanman",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "싫어",
+        "latin": "silheo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "중요한",
+        "latin": "jungyohan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "내게",
+        "latin": "naege",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말해",
+        "latin": "malhae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이상",
+        "latin": "isang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거라고",
+        "latin": "georago",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아는",
+        "latin": "aneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너는",
+        "latin": "neoneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "전혀",
+        "latin": "jeonhyeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여자",
+        "latin": "yeoja",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "새로운",
+        "latin": "saeroun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너희",
+        "latin": "neohui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "왔어",
+        "latin": "wasseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아직도",
+        "latin": "ajikdo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가지",
+        "latin": "gaji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나와",
+        "latin": "nawa",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "싶지",
+        "latin": "sipji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여기에",
+        "latin": "yeogie",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "원하는",
+        "latin": "wonhaneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "필요",
+        "latin": "piryo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "도움이",
+        "latin": "doumi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그녀를",
+        "latin": "geunyeoreul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "몰라요",
+        "latin": "molrayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "작은",
+        "latin": "jageun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "혹시",
+        "latin": "hoksi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "미안해요",
+        "latin": "mianhaeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나쁜",
+        "latin": "nappeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "죄송해요",
+        "latin": "joesonghaeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "모르겠어",
+        "latin": "moreugesseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가요",
+        "latin": "gayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알지",
+        "latin": "alji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "밖에",
+        "latin": "bakke",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "직접",
+        "latin": "jikjeop",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있나",
+        "latin": "itna",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "해도",
+        "latin": "haedo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하죠",
+        "latin": "hajyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "했는데",
+        "latin": "haetneunde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "필요해",
+        "latin": "piryohae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니요",
+        "latin": "aniyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "적이",
+        "latin": "jeogi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있나요",
+        "latin": "itnayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "갖고",
+        "latin": "gatgo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "돈을",
+        "latin": "doneul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "주세요",
+        "latin": "juseyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어디서",
+        "latin": "eodiseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "것이",
+        "latin": "geosi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거요",
+        "latin": "geoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "위한",
+        "latin": "wihan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "것은",
+        "latin": "geoseun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없이",
+        "latin": "eopsi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나중에",
+        "latin": "najunge",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아버지",
+        "latin": "abeoji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나랑",
+        "latin": "narang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "됐어요",
+        "latin": "dwaesseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "마세요",
+        "latin": "maseyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "언제",
+        "latin": "eonje",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그저",
+        "latin": "geujeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "생각",
+        "latin": "saenggak",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "했지",
+        "latin": "haetji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "봤어",
+        "latin": "bwasseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "해서",
+        "latin": "haeseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "시간을",
+        "latin": "siganeul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "마지막",
+        "latin": "majimak",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알겠어",
+        "latin": "algesseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "왜냐면",
+        "latin": "waenyamyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "위해서",
+        "latin": "wihaeseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "엄청",
+        "latin": "eomcheong",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알겠습니다",
+        "latin": "algetseupnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "오래",
+        "latin": "orae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "기다려",
+        "latin": "gidaryeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아닙니다",
+        "latin": "anipnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있는지",
+        "latin": "itneunji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알겠어요",
+        "latin": "algesseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "제일",
+        "latin": "jeil",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "지난",
+        "latin": "jinan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그렇죠",
+        "latin": "geureotjyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "죽은",
+        "latin": "jugeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "제대로",
+        "latin": "jedaero",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니지",
+        "latin": "aniji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있다면",
+        "latin": "itdamyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "보면",
+        "latin": "bomyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "우리를",
+        "latin": "urireul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "짓을",
+        "latin": "jiseul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "남자",
+        "latin": "namja",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너가",
+        "latin": "neoga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있다는",
+        "latin": "itdaneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "누구",
+        "latin": "nugu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "보여",
+        "latin": "boyeo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "왔어요",
+        "latin": "wasseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너한테",
+        "latin": "neohante",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여러분",
+        "latin": "yeoreobun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "완전히",
+        "latin": "wanjeonhi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너의",
+        "latin": "neoui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "것이다",
+        "latin": "geosida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "소리",
+        "latin": "sori",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없지",
+        "latin": "eopji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "벌써",
+        "latin": "beolsseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "모르겠어요",
+        "latin": "moreugesseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말이지",
+        "latin": "mariji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람들을",
+        "latin": "saramdeureul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "처음",
+        "latin": "cheoeum",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말이죠",
+        "latin": "marijyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사람들",
+        "latin": "saramdeul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그녀의",
+        "latin": "geunyeoui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "멋진",
+        "latin": "meotjin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "왜요",
+        "latin": "waeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "정말로",
+        "latin": "jeongmalro",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이름은",
+        "latin": "ireumeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "와서",
+        "latin": "waseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "대해서",
+        "latin": "daehaeseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여보",
+        "latin": "yeobo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "조금",
+        "latin": "jogeum",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않았어",
+        "latin": "anhasseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말이에요",
+        "latin": "marieyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이름이",
+        "latin": "ireumi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여보세요",
+        "latin": "yeoboseyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "서로",
+        "latin": "seoro",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "안돼요",
+        "latin": "andwaeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "죽을",
+        "latin": "jugeul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "매우",
+        "latin": "maeu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사랑해",
+        "latin": "saranghae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "오늘은",
+        "latin": "oneureun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "싶은",
+        "latin": "sipeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어디로",
+        "latin": "eodiro",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "단지",
+        "latin": "danji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아닌",
+        "latin": "anin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나가",
+        "latin": "naga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뿐이야",
+        "latin": "ppuniya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "미안",
+        "latin": "mian",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "확실히",
+        "latin": "hwaksilhi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "싶어요",
+        "latin": "sipeoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "죄송합니다",
+        "latin": "joesonghapnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "때까지",
+        "latin": "ttaekkaji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없고",
+        "latin": "eopgo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어때요",
+        "latin": "eottaeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당연히",
+        "latin": "dangyeonhi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "데리고",
+        "latin": "derigo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "필요한",
+        "latin": "piryohan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없다",
+        "latin": "eopda",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가고",
+        "latin": "gago",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "글쎄",
+        "latin": "geulsse",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않는",
+        "latin": "anneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "했죠",
+        "latin": "haetjyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "나의",
+        "latin": "naui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "별로",
+        "latin": "byeolro",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않은",
+        "latin": "anheun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "라고",
+        "latin": "rago",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여전히",
+        "latin": "yeojeonhi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없을",
+        "latin": "eopseul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있어서",
+        "latin": "isseoseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이야기",
+        "latin": "iyagi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "엄마는",
+        "latin": "eommaneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "부인",
+        "latin": "buin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "하는데",
+        "latin": "haneunde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않고",
+        "latin": "ango",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알았지",
+        "latin": "aratji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아니고",
+        "latin": "anigo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "여자가",
+        "latin": "yeojaga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "되지",
+        "latin": "doeji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "거기서",
+        "latin": "geogiseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "훨씬",
+        "latin": "hwolssin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아버지가",
+        "latin": "abeojiga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "망할",
+        "latin": "manghal",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뭔지",
+        "latin": "mwonji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "수술",
+        "latin": "susul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "듣고",
+        "latin": "deutgo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어쩌면",
+        "latin": "eojjeomyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "보세요",
+        "latin": "boseyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "생각이",
+        "latin": "saenggagi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어느",
+        "latin": "eoneu",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그러지",
+        "latin": "geureoji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "되면",
+        "latin": "doemyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아마도",
+        "latin": "amado",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "준비",
+        "latin": "junbi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "전화",
+        "latin": "jeonhwa",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뒤에",
+        "latin": "dwie",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "도대체",
+        "latin": "dodaeche",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너를",
+        "latin": "neoreul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신도",
+        "latin": "dangsindo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "것처럼",
+        "latin": "geotcheoreom",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않으면",
+        "latin": "anheumyeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말하는",
+        "latin": "malhaneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "최고의",
+        "latin": "choegoui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말하지",
+        "latin": "malhaji",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "모르는",
+        "latin": "moreuneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "유일한",
+        "latin": "yuilhan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "갑자기",
+        "latin": "gapjagi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이봐요",
+        "latin": "ibwayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "건가요",
+        "latin": "geongayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없다고",
+        "latin": "eopdago",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "것입니다",
+        "latin": "geosipnida",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있잖아요",
+        "latin": "itjanhayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "되고",
+        "latin": "doego",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "어쨌든",
+        "latin": "eojjaetdeun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가진",
+        "latin": "gajin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이번",
+        "latin": "ibeon",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뭐하는",
+        "latin": "mwohaneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "후에",
+        "latin": "hue",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "친구가",
+        "latin": "chinguga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "신경",
+        "latin": "singyeong",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그만해",
+        "latin": "geumanhae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "누구야",
+        "latin": "nuguya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신에게",
+        "latin": "dangsinege",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "없었어",
+        "latin": "eopseosseo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그들을",
+        "latin": "geudeureul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있게",
+        "latin": "itge",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "알잖아",
+        "latin": "aljanha",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "누군가",
+        "latin": "nugunga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "분명히",
+        "latin": "bunmyeonghi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "생각을",
+        "latin": "saenggageul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "일단",
+        "latin": "ildan",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "가야",
+        "latin": "gaya",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "걱정",
+        "latin": "geokjeong",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "보자",
+        "latin": "boja",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "매일",
+        "latin": "maeil",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "수는",
+        "latin": "suneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "아침",
+        "latin": "achim",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말할",
+        "latin": "malhal",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "말아요",
+        "latin": "marayo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "모두가",
+        "latin": "moduga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "않았어요",
+        "latin": "anhasseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "얘기를",
+        "latin": "yaegireul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "봤어요",
+        "latin": "bwasseoyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "대신",
+        "latin": "daesin",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "마치",
+        "latin": "machi",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "건데",
+        "latin": "geonde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "자넨",
+        "latin": "janen",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "했잖아",
+        "latin": "haetjanha",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "둘이",
+        "latin": "duri",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "당신과",
+        "latin": "dangsingwa",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "집으로",
+        "latin": "jibeuro",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "한다",
+        "latin": "handa",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "두고",
+        "latin": "dugo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이름을",
+        "latin": "ireumeul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "있네",
+        "latin": "itne",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그들의",
+        "latin": "geudeurui",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "뭔데",
+        "latin": "mwonde",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "금방",
+        "latin": "geumbang",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "사는",
+        "latin": "saneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "좋아하는",
+        "latin": "johahaneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "찾을",
+        "latin": "chajeul",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "맘에",
+        "latin": "mame",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "결국",
+        "latin": "gyeolguk",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "이유가",
+        "latin": "iyuga",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "필요해요",
+        "latin": "piryohaeyo",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "중에",
+        "latin": "junge",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "그때",
+        "latin": "geuttae",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "보는",
+        "latin": "boneun",
+        "source": "frequencywords:ko_50k"
+      },
+      {
+        "foreign": "너랑",
+        "latin": "neorang",
+        "source": "frequencywords:ko_50k"
+      }
+    ],
     "hebrew": [
       {
         "foreign": "אני",
@@ -37533,7 +40035,7 @@
       }
     ]
   },
-  "generatedAt": "2026-04-18T19:12:04.862893+00:00",
+  "generatedAt": "2026-04-19T20:48:25.041033+00:00",
   "licenses": {
     "frequencyWords": "CC-BY-SA-4.0 (content), MIT (code)",
     "kaikki": "CC-BY-SA + GFDL (Wiktionary-derived)"
