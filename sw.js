@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v7";
+const CACHE_NAME = "velhoksi-v8";
 const ASSETS = [
   "/",
   "/index.html",
@@ -57,15 +57,15 @@ self.addEventListener("fetch", (event) => {
       const cache = await caches.open(CACHE_NAME);
 
       if (isNavigation) {
-        try {
-          const fresh = await fetch(event.request, { cache: "no-store" });
-          if (fresh && fresh.ok) {
-            cache.put("/index.html", fresh.clone());
-          }
-          return fresh;
-        } catch {
-          return (await cache.match("/index.html")) || Response.error();
-        }
+        return (await cache.match("/index.html")) || fetch(event.request);
+      }
+
+      const assetPath = url.pathname === "/" ? "/index.html" : url.pathname;
+      const isPrecached = ASSETS.includes(assetPath);
+
+      if (isPrecached) {
+        const cached = await cache.match(assetPath);
+        return cached || fetch(event.request);
       }
 
       const cached = await cache.match(event.request);
@@ -74,9 +74,7 @@ self.addEventListener("fetch", (event) => {
           (async () => {
             try {
               const fresh = await fetch(event.request);
-              if (fresh && fresh.ok) {
-                await cache.put(event.request, fresh.clone());
-              }
+              if (fresh && fresh.ok) await cache.put(event.request, fresh.clone());
             } catch {
               // Ignore network failures.
             }
@@ -86,9 +84,7 @@ self.addEventListener("fetch", (event) => {
       }
 
       const fresh = await fetch(event.request);
-      if (fresh && fresh.ok) {
-        cache.put(event.request, fresh.clone());
-      }
+      if (fresh && fresh.ok) cache.put(event.request, fresh.clone());
       return fresh;
     })()
   );

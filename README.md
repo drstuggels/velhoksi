@@ -37,7 +37,7 @@ python3 scripts/generate_word_lists.py
 - [x] make cheat sheet font match the previous prompt font by default if on random mode
 - [x] upper case / lower case words should have correct answer in lower case / upper case
 - [x] hovering greek -> latin should flip the arrow
-- [ ] fix sw not caching html
+- [x] fix sw not caching html
 - [x] responsiveness (stats overflow, / separated menu, don't display shortcuts on mobile)
 - [ ] hangul grapheme->syllable->word mode
 - [ ] morse
