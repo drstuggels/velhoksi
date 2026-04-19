@@ -1,6 +1,5 @@
-const CACHE_NAME = "velhoksi-v8";
+const CACHE_NAME = "velhoksi-v10";
 const ASSETS = [
-  "/",
   "/index.html",
   "/styles.css",
   "/app.js",
@@ -13,11 +12,34 @@ const ASSETS = [
   "/site.webmanifest",
 ];
 
+async function fetchUnredirected(request) {
+  const response = await fetch(request);
+  if (response && response.redirected && response.url) {
+    try {
+      return await fetch(response.url);
+    } catch {
+      return response;
+    }
+  }
+  return response;
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(ASSETS.map((url) => new Request(url, { cache: "reload" })));
+      await Promise.all(
+        ASSETS.map(async (url) => {
+          try {
+            const response = await fetchUnredirected(new Request(url, { cache: "reload" }));
+            if (response && response.ok) {
+              await cache.put(url, response.clone());
+            }
+          } catch {
+            // ignore
+          }
+        })
+      );
     })()
   );
 });
@@ -57,7 +79,18 @@ self.addEventListener("fetch", (event) => {
       const cache = await caches.open(CACHE_NAME);
 
       if (isNavigation) {
-        return (await cache.match("/index.html")) || fetch(event.request);
+        const cached = await cache.match("/index.html");
+        if (cached) return cached;
+
+        try {
+          const fresh = await fetchUnredirected(new Request("/index.html", { cache: "reload" }));
+          if (fresh && fresh.ok && !fresh.redirected) {
+            await cache.put("/index.html", fresh.clone());
+          }
+          return fresh;
+        } catch {
+          return cached || fetch(event.request);
+        }
       }
 
       const assetPath = url.pathname === "/" ? "/index.html" : url.pathname;
@@ -74,7 +107,7 @@ self.addEventListener("fetch", (event) => {
           (async () => {
             try {
               const fresh = await fetch(event.request);
-              if (fresh && fresh.ok) await cache.put(event.request, fresh.clone());
+              if (fresh && fresh.ok && !fresh.redirected) await cache.put(event.request, fresh.clone());
             } catch {
               // Ignore network failures.
             }
@@ -84,7 +117,7 @@ self.addEventListener("fetch", (event) => {
       }
 
       const fresh = await fetch(event.request);
-      if (fresh && fresh.ok) cache.put(event.request, fresh.clone());
+      if (fresh && fresh.ok && !fresh.redirected) cache.put(event.request, fresh.clone());
       return fresh;
     })()
   );
