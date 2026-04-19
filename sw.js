@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v10";
+const CACHE_NAME = "velhoksi-v11";
 const ASSETS = [
   "/index.html",
   "/styles.css",
@@ -98,7 +98,17 @@ self.addEventListener("fetch", (event) => {
 
       if (isPrecached) {
         const cached = await cache.match(assetPath);
-        return cached || fetch(event.request);
+        if (cached) return cached;
+
+        try {
+          const fresh = await fetchUnredirected(new Request(assetPath, { cache: "reload" }));
+          if (fresh && fresh.ok && !fresh.redirected) {
+            await cache.put(assetPath, fresh.clone());
+          }
+          return fresh;
+        } catch {
+          return fetch(event.request);
+        }
       }
 
       const cached = await cache.match(event.request);

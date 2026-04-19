@@ -1675,7 +1675,9 @@ async function runManualResetFlow() {
     state.theme = "dark";
     setManualResetStatus("reset complete. reloading...", "success");
     window.setTimeout(() => {
-      window.location.reload();
+      const url = new URL(window.location.href);
+      url.searchParams.set("reset", String(Date.now()));
+      window.location.replace(url.toString());
     }, 220);
   } catch {
     setManualResetStatus("reset failed. try again while online.", "error");

@@ -376,7 +376,7 @@
 	          let updateRequested = false;
 
 	          navigator.serviceWorker
-	            .register("./sw.js")
+	            .register("./sw.js", { updateViaCache: "none" })
 	            .then((registration) => {
 	              const maybeShowUpdate = () => {
 	                if (registration.waiting && navigator.serviceWorker.controller) {
