@@ -49,3 +49,11 @@ python3 scripts/generate_word_lists.py
 for more fonts:
 https://typeface.ge/en
 https://www.freejapanesefont.com/category/handwriting/
+
+## Periodic elements
+
+Practice all 118 elements: symbol → English name, or name → symbol. Names and symbols follow the [IUPAC periodic table](https://iupac.org/what-we-do/periodic-table-of-elements/). Common spelling variants aluminum, cesium, and sulphur are also accepted.
+
+Both directions use typed, case-insensitive answers by default. In settings, name → symbol can use symbol buttons instead. Individual elements can be enabled or disabled; the existing cheat sheet, scoring, and missed-symbol practice also apply.
+
+The optional **show atom facts** setting is off by default and saved locally. It shows atomic number, period, and group (or lanthanide/actinide series), and enables atomic numbers on symbol buttons.

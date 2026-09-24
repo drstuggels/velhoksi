@@ -71,17 +71,17 @@
         <section id="picker-view" class="view view-picker" aria-labelledby="picker-title">
           <div class="intro-copy">
             <p class="eyebrow">start</p>
-            <h2 id="picker-title">pick an alphabet</h2>
+            <h2 id="picker-title">pick a practice set</h2>
           </div>
-          <div id="alphabet-picker" class="alphabet-picker" aria-label="alphabet picker"></div>
+          <div id="alphabet-picker" class="alphabet-picker" aria-label="practice set picker"></div>
         </section>
 
         <section id="game-view" class="view view-game hidden" aria-label="practice view">
           <div class="floating floating-main" aria-live="polite">
             <div class="prompt-meta">
               <div class="prompt-title-row eyebrow">
-                <span class="prompt-title-prefix">current alphabet is</span>
-                <span class="prompt-title-desktop">current alphabet is</span>
+                <span class="prompt-title-prefix">current practice is</span>
+                <span class="prompt-title-desktop">current practice is</span>
                 <span id="alphabet-title">nothing</span>
                 <button id="switch-alphabet" class="text-button hidden" type="button">but you can switch</button>
               </div>
@@ -118,6 +118,7 @@
             <div id="prompt-card" class="prompt-card" aria-labelledby="prompt-value" aria-describedby="prompt-hint">
               <div id="prompt-value" class="prompt-value">-</div>
               <div id="prompt-hint" class="prompt-hint">choose an alphabet</div>
+              <dl id="element-facts" class="element-facts hidden" aria-label="atom facts"></dl>
             </div>
 
             <form id="latin-form" class="answer-form hidden" autocomplete="off">
@@ -212,6 +213,24 @@
           </button>
           <hr class="dialog-separator" aria-hidden="true" />
           <div id="settings-panel" class="settings-panel" aria-label="settings panel">
+            <section id="element-answer-settings" class="settings-group hidden">
+              <div class="settings-head">
+                <p class="eyebrow">element answers</p>
+                <p class="settings-copy">choose how to answer name → symbol prompts. element names are always typed.</p>
+              </div>
+              <label class="duration-control" for="element-answer-mode">
+                <span class="eyebrow">name → symbol</span>
+                <select id="element-answer-mode">
+                  <option value="typed">type the symbol</option>
+                  <option value="buttons">pick a symbol button</option>
+                </select>
+              </label>
+              <label class="setting-item setting-item-inline" for="show-element-facts">
+                <span class="setting-symbol"><span>show atom facts</span></span>
+                <input id="show-element-facts" type="checkbox" class="toggle" aria-describedby="element-facts-copy" />
+              </label>
+              <p id="element-facts-copy" class="settings-copy">show atomic number, period, and group or series for the current element, plus atomic numbers on symbol buttons.</p>
+            </section>
             <section id="practice-mode-settings" class="settings-group hidden">
               <div class="settings-head">
                 <p class="eyebrow">practice mode</p>

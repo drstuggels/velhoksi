@@ -14,6 +14,8 @@ const STORAGE_KEYS = {
   promptFontMap: "velhoksi.promptFontMap",
   randomFontMap: "velhoksi.randomFontMap",
   practiceModeMap: "velhoksi.practiceModeMap",
+  elementAnswerMode: "velhoksi.elementAnswerMode",
+  showElementFacts: "velhoksi.showElementFacts",
 };
 
 const BASE_ALPHABETS = [
@@ -321,7 +323,73 @@ function createMusicAlphabet() {
   };
 }
 
-const ALPHABETS = [...normalizeBaseAlphabets(BASE_ALPHABETS), createMusicAlphabet()];
+function createElementsAlphabet() {
+  // Atomic-number order; names and symbols: https://iupac.org/what-we-do/periodic-table-of-elements/
+  const elements = [
+    ["H", "hydrogen"], ["He", "helium"],
+    ["Li", "lithium"], ["Be", "beryllium"], ["B", "boron"], ["C", "carbon"],
+    ["N", "nitrogen"], ["O", "oxygen"], ["F", "fluorine"], ["Ne", "neon"],
+    ["Na", "sodium"], ["Mg", "magnesium"], ["Al", "aluminium", "aluminum"], ["Si", "silicon"],
+    ["P", "phosphorus"], ["S", "sulfur", "sulphur"], ["Cl", "chlorine"], ["Ar", "argon"],
+    ["K", "potassium"], ["Ca", "calcium"], ["Sc", "scandium"], ["Ti", "titanium"],
+    ["V", "vanadium"], ["Cr", "chromium"], ["Mn", "manganese"], ["Fe", "iron"],
+    ["Co", "cobalt"], ["Ni", "nickel"], ["Cu", "copper"], ["Zn", "zinc"],
+    ["Ga", "gallium"], ["Ge", "germanium"], ["As", "arsenic"], ["Se", "selenium"],
+    ["Br", "bromine"], ["Kr", "krypton"], ["Rb", "rubidium"], ["Sr", "strontium"],
+    ["Y", "yttrium"], ["Zr", "zirconium"], ["Nb", "niobium"], ["Mo", "molybdenum"],
+    ["Tc", "technetium"], ["Ru", "ruthenium"], ["Rh", "rhodium"], ["Pd", "palladium"],
+    ["Ag", "silver"], ["Cd", "cadmium"], ["In", "indium"], ["Sn", "tin"],
+    ["Sb", "antimony"], ["Te", "tellurium"], ["I", "iodine"], ["Xe", "xenon"],
+    ["Cs", "caesium", "cesium"], ["Ba", "barium"], ["La", "lanthanum"], ["Ce", "cerium"],
+    ["Pr", "praseodymium"], ["Nd", "neodymium"], ["Pm", "promethium"], ["Sm", "samarium"],
+    ["Eu", "europium"], ["Gd", "gadolinium"], ["Tb", "terbium"], ["Dy", "dysprosium"],
+    ["Ho", "holmium"], ["Er", "erbium"], ["Tm", "thulium"], ["Yb", "ytterbium"],
+    ["Lu", "lutetium"], ["Hf", "hafnium"], ["Ta", "tantalum"], ["W", "tungsten"],
+    ["Re", "rhenium"], ["Os", "osmium"], ["Ir", "iridium"], ["Pt", "platinum"],
+    ["Au", "gold"], ["Hg", "mercury"], ["Tl", "thallium"], ["Pb", "lead"],
+    ["Bi", "bismuth"], ["Po", "polonium"], ["At", "astatine"], ["Rn", "radon"],
+    ["Fr", "francium"], ["Ra", "radium"], ["Ac", "actinium"], ["Th", "thorium"],
+    ["Pa", "protactinium"], ["U", "uranium"], ["Np", "neptunium"], ["Pu", "plutonium"],
+    ["Am", "americium"], ["Cm", "curium"], ["Bk", "berkelium"], ["Cf", "californium"],
+    ["Es", "einsteinium"], ["Fm", "fermium"], ["Md", "mendelevium"], ["No", "nobelium"],
+    ["Lr", "lawrencium"], ["Rf", "rutherfordium"], ["Db", "dubnium"], ["Sg", "seaborgium"],
+    ["Bh", "bohrium"], ["Hs", "hassium"], ["Mt", "meitnerium"], ["Ds", "darmstadtium"],
+    ["Rg", "roentgenium"], ["Cn", "copernicium"], ["Nh", "nihonium"], ["Fl", "flerovium"],
+    ["Mc", "moscovium"], ["Lv", "livermorium"], ["Ts", "tennessine"], ["Og", "oganesson"],
+  ];
+  return {
+    id: "periodic-elements",
+    label: "periodic elements",
+    sourceLabel: "symbol",
+    targetLabel: "name",
+    symbols: elements.map(([foreign, latin, ...aliases], index) => ({
+      id: `periodic-elements-${index + 1}`,
+      foreign,
+      latin,
+      atomicNumber: index + 1,
+      tablePosition: getElementTablePosition(index + 1),
+      nameAnswers: [latin, ...aliases],
+      enabledByDefault: true,
+    })),
+  };
+}
+
+function getElementTablePosition(atomicNumber) {
+  // [first element, last element, row, first column] in the 18-column table.
+  // Rows 9 and 10 hold the detached series, with row 8 left as a gap.
+  const runs = [
+    [1, 1, 1, 1], [2, 2, 1, 18],
+    [3, 4, 2, 1], [5, 10, 2, 13],
+    [11, 12, 3, 1], [13, 18, 3, 13],
+    [19, 36, 4, 1], [37, 54, 5, 1],
+    [55, 56, 6, 1], [57, 71, 9, 3], [72, 86, 6, 4],
+    [87, 88, 7, 1], [89, 103, 10, 3], [104, 118, 7, 4],
+  ];
+  const [first, , row, column] = runs.find(([first, last]) => atomicNumber >= first && atomicNumber <= last);
+  return { row, column: column + atomicNumber - first };
+}
+
+const ALPHABETS = [...normalizeBaseAlphabets(BASE_ALPHABETS), createMusicAlphabet(), createElementsAlphabet()];
 
 const alphabetById = Object.fromEntries(ALPHABETS.map((alphabet) => [alphabet.id, alphabet]));
 const CYRILLIC_VARIANTS = ["russian", "ukrainian", "belarusian", "bulgarian", "serbian", "macedonian"];
@@ -666,6 +734,8 @@ const state = {
   theme: loadTheme(),
   selectedAlphabet: localStorage.getItem(STORAGE_KEYS.alphabet) || null,
   bootLoading: true,
+  elementAnswerMode: localStorage.getItem(STORAGE_KEYS.elementAnswerMode) === "buttons" ? "buttons" : "typed",
+  showElementFacts: localStorage.getItem(STORAGE_KEYS.showElementFacts) === "true",
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
   cyrillicVariant: loadCyrillicVariant(),
   enabledMap: loadEnabledMap(),
@@ -717,6 +787,10 @@ const refs = {
   practiceModeCopy: document.querySelector("#practice-mode-copy"),
   practiceModeOptions: [...document.querySelectorAll(".practice-mode-option")],
   settingsList: document.querySelector("#settings-list"),
+  elementAnswerSettings: document.querySelector("#element-answer-settings"),
+  elementAnswerMode: document.querySelector("#element-answer-mode"),
+  showElementFacts: document.querySelector("#show-element-facts"),
+  elementFacts: document.querySelector("#element-facts"),
   settingsEmpty: document.querySelector("#settings-empty"),
   allOnButton: document.querySelector("#all-on-button"),
   allOffButton: document.querySelector("#all-off-button"),
@@ -776,6 +850,21 @@ async function init() {
 }
 
 function bindEvents() {
+  refs.showElementFacts.addEventListener("change", () => {
+    state.showElementFacts = refs.showElementFacts.checked;
+    localStorage.setItem(STORAGE_KEYS.showElementFacts, String(state.showElementFacts));
+    renderElementFacts(getCurrentPrompt());
+    if (!usesTypedAnswer()) {
+      renderSymbolGrid();
+    }
+  });
+  refs.elementAnswerMode.addEventListener("change", () => {
+    state.elementAnswerMode = refs.elementAnswerMode.value === "buttons" ? "buttons" : "typed";
+    localStorage.setItem(STORAGE_KEYS.elementAnswerMode, state.elementAnswerMode);
+    clearPendingWrongState();
+    setFeedback("");
+    render();
+  });
   if (refs.brandHome) {
     refs.brandHome.addEventListener("click", () => {
       goToStartMenu();
@@ -1240,7 +1329,7 @@ function bindEvents() {
       return;
     }
 
-    if (state.direction === "foreignToLatin" && state.feedbackTimeoutId === null) {
+    if (usesTypedAnswer() && state.feedbackTimeoutId === null) {
       const prompt = getCurrentPrompt();
       if (!prompt) {
         return;
@@ -1359,6 +1448,9 @@ function render() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   }
+  refs.elementAnswerSettings.classList.toggle("hidden", alphabet?.id !== "periodic-elements");
+  refs.elementAnswerMode.value = state.elementAnswerMode;
+  refs.showElementFacts.checked = state.showElementFacts;
   renderPracticeModeSettings(alphabet);
   renderPromptFontSettings(alphabet);
   refs.continueButton.classList.toggle("hidden", !state.awaitingManualContinue);
@@ -1378,6 +1470,9 @@ function render() {
 }
 
 function getLatinInputPlaceholder(alphabet) {
+  if (alphabet?.id === "periodic-elements") {
+    return state.direction === "foreignToLatin" ? "type the element name" : "type the chemical symbol";
+  }
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
     return "type the latin transliteration";
   }
@@ -1391,6 +1486,9 @@ function getLatinInputPlaceholder(alphabet) {
 }
 
 function getLatinInputMaxLength(alphabet) {
+  if (alphabet?.id === "periodic-elements") {
+    return 32;
+  }
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
     return 48;
   }
@@ -1405,7 +1503,7 @@ function renderPracticeModeSettings(alphabet) {
     return;
   }
 
-  const show = Boolean(alphabet && !alphabet.oneWay);
+  const show = Boolean(alphabet && !alphabet.oneWay && alphabet.id !== "periodic-elements");
   refs.practiceModeSettings.classList.toggle("hidden", !show);
   if (!show) {
     return;
@@ -1748,16 +1846,19 @@ function renderAlphabetPicker() {
 
 function renderPrompt() {
   const prompt = getCurrentPrompt();
+  renderElementFacts(prompt);
   const alphabet = getSelectedAlphabet();
   const isWordMode = Boolean(alphabet && isWordPracticeModeForAlphabet(alphabet));
-  const sourceLabel = alphabet ? alphabet.label : "foreign";
+  const sourceLabel = alphabet ? alphabet.sourceLabel || alphabet.label : "foreign";
+  const targetLabel = alphabet?.targetLabel || "latin";
+  refs.promptValue.classList.toggle("element-name", alphabet?.id === "periodic-elements" && state.direction === "latinToForeign");
   const leftLabel =
     state.direction === "foreignToLatin"
       ? isWordMode
         ? `${sourceLabel} words`
         : sourceLabel
-      : "latin";
-  const rightLabel = state.direction === "foreignToLatin" ? "latin" : sourceLabel;
+      : targetLabel;
+  const rightLabel = state.direction === "foreignToLatin" ? targetLabel : sourceLabel;
   const directionKey = `${leftLabel}::${rightLabel}`;
   if (refs.directionToggle.dataset.directionKey !== directionKey) {
     refs.directionToggle.dataset.directionKey = directionKey;
@@ -1808,11 +1909,44 @@ function renderPrompt() {
   refs.promptHint.textContent = getPromptHint(prompt, alphabet);
 }
 
+function renderElementFacts(prompt) {
+  const show = Boolean(state.showElementFacts && state.selectedAlphabet === "periodic-elements" && prompt);
+  refs.elementFacts.classList.toggle("hidden", !show);
+  refs.promptCard.classList.toggle("has-element-facts", show);
+  refs.gameView.querySelector(".floating-main")?.classList.toggle("has-element-facts", show);
+  refs.elementFacts.replaceChildren();
+  if (!show) {
+    return;
+  }
+
+  const { row, column } = prompt.tablePosition;
+  const detached = row > 7;
+  const facts = [
+    ["atomic number", String(prompt.atomicNumber)],
+    ["period", String(detached ? row - 3 : row)],
+    detached ? ["series", row === 9 ? "lanthanide" : "actinide"] : ["group", String(column)],
+  ];
+  for (const [label, value] of facts) {
+    const item = document.createElement("div");
+    const term = document.createElement("dt");
+    const description = document.createElement("dd");
+    term.textContent = label;
+    description.textContent = value;
+    item.append(term, description);
+    refs.elementFacts.appendChild(item);
+  }
+}
+
+function usesTypedAnswer() {
+  return state.direction === "foreignToLatin" ||
+    (state.selectedAlphabet === "periodic-elements" && state.elementAnswerMode === "typed");
+}
+
 function renderAnswerArea() {
   const prompt = getCurrentPrompt();
   const alphabet = getSelectedAlphabet();
   const forceLatinInput = Boolean(alphabet && isWordPracticeModeForAlphabet(alphabet));
-  const useLatinInput = forceLatinInput || state.direction === "foreignToLatin";
+  const useLatinInput = forceLatinInput || usesTypedAnswer();
   const showManualContinue = useLatinInput && state.awaitingManualContinue;
 
   const mainPanel = refs.gameView.querySelector(".floating-main");
@@ -1849,6 +1983,10 @@ function renderAnswerArea() {
 
 function renderSymbolGrid() {
   refs.symbolGrid.innerHTML = "";
+  const isElements = state.selectedAlphabet === "periodic-elements";
+  refs.symbolGrid.classList.toggle("periodic-table", isElements);
+  refs.symbolGrid.classList.toggle("show-element-facts", isElements && state.showElementFacts);
+  refs.symbolGrid.setAttribute("aria-label", isElements ? "periodic table symbol keyboard" : "symbol keyboard");
 
   for (const symbol of getAnswerSymbols()) {
     const button = document.createElement("button");
@@ -1861,6 +1999,17 @@ function renderSymbolGrid() {
       button.classList.add("selected-correct");
     }
     button.textContent = symbol.foreign;
+    if (isElements) {
+      button.style.gridRow = String(symbol.tablePosition.row);
+      button.style.gridColumn = String(symbol.tablePosition.column);
+      if (state.showElementFacts) {
+        const number = document.createElement("span");
+        number.className = "element-number";
+        number.textContent = String(symbol.atomicNumber);
+        number.setAttribute("aria-hidden", "true");
+        button.prepend(number);
+      }
+    }
     button.setAttribute("aria-label", `${symbol.foreign} for ${symbol.latin}${symbol.caseLabel ? `, ${symbol.caseLabel}` : ""}`);
     button.addEventListener("click", () => {
       if (state.awaitingManualContinue || state.feedbackTimeoutId !== null) {
@@ -1874,6 +2023,18 @@ function renderSymbolGrid() {
       submitResult(symbol.id === prompt.id, prompt.foreign);
     });
     refs.symbolGrid.appendChild(button);
+  }
+
+  if (isElements) {
+    for (const [row, label] of [[6, "57–71"], [7, "89–103"]]) {
+      const marker = document.createElement("span");
+      marker.className = "element-series-marker";
+      marker.style.gridRow = String(row);
+      marker.style.gridColumn = "3";
+      marker.textContent = label;
+      marker.setAttribute("aria-hidden", "true");
+      refs.symbolGrid.appendChild(marker);
+    }
   }
 }
 
@@ -2748,7 +2909,7 @@ function submitResult(correct, expectedAnswer) {
       state.awaitingManualContinue = true;
       renderAnswerArea();
       refs.continueButton.classList.remove("hidden");
-      if (state.direction === "foreignToLatin") {
+      if (usesTypedAnswer()) {
         focusLatinInput();
       } else {
         refs.continueButton.focus();
@@ -2761,30 +2922,37 @@ function submitResult(correct, expectedAnswer) {
 
 function submitLatinAnswer(forceSubmit) {
   const prompt = getCurrentPrompt();
-  if (!prompt || state.direction !== "foreignToLatin") {
+  if (!prompt || !usesTypedAnswer() || state.feedbackTimeoutId !== null || state.awaitingManualContinue) {
     return;
   }
 
   const rawAnswer = refs.latinInput.value.trim().toLowerCase();
   const answer = Array.isArray(prompt.acceptedAnswers) ? normalizeNoteAnswer(rawAnswer) : rawAnswer;
-  const shouldForceSubmit = forceSubmit || shouldAutoSubmitByLength(prompt, answer);
+  const reverse = state.direction === "latinToForeign";
+  const shouldForceSubmit = forceSubmit || (reverse
+    ? answer.length >= prompt.foreign.length
+    : shouldAutoSubmitByLength(prompt, answer));
 
   if (!answer && !shouldForceSubmit) {
     return;
   }
 
-  if (isAcceptedLatinAnswer(prompt, answer)) {
-    submitResult(true, prompt.latin);
+  if (reverse ? answer === prompt.foreign.toLowerCase() : isAcceptedLatinAnswer(prompt, answer)) {
+    submitResult(true, reverse ? prompt.foreign : prompt.latin);
     return;
   }
 
   if (shouldForceSubmit) {
-    submitResult(false, getExpectedLatinAnswer(prompt));
+    submitResult(false, reverse ? prompt.foreign : getExpectedLatinAnswer(prompt));
   }
 }
 
 function shouldAutoSubmitByLength(prompt, answer) {
   if (!answer) {
+    return false;
+  }
+  // Do not reject a valid longer spelling while it is still being typed.
+  if (prompt.nameAnswers?.some((name) => name.startsWith(answer))) {
     return false;
   }
   const targetLength = getAutoSubmitTargetLength(prompt);
@@ -2795,6 +2963,9 @@ function shouldAutoSubmitByLength(prompt, answer) {
 }
 
 function getAutoSubmitTargetLength(prompt) {
+  if (prompt.nameAnswers?.length) {
+    return Math.max(...prompt.nameAnswers.map((name) => name.length));
+  }
   if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
     const normalized = prompt.acceptedAnswers
       .map((entry) => normalizeNoteAnswer(entry))
@@ -2859,6 +3030,9 @@ function noteNameToPitchClass(raw) {
 }
 
 function isAcceptedLatinAnswer(prompt, answer) {
+  if (prompt.nameAnswers) {
+    return prompt.nameAnswers.includes(answer.trim().toLowerCase());
+  }
   if (!answer) {
     return false;
   }
@@ -2883,6 +3057,9 @@ function isAcceptedLatinAnswer(prompt, answer) {
 }
 
 function getExpectedLatinAnswer(prompt) {
+  if (prompt.nameAnswers) {
+    return prompt.nameAnswers.join(" or ");
+  }
   if (Array.isArray(prompt.acceptedAnswers) && prompt.acceptedAnswers.length > 0) {
     return prompt.acceptedAnswers.join(" or ");
   }
@@ -3205,6 +3382,11 @@ function ensurePracticeModeMapShape() {
 }
 
 function getPromptHint(prompt, alphabet) {
+  if (alphabet?.id === "periodic-elements") {
+    return state.direction === "foreignToLatin"
+      ? "type the element name below"
+      : usesTypedAnswer() ? "type the chemical symbol below" : "pick the matching chemical symbol";
+  }
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
     return "type the latin transliteration";
   }
