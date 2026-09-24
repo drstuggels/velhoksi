@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   practiceModeMap: "velhoksi.practiceModeMap",
   elementAnswerMode: "velhoksi.elementAnswerMode",
   showElementFacts: "velhoksi.showElementFacts",
+  elementNameLanguage: "velhoksi.elementNameLanguage",
 };
 
 const BASE_ALPHABETS = [
@@ -322,6 +323,34 @@ function createMusicAlphabet() {
     symbols: notePool,
   };
 }
+
+// Finnish names: Kemianseurat, Chemical Elements appendix (pp. 89–92),
+// https://kemianseurat.fi/wp-content/uploads/2013/08/ESEKPS2.pdf
+// Newer names: https://info.ylioppilastutkinto.fi/hvp/final/2020_k_ke.pdf
+// and https://www.kemiamedia.fi/wp-content/uploads/2013/02/kemia_uut_2011_15.pdf
+const ELEMENT_NAMES_FI = {
+  H: "vety", He: "helium", Li: "litium", Be: "beryllium", B: "boori", C: "hiili",
+  N: "typpi", O: "happi", F: "fluori", Ne: "neon", Na: "natrium", Mg: "magnesium",
+  Al: "alumiini", Si: "pii", P: "fosfori", S: "rikki", Cl: "kloori", Ar: "argon",
+  K: "kalium", Ca: "kalsium", Sc: "skandium", Ti: "titaani", V: "vanadiini", Cr: "kromi",
+  Mn: "mangaani", Fe: "rauta", Co: "koboltti", Ni: "nikkeli", Cu: "kupari", Zn: "sinkki",
+  Ga: "gallium", Ge: "germanium", As: "arseeni", Se: "seleeni", Br: "bromi", Kr: "krypton",
+  Rb: "rubidium", Sr: "strontium", Y: "yttrium", Zr: "zirkonium", Nb: "niobium", Mo: "molybdeeni",
+  Tc: "teknetium", Ru: "rutenium", Rh: "rodium", Pd: "palladium", Ag: "hopea", Cd: "kadmium",
+  In: "indium", Sn: "tina", Sb: "antimoni", Te: "telluuri", I: "jodi", Xe: "ksenon",
+  Cs: "cesium", Ba: "barium", La: "lantaani", Ce: "cerium", Pr: "praseodyymi", Nd: "neodyymi",
+  Pm: "prometium", Sm: "samarium", Eu: "europium", Gd: "gadolinium", Tb: "terbium", Dy: "dysprosium",
+  Ho: "holmium", Er: "erbium", Tm: "tulium", Yb: "ytterbium", Lu: "lutetium", Hf: "hafnium",
+  Ta: "tantaali", W: "volframi", Re: "renium", Os: "osmium", Ir: "iridium", Pt: "platina",
+  Au: "kulta", Hg: "elohopea", Tl: "tallium", Pb: "lyijy", Bi: "vismutti", Po: "polonium",
+  At: "astatiini", Rn: "radon", Fr: "frankium", Ra: "radium", Ac: "aktinium", Th: "torium",
+  Pa: "protaktinium", U: "uraani", Np: "neptunium", Pu: "plutonium", Am: "amerikium", Cm: "curium",
+  Bk: "berkelium", Cf: "kalifornium", Es: "einsteinium", Fm: "fermium", Md: "mendelevium", No: "nobelium",
+  Lr: "lawrencium", Rf: "rutherfordium", Db: "dubnium", Sg: "seaborgium", Bh: "bohrium", Hs: "hassium",
+  Mt: "meitnerium", Ds: "darmstadtium", Rg: "röntgenium", Cn: "kopernikium", Nh: "nihonium", Fl: "flerovium",
+  Mc: "moskovium", Lv: "livermorium", Ts: "tennessiini", Og: "oganesson",
+};
+const ELEMENT_NAME_LANGUAGES = { en: "English", fi: "Finnish" };
 
 function createElementsAlphabet() {
   // Atomic-number order; names and symbols: https://iupac.org/what-we-do/periodic-table-of-elements/
@@ -736,6 +765,7 @@ const state = {
   bootLoading: true,
   elementAnswerMode: localStorage.getItem(STORAGE_KEYS.elementAnswerMode) === "buttons" ? "buttons" : "typed",
   showElementFacts: localStorage.getItem(STORAGE_KEYS.showElementFacts) === "true",
+  elementNameLanguage: loadElementNameLanguage(),
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
   cyrillicVariant: loadCyrillicVariant(),
   enabledMap: loadEnabledMap(),
@@ -789,6 +819,7 @@ const refs = {
   settingsList: document.querySelector("#settings-list"),
   elementAnswerSettings: document.querySelector("#element-answer-settings"),
   elementAnswerMode: document.querySelector("#element-answer-mode"),
+  elementNameLanguage: document.querySelector("#element-name-language"),
   showElementFacts: document.querySelector("#show-element-facts"),
   elementFacts: document.querySelector("#element-facts"),
   settingsEmpty: document.querySelector("#settings-empty"),
@@ -850,6 +881,17 @@ async function init() {
 }
 
 function bindEvents() {
+  refs.elementNameLanguage.addEventListener("change", () => {
+    const language = refs.elementNameLanguage.value;
+    if (!Object.hasOwn(ELEMENT_NAME_LANGUAGES, language)) {
+      return;
+    }
+    state.elementNameLanguage = language;
+    localStorage.setItem(STORAGE_KEYS.elementNameLanguage, language);
+    clearPendingWrongState();
+    setFeedback("");
+    render();
+  });
   refs.showElementFacts.addEventListener("change", () => {
     state.showElementFacts = refs.showElementFacts.checked;
     localStorage.setItem(STORAGE_KEYS.showElementFacts, String(state.showElementFacts));
@@ -1450,6 +1492,7 @@ function render() {
   }
   refs.elementAnswerSettings.classList.toggle("hidden", alphabet?.id !== "periodic-elements");
   refs.elementAnswerMode.value = state.elementAnswerMode;
+  refs.elementNameLanguage.value = state.elementNameLanguage;
   refs.showElementFacts.checked = state.showElementFacts;
   renderPracticeModeSettings(alphabet);
   renderPromptFontSettings(alphabet);
@@ -1471,7 +1514,9 @@ function render() {
 
 function getLatinInputPlaceholder(alphabet) {
   if (alphabet?.id === "periodic-elements") {
-    return state.direction === "foreignToLatin" ? "type the element name" : "type the chemical symbol";
+    return state.direction === "foreignToLatin"
+      ? `type the ${ELEMENT_NAME_LANGUAGES[state.elementNameLanguage]} element name`
+      : "type the chemical symbol";
   }
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {
     return "type the latin transliteration";
@@ -1906,6 +1951,8 @@ function renderPrompt() {
   } else {
     refs.promptValue.textContent = state.direction === "foreignToLatin" ? prompt.foreign : prompt.latin;
   }
+  refs.promptValue.lang = alphabet?.id === "periodic-elements" && state.direction === "latinToForeign"
+    ? state.elementNameLanguage : "";
   refs.promptHint.textContent = getPromptHint(prompt, alphabet);
 }
 
@@ -2531,8 +2578,28 @@ function getCurrentPrompt() {
   return getPromptPool().find((symbol) => symbol.id === state.currentPromptId) || null;
 }
 
+function loadElementNameLanguage() {
+  const stored = localStorage.getItem(STORAGE_KEYS.elementNameLanguage);
+  return Object.hasOwn(ELEMENT_NAME_LANGUAGES, stored) ? stored : "en";
+}
+
 function getSelectedAlphabet() {
-  return alphabetById[state.selectedAlphabet] || null;
+  const alphabet = alphabetById[state.selectedAlphabet] || null;
+  if (alphabet?.id !== "periodic-elements") {
+    return alphabet;
+  }
+  const language = state.elementNameLanguage;
+  return {
+    ...alphabet,
+    targetLabel: `${ELEMENT_NAME_LANGUAGES[language]} name`,
+    symbols: alphabet.symbols.map((symbol) => {
+      const latin = language === "fi" ? ELEMENT_NAMES_FI[symbol.foreign] : symbol.latin;
+      const nameAnswers = language === "fi"
+        ? (symbol.foreign === "Nb" ? [latin, "niobi"] : [latin])
+        : symbol.nameAnswers;
+      return { ...symbol, latin, nameAnswers };
+    }),
+  };
 }
 
 function getEnabledSymbols() {
@@ -2926,7 +2993,7 @@ function submitLatinAnswer(forceSubmit) {
     return;
   }
 
-  const rawAnswer = refs.latinInput.value.trim().toLowerCase();
+  const rawAnswer = refs.latinInput.value.trim().toLowerCase().normalize("NFC");
   const answer = Array.isArray(prompt.acceptedAnswers) ? normalizeNoteAnswer(rawAnswer) : rawAnswer;
   const reverse = state.direction === "latinToForeign";
   const shouldForceSubmit = forceSubmit || (reverse
@@ -2934,6 +3001,11 @@ function submitLatinAnswer(forceSubmit) {
     : shouldAutoSubmitByLength(prompt, answer));
 
   if (!answer && !shouldForceSubmit) {
+    return;
+  }
+
+  // Let a longer accepted spelling finish (for example, niobi → niobium).
+  if (!reverse && !forceSubmit && prompt.nameAnswers?.some((name) => name.length > answer.length && name.startsWith(answer))) {
     return;
   }
 
@@ -3031,7 +3103,7 @@ function noteNameToPitchClass(raw) {
 
 function isAcceptedLatinAnswer(prompt, answer) {
   if (prompt.nameAnswers) {
-    return prompt.nameAnswers.includes(answer.trim().toLowerCase());
+    return prompt.nameAnswers.includes(answer.trim().toLowerCase().normalize("NFC"));
   }
   if (!answer) {
     return false;
@@ -3384,7 +3456,7 @@ function ensurePracticeModeMapShape() {
 function getPromptHint(prompt, alphabet) {
   if (alphabet?.id === "periodic-elements") {
     return state.direction === "foreignToLatin"
-      ? "type the element name below"
+      ? `type the ${ELEMENT_NAME_LANGUAGES[state.elementNameLanguage]} element name below`
       : usesTypedAnswer() ? "type the chemical symbol below" : "pick the matching chemical symbol";
   }
   if (alphabet && isWordPracticeModeForAlphabet(alphabet)) {

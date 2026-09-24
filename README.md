@@ -52,8 +52,10 @@ https://www.freejapanesefont.com/category/handwriting/
 
 ## Periodic elements
 
-Practice all 118 elements: symbol → English name, or name → symbol. Names and symbols follow the [IUPAC periodic table](https://iupac.org/what-we-do/periodic-table-of-elements/). Common spelling variants aluminum, cesium, and sulphur are also accepted.
+Practice all 118 elements: symbol → element name, or name → symbol. Names and symbols follow the [IUPAC periodic table](https://iupac.org/what-we-do/periodic-table-of-elements/). Common spelling variants aluminum, cesium, and sulphur are also accepted.
 
 Both directions use typed, case-insensitive answers by default. In settings, name → symbol can use symbol buttons instead. Individual elements can be enabled or disabled; the existing cheat sheet, scoring, and missed-symbol practice also apply.
 
 The optional **show atom facts** setting is off by default and saved locally. It shows atomic number, period, and group (or lanthanide/actinide series), and enables atomic numbers on symbol buttons.
+
+Choose **English** (default) or **Suomi (Finnish)** under **element name language** in settings. The saved selection applies to both directions, accepted answers, the cheat sheet, and element-selection labels. Progress and enabled elements are shared across languages. Finnish names follow the [Kemianseurat terminology appendix](https://kemianseurat.fi/wp-content/uploads/2013/08/ESEKPS2.pdf), with newer names checked against [Finnish exam-board material](https://info.ylioppilastutkinto.fi/hvp/final/2020_k_ke.pdf) and [Kemia’s naming report](https://www.kemiamedia.fi/wp-content/uploads/2013/02/kemia_uut_2011_15.pdf). Finnish also accepts “niobi” for niobium; accents such as the ö in “röntgenium” are preserved.
