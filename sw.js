@@ -1,10 +1,32 @@
-const CACHE_NAME = "velhoksi-v16";
+const CACHE_NAME = "velhoksi-v65";
 const ASSETS = [
   "/index.html",
   "/styles.css",
   "/app.js",
+  "/global-panels.mjs",
+  "/preferences.mjs",
+  "/ear-training/ear.css",
+  "/ear-training/ui.mjs",
+  "/ear-training/analysis.mjs",
+  "/ear-training/audio.mjs",
+  "/ear-training/theory.mjs",
+  "/ear-training/instruments.mjs",
+  "/ear-training/challenges.mjs",
+  "/ear-training/shortcuts.mjs",
+  "/ear-training/drone.mjs",
+  "/audio/samples/manifest.json",
+  "/audio/samples/salamander/LICENSE.txt",
+  "/audio/samples/wurlitzer/LICENSE.txt",
+  "/audio/samples/shinyguitar/LICENSE.txt",
+  "/audio/samples/vcsl/LICENSE.txt",
+  "/audio/samples/rhodes/LICENSE.txt",
+  "/vendor/dattorro/dattorroReverb.js",
+  "/vendor/dattorro/LICENSE",
+  "/vendor/dattorro/SOURCE.txt",
   "/data/word-lists.json",
   "/vendor/abcjs-basic-min.js",
+  "/vendor/abcjs-LICENSE.txt",
+  "/vendor/abcjs-SOURCE.txt",
   "/velhoksi.png",
   "/icon-192.png",
   "/icon-512.png",
@@ -48,7 +70,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+      await Promise.all(keys.filter((key) => /^velhoksi-v\d+$/.test(key) && key !== CACHE_NAME).map((key) => caches.delete(key)));
       await self.clients.claim();
     })()
   );
@@ -70,9 +92,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const isNavigation =
+  // Lossless recordings have their own bounded/on-demand storage policy.
+  // The sampler owns this cache, avoiding duplicated banks and update eviction.
+  if (url.pathname.startsWith("/audio/samples/") && url.pathname.endsWith(".flac")) return;
+
+  // Linked credits/license files must stay files, including when opened in a tab.
+  const isAssetDocument = ASSETS.includes(url.pathname) && url.pathname !== "/index.html";
+  const isNavigation = !isAssetDocument && (
     event.request.mode === "navigate" ||
-    (event.request.headers.get("accept") || "").includes("text/html");
+    (event.request.headers.get("accept") || "").includes("text/html"));
 
   event.respondWith(
     (async () => {

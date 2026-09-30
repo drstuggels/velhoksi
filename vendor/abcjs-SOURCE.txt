@@ -1,0 +1,5 @@
+abcjs 6.6.2 by Paul Rosen and Gregory Dyke
+https://github.com/paulrosen/abcjs
+https://www.npmjs.com/package/abcjs/v/6.6.2
+MIT license retrieved from the matching published package:
+https://cdn.jsdelivr.net/npm/abcjs@6.6.2/LICENSE.md

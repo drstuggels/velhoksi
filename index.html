@@ -7,7 +7,7 @@
     <meta name="google" content="notranslate" />
     <meta
       name="description"
-      content="velhoksi is a minimal game for practicing and memorizing alphabets and symbols across scripts like hiragana, katakana, greek, cyrillic, hangul, arabic, hebrew, armenian, georgian, syriac, and cherokee."
+      content="every tool you need to become a wizard"
     />
     <meta name="robots" content="index,follow" />
     <meta id="theme-color-meta" name="theme-color" content="#17284b" />
@@ -20,20 +20,20 @@
     <meta property="og:title" content="velhoksi" />
     <meta
       property="og:description"
-      content="a minimal game for practicing and memorizing alphabets and symbols across multiple scripts."
+      content="every tool you need to become a wizard"
     />
     <meta property="og:url" content="https://velhoksi.click/" />
     <meta property="og:site_name" content="velhoksi" />
     <meta property="og:image" content="https://velhoksi.click/og-image.png" />
     <meta property="og:image:width" content="2400" />
     <meta property="og:image:height" content="1260" />
-    <meta property="og:image:alt" content="velhoksi symbol practice game preview" />
+    <meta property="og:image:alt" content="velhoksi practice app preview" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://velhoksi.click/og-image.png" />
     <meta name="twitter:title" content="velhoksi" />
     <meta
       name="twitter:description"
-      content="a minimal game for practicing and memorizing alphabets and symbols across multiple scripts."
+      content="every tool you need to become a wizard"
     />
     <link rel="icon" type="image/png" href="./velhoksi.png" />
     <link rel="apple-touch-icon" href="./velhoksi.png" />
@@ -49,13 +49,14 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./ear-training/ear.css" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">skip to main content</a>
     <div class="app-shell">
       <header class="site-header" aria-label="site header">
         <div class="brand-lockup">
-          <p class="eyebrow"><span class="brand-foreign">script</span> symbol practice</p>
+          <p class="eyebrow"><span class="brand-foreign">grind</span> season</p>
           <div class="brand-row">
             <h1>
               <button id="brand-home" class="brand-home" type="button" aria-label="back to start menu" data-text="velhoksi">
@@ -80,9 +81,7 @@
           <div class="floating floating-main" aria-live="polite">
             <div class="prompt-meta">
               <div class="prompt-title-row eyebrow">
-                <span class="prompt-title-prefix">current practice is</span>
-                <span class="prompt-title-desktop">current practice is</span>
-                <span id="alphabet-title">nothing</span>
+                <strong class="prompt-title-copy">current practice is <span id="alphabet-title">nothing</span> </strong>
                 <button id="switch-alphabet" class="text-button hidden" type="button">but you can switch</button>
               </div>
               <div class="prompt-tools">
@@ -169,6 +168,7 @@
           </aside>
 
         </section>
+        <section id="ear-view" class="view ear-view hidden" aria-label="ear training"></section>
       </main>
 
       <footer class="site-footer" aria-label="site footer">
@@ -176,9 +176,154 @@
         <button id="theme-toggle" class="text-button" type="button" aria-label="toggle theme">
           current mode is dark, switch it
         </button>
-        <a href="https://github.com/drstuggels" target="_blank" rel="noreferrer">made by nuua</a>
+        <nav class="footer-links" aria-label="app information">
+          <button class="text-button" type="button" data-global-panel="preferences" aria-haspopup="dialog" aria-controls="preferences-dialog">preferences</button>
+          <button class="text-button" type="button" data-global-panel="credits" aria-haspopup="dialog" aria-controls="credits-dialog">credits</button>
+          <a href="https://github.com/drstuggels" target="_blank" rel="noreferrer">made by nuua</a>
+        </nav>
       </footer>
     </div>
+
+    <dialog id="preferences-dialog" class="cheat-dialog global-dialog" aria-labelledby="preferences-title">
+      <div class="dialog-card">
+        <div class="global-dialog-head"><h2 id="preferences-title" tabindex="-1">preferences</h2><button type="button" class="text-button" data-close-global>close</button></div>
+        <div class="preferences-grid">
+          <section class="preference-card" aria-labelledby="preference-sound-title">
+            <header class="preference-card-head"><h3 id="preference-sound-title">sound</h3></header>
+            <div class="preference-card-body">
+              <label class="global-volume" for="global-volume"><span>volume <output id="global-volume-value" for="global-volume"></output></span><input type="range" id="global-volume" min="0" max="1" step="0.01" value="0.65" /></label>
+            </div>
+          </section>
+          <section class="preference-card" aria-labelledby="preference-reveal-title">
+            <header class="preference-card-head"><h3 id="preference-reveal-title">answer reveal</h3><span>symbols &amp; words</span></header>
+            <div class="preference-card-body">
+              <div class="preference-fields">
+                <label class="duration-control" for="feedback-mode">
+                  <span class="eyebrow">after a wrong answer</span>
+                  <select id="feedback-mode" aria-describedby="feedback-settings-copy">
+                    <option value="timed">wait automatically</option>
+                    <option value="manual">wait for another enter press</option>
+                  </select>
+                </label>
+                <label id="feedback-duration-control" class="duration-control" for="feedback-duration">
+                  <span class="eyebrow">for this long</span>
+                  <select id="feedback-duration">
+                    <option value="1500">1.5s</option>
+                    <option value="2500">2.5s</option>
+                    <option value="3500">3.5s</option>
+                    <option value="5000">5s</option>
+                  </select>
+                </label>
+              </div>
+              <p id="feedback-settings-copy" class="preference-help">wait style after a wrong answer.</p>
+            </div>
+          </section>
+        </div>
+        <details class="preference-section preference-downloads" open>
+          <summary>downloads &amp; offline practice</summary>
+          <div class="preference-section-body">
+            <div class="offline-overview"><span id="offline-connection"></span><span id="offline-app-status" role="status">checking app storage…</span></div>
+            <p class="preference-help">Download instruments for offline practice. The drone uses pipe organ · quiet. Fonts may need a connection.</p>
+            <div id="offline-banks"><p class="preference-help">loading recordings…</p></div>
+            <div class="offline-actions"><span id="offline-storage"></span><button type="button" class="text-button" id="offline-cancel" hidden>cancel download</button><button type="button" class="text-button" id="offline-remove" disabled>remove recordings</button></div>
+            <p id="offline-status" class="preference-help" role="status" aria-live="polite"></p>
+          </div>
+        </details>
+        <details class="preference-section preference-reset"><summary>reset app</summary>
+          <div class="preference-section-body">
+            <p class="preference-help">Removes saved exercises, progress, preferences and downloaded app data, then reloads. A connection is needed to use the app again after resetting.</p>
+            <button id="manual-reset-button" class="text-button danger-button" type="button">reset app completely</button>
+            <p id="manual-reset-status" class="preference-help settings-status hidden" aria-live="polite"></p>
+          </div>
+        </details>
+      </div>
+    </dialog>
+    <dialog id="credits-dialog" class="cheat-dialog global-dialog credits-dialog" aria-labelledby="credits-title">
+      <div class="dialog-card">
+        <div class="global-dialog-head"><h2 id="credits-title" tabindex="-1">credits</h2><button type="button" class="text-button" data-close-global>close</button></div>
+        <details class="global-section" open><summary>recordings</summary>
+          <div class="credit-entries"><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/SalamanderGrandPiano" target="_blank" rel="noopener">Salamander Grand Piano V3</a></h3><p>Alexander Holm · mapping by kinwie · retuning by Markus Fiedler.</p><div class="credit-links"><a href="./audio/samples/salamander/LICENSE.txt" target="_blank" rel="noopener">CC BY 3.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/GregSullivan.E-Pianos" target="_blank" rel="noopener">Wurlitzer EP200</a></h3><p>Greg Sullivan · mapping by kinwie.</p><div class="credit-links"><a href="./audio/samples/wurlitzer/LICENSE.txt" target="_blank" rel="noopener">CC BY 3.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/karoryfer.shinyguitar" target="_blank" rel="noopener">Shinyguitar</a></h3><p>Sampled and mapped by D. Smolken / Karoryfer Samples. Electric pickup and acoustic microphone recordings.</p><div class="credit-links"><a href="./audio/samples/shinyguitar/LICENSE.txt" target="_blank" rel="noopener">CC0 1.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sgossner/VCSL" target="_blank" rel="noopener">Versilian Community Sample Library</a></h3><p>Versilian Studios LLC. Vibraphone, bowed vibraphone, marimba, Renaissance organ, pipe organ, Yamaha TX81Z, concert harp and kalimbas.</p><p>Pipe organ recorded by Simon Dalzell / Ivy Audio; SFZ generation by Peter Eastman.</p><div class="credit-links"><a href="./audio/samples/vcsl/LICENSE.txt" target="_blank" rel="noopener">CC0 1.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/jlearman.jRhodes3d" target="_blank" rel="noopener">jRhodes3d</a></h3><p>1977 Rhodes Mark I Stage 73 recorded by Jeffrey Learman. Samples used for this noncommercial app.</p><div class="credit-links"><a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a><a href="./audio/samples/rhodes/LICENSE.txt" target="_blank" rel="noopener">Author’s license</a></div></article></div>
+          <div class="credit-note"><p>Playback mappings are adapted for Velhoksi. Original PCM is preserved; WAV sources are losslessly packed as FLAC. Organ sustain loops are crossfaded during playback.</p><a href="./audio/samples/manifest.json" download>Recording sources, revisions & mappings ↓</a></div>
+        </details>
+        <details class="global-section"><summary>software</summary>
+          <div class="credit-entries"><article class="credit-entry"><h3><a href="https://abcjs.net/" target="_blank" rel="noopener">abcjs 6.6.2</a></h3><p>Paul Rosen and Gregory Dyke · music notation.</p><div class="credit-links"><a href="./vendor/abcjs-LICENSE.txt" target="_blank" rel="noopener">MIT license</a><a href="./vendor/abcjs-SOURCE.txt" target="_blank" rel="noopener">Source & version</a></div></article><article class="credit-entry"><h3><a href="https://github.com/khoin/DattorroReverbNode" target="_blank" rel="noopener">DattorroReverbNode</a></h3><p>khoin · implementation of Jon Dattorro’s reverb topology.</p><div class="credit-links"><a href="./vendor/dattorro/LICENSE" target="_blank" rel="noopener">Public-domain notice</a><a href="./vendor/dattorro/SOURCE.txt" target="_blank" rel="noopener">Revision & local changes</a></div></article></div>
+
+        </details>
+        <details class="global-section"><summary>words & language data</summary>
+          <div class="credit-entries"><article class="credit-entry"><h3><a href="https://github.com/hermitdave/FrequencyWords" target="_blank" rel="noopener">FrequencyWords</a></h3><p>Hermit Dave · using the <a href="https://opus.nlpl.eu/OpenSubtitles2018.php" target="_blank" rel="noopener">OPUS OpenSubtitles 2018 corpus</a>. Word-list content is CC BY-SA 4.0; generator code is MIT.</p><div class="credit-links"><a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a></div></article><article class="credit-entry"><h3><a href="https://kaikki.org/dictionary/" target="_blank" rel="noopener">Kaikki.org / Wiktextract</a></h3><p>Maintained by Tatu Ylonen, with data from <a href="https://en.wiktionary.org/" target="_blank" rel="noopener">Wiktionary contributors</a>.</p><div class="credit-links"><a href="https://en.wiktionary.org/wiki/Wiktionary:Copyrights" target="_blank" rel="noopener">CC BY-SA & GFDL</a></div></article></div>
+          <div class="credit-note"><p>Velhoksi filters and normalizes these lists and adds practice readings. Adaptations retain the applicable source licenses.</p><a href="./data/word-lists.json" download>Adapted word data & source metadata ↓</a></div>
+        </details>
+        <details class="global-section"><summary>elements</summary>
+          <div class="credit-entries"><article class="credit-entry"><h3><a href="https://iupac.org/what-we-do/periodic-table-of-elements/" target="_blank" rel="noopener">IUPAC periodic table</a></h3><p>Element names, symbols and ordering.</p></article><article class="credit-entry"><h3><a href="https://kemianseurat.fi/wp-content/uploads/2013/08/ESEKPS2.pdf" target="_blank" rel="noopener">Kemianseurat terminology appendix</a></h3><p>Finnish element names.</p></article><article class="credit-entry"><h3><a href="https://info.ylioppilastutkinto.fi/hvp/final/2020_k_ke.pdf" target="_blank" rel="noopener">Finnish Matriculation Examination Board</a></h3><p>Newer Finnish element names.</p></article><article class="credit-entry"><h3><a href="https://www.kemiamedia.fi/wp-content/uploads/2013/02/kemia_uut_2011_15.pdf" target="_blank" rel="noopener">Kemia’s naming report</a></h3><p>Newer Finnish element names.</p></article></div>
+
+        </details>
+        <details class="global-section"><summary>typefaces</summary>
+          <p>Typefaces by their respective designers, served through Google Fonts. Each family page includes its designer credits and license information.</p>
+          <ul class="credits-fonts"><li><a href="https://fonts.google.com/specimen/Alegreya" target="_blank" rel="noopener">Alegreya</a></li>
+<li><a href="https://fonts.google.com/specimen/Amiri" target="_blank" rel="noopener">Amiri</a></li>
+<li><a href="https://fonts.google.com/specimen/Aref+Ruqaa" target="_blank" rel="noopener">Aref Ruqaa</a></li>
+<li><a href="https://fonts.google.com/specimen/Aref+Ruqaa+Ink" target="_blank" rel="noopener">Aref Ruqaa Ink</a></li>
+<li><a href="https://fonts.google.com/specimen/Assistant" target="_blank" rel="noopener">Assistant</a></li>
+<li><a href="https://fonts.google.com/specimen/Black+Han+Sans" target="_blank" rel="noopener">Black Han Sans</a></li>
+<li><a href="https://fonts.google.com/specimen/Cairo+Play" target="_blank" rel="noopener">Cairo Play</a></li>
+<li><a href="https://fonts.google.com/specimen/Cormorant+Garamond" target="_blank" rel="noopener">Cormorant Garamond</a></li>
+<li><a href="https://fonts.google.com/specimen/David+Libre" target="_blank" rel="noopener">David Libre</a></li>
+<li><a href="https://fonts.google.com/specimen/Dokdo" target="_blank" rel="noopener">Dokdo</a></li>
+<li><a href="https://fonts.google.com/specimen/DotGothic16" target="_blank" rel="noopener">DotGothic16</a></li>
+<li><a href="https://fonts.google.com/specimen/Explora" target="_blank" rel="noopener">Explora</a></li>
+<li><a href="https://fonts.google.com/specimen/Frank+Ruhl+Libre" target="_blank" rel="noopener">Frank Ruhl Libre</a></li>
+<li><a href="https://fonts.google.com/specimen/GFS+Didot" target="_blank" rel="noopener">GFS Didot</a></li>
+<li><a href="https://fonts.google.com/specimen/GFS+Neohellenic" target="_blank" rel="noopener">GFS Neohellenic</a></li>
+<li><a href="https://fonts.google.com/specimen/Gaegu" target="_blank" rel="noopener">Gaegu</a></li>
+<li><a href="https://fonts.google.com/specimen/Genos" target="_blank" rel="noopener">Genos</a></li>
+<li><a href="https://fonts.google.com/specimen/Google+Sans" target="_blank" rel="noopener">Google Sans</a></li>
+<li><a href="https://fonts.google.com/specimen/Gowun+Dodum" target="_blank" rel="noopener">Gowun Dodum</a></li>
+<li><a href="https://fonts.google.com/specimen/Gugi" target="_blank" rel="noopener">Gugi</a></li>
+<li><a href="https://fonts.google.com/specimen/Handjet" target="_blank" rel="noopener">Handjet</a></li>
+<li><a href="https://fonts.google.com/specimen/Heebo" target="_blank" rel="noopener">Heebo</a></li>
+<li><a href="https://fonts.google.com/specimen/IBM+Plex+Mono" target="_blank" rel="noopener">IBM Plex Mono</a></li>
+<li><a href="https://fonts.google.com/specimen/Idiqlat" target="_blank" rel="noopener">Idiqlat</a></li>
+<li><a href="https://fonts.google.com/specimen/Kaisei+Decol" target="_blank" rel="noopener">Kaisei Decol</a></li>
+<li><a href="https://fonts.google.com/specimen/Lobster" target="_blank" rel="noopener">Lobster</a></li>
+<li><a href="https://fonts.google.com/specimen/Marck+Script" target="_blank" rel="noopener">Marck Script</a></li>
+<li><a href="https://fonts.google.com/specimen/Nanum+Brush+Script" target="_blank" rel="noopener">Nanum Brush Script</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Kufi+Arabic" target="_blank" rel="noopener">Noto Kufi Arabic</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Naskh+Arabic" target="_blank" rel="noopener">Noto Naskh Arabic</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Nastaliq+Urdu" target="_blank" rel="noopener">Noto Nastaliq Urdu</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Rashi+Hebrew" target="_blank" rel="noopener">Noto Rashi Hebrew</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans" target="_blank" rel="noopener">Noto Sans</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Arabic" target="_blank" rel="noopener">Noto Sans Arabic</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Armenian" target="_blank" rel="noopener">Noto Sans Armenian</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Cherokee" target="_blank" rel="noopener">Noto Sans Cherokee</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Georgian" target="_blank" rel="noopener">Noto Sans Georgian</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Hebrew" target="_blank" rel="noopener">Noto Sans Hebrew</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+JP" target="_blank" rel="noopener">Noto Sans JP</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+KR" target="_blank" rel="noopener">Noto Sans KR</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Syriac" target="_blank" rel="noopener">Noto Sans Syriac</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Syriac+Eastern" target="_blank" rel="noopener">Noto Sans Syriac Eastern</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Sans+Syriac+Western" target="_blank" rel="noopener">Noto Sans Syriac Western</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Serif" target="_blank" rel="noopener">Noto Serif</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Serif+Armenian" target="_blank" rel="noopener">Noto Serif Armenian</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Serif+Georgian" target="_blank" rel="noopener">Noto Serif Georgian</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Serif+JP" target="_blank" rel="noopener">Noto Serif JP</a></li>
+<li><a href="https://fonts.google.com/specimen/Noto+Serif+KR" target="_blank" rel="noopener">Noto Serif KR</a></li>
+<li><a href="https://fonts.google.com/specimen/Playpen+Sans+Hebrew" target="_blank" rel="noopener">Playpen Sans Hebrew</a></li>
+<li><a href="https://fonts.google.com/specimen/Rampart+One" target="_blank" rel="noopener">Rampart One</a></li>
+<li><a href="https://fonts.google.com/specimen/Ramsina" target="_blank" rel="noopener">Ramsina</a></li>
+<li><a href="https://fonts.google.com/specimen/Reem+Kufi+Fun" target="_blank" rel="noopener">Reem Kufi Fun</a></li>
+<li><a href="https://fonts.google.com/specimen/Reem+Kufi+Ink" target="_blank" rel="noopener">Reem Kufi Ink</a></li>
+<li><a href="https://fonts.google.com/specimen/RocknRoll+One" target="_blank" rel="noopener">RocknRoll One</a></li>
+<li><a href="https://fonts.google.com/specimen/Rubik+Bubbles" target="_blank" rel="noopener">Rubik Bubbles</a></li>
+<li><a href="https://fonts.google.com/specimen/Russo+One" target="_blank" rel="noopener">Russo One</a></li>
+<li><a href="https://fonts.google.com/specimen/Secular+One" target="_blank" rel="noopener">Secular One</a></li>
+<li><a href="https://fonts.google.com/specimen/Single+Day" target="_blank" rel="noopener">Single Day</a></li>
+<li><a href="https://fonts.google.com/specimen/Space+Grotesk" target="_blank" rel="noopener">Space Grotesk</a></li>
+<li><a href="https://fonts.google.com/specimen/Suez+One" target="_blank" rel="noopener">Suez One</a></li>
+<li><a href="https://fonts.google.com/specimen/Yusei+Magic" target="_blank" rel="noopener">Yusei Magic</a></li>
+<li><a href="https://fonts.google.com/specimen/Zen+Maru+Gothic" target="_blank" rel="noopener">Zen Maru Gothic</a></li></ul>
+        </details>
+      </div>
+    </dialog>
 
 	    <dialog id="cheat-dialog" class="cheat-dialog" aria-labelledby="cheat-title">
 	      <div class="dialog-card">
@@ -304,43 +449,8 @@
                 </select>
               </label>
             </section>
-            <section class="settings-group">
-              <div class="settings-head">
-                <p class="eyebrow">answer reveal</p>
-                <p id="feedback-settings-copy" class="settings-copy">wait style after a wrong answer.</p>
-              </div>
-              <label class="duration-control" for="feedback-mode">
-                <span class="eyebrow">after a wrong answer</span>
-                <select id="feedback-mode">
-                  <option value="timed">wait automatically</option>
-                  <option value="manual">wait for another enter press</option>
-                </select>
-              </label>
-              <label id="feedback-duration-control" class="duration-control" for="feedback-duration">
-                <span class="eyebrow">for this long</span>
-                <select id="feedback-duration">
-                  <option value="1500">1.5s</option>
-                  <option value="2500">2.5s</option>
-                  <option value="3500">3.5s</option>
-                  <option value="5000">5s</option>
-                </select>
-              </label>
-            </section>
-            <section class="settings-group">
-              <div class="settings-head">
-                <p class="eyebrow">reset app</p>
-                <p class="settings-copy">
-                  force updates the app by clearing downloaded app data and resetting all settings to defaults. if you are
-                  offline after reset, offline mode will not work again until internet is reached.
-                </p>
-              </div>
-              <div class="settings-actions settings-actions-start">
-                <button id="manual-reset-button" class="text-button danger-button" type="button">
-                  reset app completely
-                </button>
-              </div>
-              <p id="manual-reset-status" class="settings-copy settings-status hidden" aria-live="polite"></p>
-            </section>
+
+
             <section class="settings-group settings-group-symbols">
               <div class="settings-head">
                 <p class="eyebrow">active symbols</p>
@@ -383,7 +493,7 @@
           <p class="shortcuts-key-note eyebrow">alt = option = altgr = ⌥</p>
         </div>
       </dialog>
-	
+
 	    <script>
 	      if ("serviceWorker" in navigator) {
 	        window.addEventListener("load", () => {
@@ -445,5 +555,6 @@
 	    </script>
 	    <script src="./vendor/abcjs-basic-min.js"></script>
 	    <script src="./app.js"></script>
+        <script type="module" src="./global-panels.mjs"></script>
 	  </body>
 	</html>

@@ -1,0 +1,3 @@
+https://github.com/khoin/DattorroReverbNode
+Revision: d65d0dadeb3723fabc2d069897ef4050224551cf
+Local changes: reset message; zero-input allocation removed; Int32 delay taps.

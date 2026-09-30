@@ -1,7 +1,7 @@
 {
   "name": "velhoksi",
   "short_name": "velhoksi",
-  "description": "a minimal game for practicing alphabets and symbols across scripts.",
+  "description": "every tool you need to become a wizard",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

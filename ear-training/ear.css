@@ -1,0 +1,461 @@
+/* Use the same picker, floating prompt and stats layout as the other practice sets. */
+.ear-view { min-width: 0; min-height: 0; overflow: visible; }
+.ear-view [hidden] { display: none !important; }
+.ear-picker { width: min(360px, 100%); }
+.ear-breadcrumbs { display: flex; align-items: center; justify-content: inherit; flex-wrap: wrap; gap: 10px; color: var(--muted); font: .8rem "IBM Plex Mono", monospace; }
+.intro-copy .ear-breadcrumbs { justify-content: center; }
+.ear-breadcrumbs .text-button { font: inherit; }
+.ear-card-multitimbral { font-size: .75rem !important; }
+.ear-menu-tools { display: flex; align-items: center; gap: 14px; color: var(--muted); }
+.ear-challenges { gap: 24px; padding: 20px 24px 28px; margin-top: 90px; height: auto; max-height: calc(100dvh - 200px); overflow-y: auto; align-content: start; overscroll-behavior: contain; }
+.ear-challenge-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.ear-challenge-card { min-width: 0; border: 2px solid var(--line); background: var(--surface-strong); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.ear-challenge-card:hover, .ear-challenge-card:focus-within { box-shadow: 4px 4px 0 var(--line); }
+.ear-challenge-card.is-selected { border-color: var(--accent); }
+.ear-challenge-select { width: 100%; padding: 16px 20px; border: 0; background: transparent; color: var(--text); display: grid; gap: 10px; text-align: left; }
+.ear-challenge-card-top, .ear-challenge-card-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ear-challenge-level, .ear-challenge-description { color: var(--muted); font: .75rem/1.6 "IBM Plex Mono", monospace; }
+.ear-challenge-expand { font: 1rem "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-challenge-picker .alphabet-button-label { font-size: 1.2rem; }
+.ear-challenge-drawing { width: 64px; height: 40px; flex-shrink: 0; overflow: visible; color: var(--accent); }
+.ear-challenge-drawing path { fill: none; stroke: currentColor; stroke-width: 1; opacity: .45; }
+.ear-challenge-drawing circle { fill: currentColor; }
+.ear-challenge-select:hover circle, .ear-challenge-select:focus-visible circle { animation: ear-note-lift 450ms ease var(--note-delay) both; }
+@keyframes ear-note-lift { 50% { transform: translateY(-4px); opacity: .5; } }
+.ear-challenge-summary { font: .7rem/1.6 "IBM Plex Mono", monospace; color: var(--muted); overflow-wrap: anywhere; }
+.is-selected .ear-challenge-summary { display: none; }
+.ear-challenge-options { margin: 0 20px; padding: 16px 0 20px; border-top: 1px solid var(--soft-line); animation: ear-card-reveal 160ms ease; }
+@keyframes ear-card-reveal { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.ear-card-answer { border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.ear-card-answer legend, .ear-card-interval-heading, .ear-card-compound summary { font: .75rem/1.6 "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-card-answer legend { margin-bottom: 8px; }
+.ear-card-answer > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.ear-card-answer button, .ear-challenge-interval { padding: 7px 9px; border: 1px solid var(--soft-line); color: var(--muted); background: transparent; font: .75rem "IBM Plex Mono", monospace; }
+.ear-card-answer button:hover, .ear-challenge-interval:hover { border-color: var(--text); color: var(--text); }
+.ear-card-answer button[aria-pressed="true"] { color: var(--text); border-color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
+.ear-card-interval-heading, .ear-card-interval-heading > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ear-card-interval-heading { margin-bottom: 8px; }
+.ear-card-interval-heading .text-button { font-size: .7rem; }
+.ear-card-intervals { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+.ear-challenge-interval { padding: 8px 2px; min-height: 34px; }
+.ear-challenge-interval[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--bg); }
+.ear-card-compound { margin: 12px 0 0; }
+.ear-card-compound summary { cursor: pointer; width: fit-content; }
+.ear-card-compound[open] summary { margin-bottom: 10px; }
+.ear-card-start { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.ear-card-start .text-button { font-size: .75rem; }
+.ear-card-error { font-size: .8rem; line-height: 1.5; color: var(--danger); margin-top: 10px; }
+.ear-card-error:empty { display: none; }
+.ear-challenge-picker .ear-custom-choice { grid-column: 1 / -1; min-height: 64px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 16px 20px; }
+.ear-setup { max-height: calc(100dvh - 200px); height: auto; margin-top: 90px; overflow-y: auto; overscroll-behavior: contain; }
+.ear-setup-inner { width: min(860px, 100%); margin: 0 auto; padding: 0 24px; }
+.ear-setup-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 8px 0 20px; border-bottom: 1px solid var(--soft-line); }
+.ear-setup-header h2 { font-size: 1.6rem; margin-top: 8px; }
+.ear-setup-start .ear-save-toggle { margin: 0; font-size: .8rem; }
+.ear-setup-start .ear-save-toggle, .ear-setup-start .ear-save-copy { align-self: center; min-height: 40px; line-height: 1.25; }
+.ear-setup-start input[type="checkbox"] { margin: 0; }
+.ear-setup-start .ear-primary { min-height: 40px; line-height: 1.25; flex-shrink: 0; }
+.ear-save-options { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 20px; min-width: 0; padding-bottom: 12px; border-bottom: 1px solid var(--soft-line); }
+.ear-save-options input[type="text"] { flex: 1 1 240px; min-width: 0; width: 100%; max-width: 100%; min-height: 40px; height: 40px; padding: 9px 12px; border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); font: .8rem/1.25 "IBM Plex Mono", monospace; }
+.ear-setup-start .ear-save-copy { margin: 0; font-size: .7rem; }
+.ear-setup-start > p { margin: 0; }
+.ear-setup-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px; min-width: 0; }
+.ear-setup-actions > [data-action="save-now"] { margin-left: auto; }
+#ear-save-status, #ear-saved-status { margin-top: 8px; color: var(--muted); font: .75rem/1.5 "IBM Plex Mono", monospace; }
+#ear-save-status:empty, #ear-saved-status:empty, #ear-setup-error:empty { display: none; }
+#ear-save-status[data-state="error"], #ear-saved-status[data-state="error"] { color: var(--danger); }
+.ear-saved-exercises { width: min(760px, 100%); }
+.ear-saved-exercises h3 { color: var(--muted); font: .8rem "IBM Plex Mono", monospace; margin: 0 0 12px; }
+#ear-saved-list { display: grid; gap: 10px; }
+.ear-saved-exercise { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 24px; padding: 16px 20px; border: 1px solid var(--soft-line); background: var(--surface-strong); }
+.ear-saved-exercise > div:first-child { min-width: 0; flex: 1 1 220px; }
+.ear-saved-exercise h4 { margin: 0 0 8px; font-size: 1rem; font-weight: 500; overflow-wrap: anywhere; }
+.ear-saved-exercise p { color: var(--muted); font: .7rem/1.6 "IBM Plex Mono", monospace; overflow-wrap: anywhere; }
+.ear-saved-exercise .ear-saved-intervals { margin-top: 4px; }
+.ear-saved-actions, .ear-saved-notice { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.ear-saved-actions .text-button, .ear-saved-notice .text-button { font-size: .75rem; }
+.ear-saved-notice { margin-top: 8px; }
+.ear-setup-start { position: sticky; bottom: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px 0; background: var(--bg); border-top: 1px solid var(--soft-line); z-index: 3; }
+#ear-setup-error { color: var(--danger); font-size: .85rem; line-height: 1.5; }
+.ear-instrument-pool { min-inline-size: 0; margin: 20px 0 22px 26px; padding: 16px 18px 20px; border: 1px solid var(--soft-line); background: var(--panel-tone); box-shadow: inset 0 2px 8px rgba(0, 0, 0, .035); }
+.ear-instrument-pool legend { padding: 0 8px; color: var(--text); font: .8rem "IBM Plex Mono", monospace; }
+.ear-instrument-pool legend span { margin-left: 12px; color: var(--muted); font-size: .7rem; }
+.ear-pool-families { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; }
+.ear-pool-family { min-width: 0; }
+.ear-pool-family h4 { margin: 0 0 8px; color: var(--muted); font: .7rem "IBM Plex Mono", monospace; letter-spacing: .06em; }
+.ear-pool-family > div { display: grid; gap: 6px; }
+.ear-pool-choice { display: flex; align-items: stretch; gap: 4px; min-height: 38px; border: 1px solid transparent; background: var(--surface); color: var(--muted); font-size: .8rem; line-height: 1.4; transition: border-color 120ms ease, background 120ms ease; }
+.ear-pool-toggle { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 8px 10px; cursor: pointer; }
+.ear-instrument-preview { align-self: center; flex: 0 0 32px; width: 32px; height: 32px; margin-right: 3px; padding: 0; border: 0; border-left: 1px solid var(--soft-line); background: transparent; color: var(--muted); font-size: .7rem; }
+.ear-instrument-preview:hover, .ear-instrument-preview.is-playing { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.ear-instrument-preview.is-playing span { display: inline-block; animation: ear-loading-pulse 800ms ease-in-out infinite alternate; }
+.ear-pool-choice span { min-width: 0; overflow-wrap: anywhere; }
+.ear-pool-choice input { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); flex-shrink: 0; }
+.ear-pool-choice:hover { border-color: var(--soft-line); }
+.ear-pool-choice.is-selected { border-color: color-mix(in srgb, var(--accent) 55%, var(--soft-line)); background: color-mix(in srgb, var(--accent) 8%, var(--surface-strong)); color: var(--text); }
+.ear-pool-choice:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ear-variation-block { border-top: 1px solid var(--soft-line); margin-top: 22px; padding-top: 2px; }
+.ear-dynamics { margin: 16px 0 0 26px; padding: 16px 18px; width: min(360px, calc(100% - 26px)); border: 1px solid var(--soft-line); background: var(--panel-tone); box-shadow: inset 0 2px 8px rgba(0, 0, 0, .035); }
+.ear-dynamics label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; color: var(--muted); font: .75rem "IBM Plex Mono", monospace; }
+.ear-dynamics output { color: var(--text); font-variant-numeric: tabular-nums; }
+.ear-dynamics input { grid-column: 1 / -1; width: 100%; margin: 0; accent-color: var(--accent); }
+.ear-dynamics-scale { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: .65rem; }
+#ear-workspace { min-height: 0; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; scroll-padding-block: 24px; padding-bottom: 28px; }
+.ear-view .ear-main { position: relative; inset: auto; width: 87%; margin: min(8vh, 80px) 8% 0 5%; padding-bottom: 24px; min-height: calc(100% - 110px); grid-template-columns: minmax(0, 1fr); grid-template-rows: auto clamp(130px, 22vh, 230px) auto; align-content: start; gap: 22px; }
+.ear-view .ear-prompt { position: relative; grid-template-rows: 1fr auto; padding: 12px 20px; }
+.ear-play { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 0; background: none; color: var(--text); width: 100%; height: 100%; min-height: 0; padding: 0; }
+.ear-play-icon { font-size: clamp(2.5rem, 6vh, 5rem); line-height: 1; }
+#ear-play-label { font-family: "IBM Plex Mono", monospace; font-size: .8rem; color: var(--muted); }
+.ear-play.is-playing .ear-play-icon { color: var(--accent); }
+.ear-prompt-footer { width: 100%; min-height: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.ear-transport { display: flex; align-items: center; gap: 10px; }
+.ear-challenge-caption { color: var(--muted); font: .75rem "IBM Plex Mono", monospace; }
+.ear-note-dots { position: absolute; top: 12px; right: 20px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.ear-note-dot { display: grid; place-items: center; width: 17px; height: 17px; border: 1px solid var(--soft-line); border-radius: 50%; font: .6rem "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-note-dot.playing { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.ear-transport .text-button { font-size: .75rem; }
+.ear-answer { max-width: calc(100% - var(--stats-reserve) - 32px); min-width: 0; margin-left: 10px; }
+.ear-answer-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 10px; }
+.ear-muted { color: var(--muted); font-size: .85rem; line-height: 1.5; }
+#ear-answer-instruction { font: .75rem "IBM Plex Mono", monospace; margin: 0; }
+.ear-answer-slots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ear-selected-answer { display: flex; align-items: baseline; gap: 10px; color: var(--muted); font: .75rem "IBM Plex Mono", monospace; }
+.ear-selected-answer:empty { display: none; }
+.ear-selected-answer strong { color: var(--text); font-size: 1rem; font-weight: 500; }
+.ear-answer-slot { display: grid; gap: 5px; min-width: 86px; padding: 7px 12px; border: 0; border-bottom: 2px solid var(--soft-line); background: transparent; color: var(--text); text-align: left; }
+.ear-answer-slot span { font: .65rem "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-answer-slot strong { font-size: 1rem; font-weight: 500; }
+.ear-answer-slot.current { border-bottom: 2px solid var(--accent); }
+.ear-interval-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 6px; }
+.ear-interval-buttons button { min-height: 44px; padding: 8px 4px; border: 1px solid var(--soft-line); color: var(--text); background: var(--surface-strong); }
+.ear-interval-buttons strong { font-size: 1.05rem; font-weight: 500; }
+.ear-interval-buttons button:hover { border-color: var(--text); }
+.ear-interval-buttons button[aria-pressed="true"] { border-color: var(--text); background: var(--text); color: var(--bg); }
+.ear-interval-buttons button.answer-correct { border-color: var(--success); box-shadow: inset 0 -3px var(--success); }
+.ear-interval-buttons button.answer-wrong { border-color: var(--danger); box-shadow: inset 0 -3px var(--danger); }
+.ear-type-option { margin-top: 8px; }
+.ear-type-option summary { width: fit-content; color: var(--muted); font: .75rem "IBM Plex Mono", monospace; cursor: pointer; }
+.ear-typed { display: grid; gap: 6px; margin: 8px 0; }
+.ear-typed label, .ear-typed small { color: var(--muted); font-size: .8rem; }
+.ear-typed > div { display: flex; align-items: center; gap: 12px; }
+.ear-typed input { min-width: 0; width: min(440px, 100%); border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); padding: 12px; font: 1rem "IBM Plex Mono", monospace; }
+.ear-answer-actions, .ear-comparison { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px; margin-top: 12px; }
+.ear-answer-actions > [data-action="next"] { margin-left: auto; }
+.ear-primary { border: 1px solid var(--line); background: var(--surface-strong); color: var(--text); padding: 8px 12px; font: .85rem "IBM Plex Mono", monospace; min-height: 36px; }
+.ear-primary:hover { background: var(--text); color: var(--bg); }
+.ear-feedback { font-size: .875rem; line-height: 1.5; margin-top: 10px; }
+.ear-feedback:empty, .ear-sound-status:empty, .ear-local-status:empty { display: none; }
+.ear-feedback.correct { color: var(--success); }
+.ear-feedback.incorrect { color: var(--danger); }
+.ear-feedback.ear-result { display: block; color: var(--text); padding: 16px 18px; margin-top: 18px; border: 1px solid var(--soft-line); border-left: 3px solid var(--accent); background: var(--surface-strong); }
+.ear-feedback.ear-result.correct { border-left-color: var(--success); }
+.ear-feedback.ear-result:empty { display: none; }
+.ear-result-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font: .8rem "IBM Plex Mono", monospace; }
+.ear-result-heading > strong { font-weight: 500; }
+.ear-result.correct .ear-result-heading > strong, .ear-result.correct .ear-result-mark { color: var(--success); }
+.ear-result-mark { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid currentColor; border-radius: 50%; font-size: .9rem; }
+.ear-result-assisted { color: var(--muted); font-size: .65rem; }
+.ear-result-counts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-left: auto; color: var(--muted); font-size: .65rem; }
+.ear-result-intervals { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; margin-top: 14px; }
+.ear-result-part { min-width: 0; border-top: 2px solid var(--soft-line); padding: 10px 0 0; }
+.ear-result-part.correct { border-top-color: var(--success); }
+.ear-result-part.incorrect { border-top-color: var(--danger); }
+.ear-result-part.direction-wrong { border-top-color: var(--accent); }
+.ear-result-step { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 8px; font: .6rem/1.5 "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-result-part.correct .ear-result-step-status { color: var(--success); }
+.ear-result-part.incorrect .ear-result-step-status { color: var(--danger); }
+.ear-result-part.direction-wrong .ear-result-step-status { color: var(--accent); }
+.ear-result-heard { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 8px; }
+.ear-result-abbr { min-width: 28px; font-size: 1.05rem; font-weight: 600; }
+.ear-result-name { font-size: .85rem; }
+.ear-result-direction { color: var(--muted); font: .8rem "IBM Plex Mono", monospace; }
+.ear-result-notes { margin: 5px 0 0; color: var(--muted); font: .75rem/1.7 "IBM Plex Mono", monospace; }
+.ear-result-submitted { margin-top: 10px; padding: 9px 10px; background: var(--panel-tone); border-left: 2px solid var(--soft-line); }
+.ear-result-your-label { display: block; margin-bottom: 4px; color: var(--muted); font: .6rem "IBM Plex Mono", monospace; }
+@media (max-width: 500px) { .ear-result-counts { flex-basis: 100%; margin-left: 32px; } }
+
+.ear-stats .stats-row span { color: var(--muted); font: .875rem "IBM Plex Mono", monospace; }
+.ear-sound-status { margin-top: 8px; color: var(--muted); font: .8rem/1.5 "IBM Plex Mono", monospace; }
+.ear-sound-status[data-state="error"], .ear-local-status[data-state="error"] { color: var(--danger); }
+.ear-view button:focus-visible, .ear-view input:focus-visible, .ear-view select:focus-visible, .ear-view summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ear-view button:disabled { cursor: not-allowed; opacity: .4; }
+.ear-shortcut-list { display: grid; grid-template-columns: minmax(90px, 1fr) 2fr; gap: 16px 24px; padding-top: 24px; }
+.ear-shortcut-list dt { overflow-wrap: anywhere; font-family: "IBM Plex Mono", monospace; }
+.ear-shortcut-list dd { margin: 0; color: var(--muted); }
+.ear-settings-grid label { display: flex; flex-direction: column; gap: 7px; font: .875rem "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-settings-grid select, .ear-settings-grid input[type="number"] { border: 1px solid var(--soft-line); padding: 9px 12px; color: var(--text); background: var(--surface-strong); font: inherit; border-radius: 0; min-height: 40px; max-width: 100%; }
+.ear-setting-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; font: .875rem "IBM Plex Mono", monospace; }
+.ear-pitch-control { display: grid; grid-template-columns: minmax(0, 1fr) 38px; gap: 6px; }
+.ear-pitch-control select { width: 100%; min-width: 0; }
+.ear-pitch-preview { border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--muted); padding: 0; min-height: 40px; font-size: .75rem; }
+.ear-pitch-preview:hover, .ear-pitch-preview.is-playing { color: var(--accent); border-color: var(--accent); }
+.ear-pitch-preview.is-playing span { display: inline-block; animation: ear-loading-pulse 800ms ease-in-out infinite alternate; }
+.ear-instrument-scroll { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; padding: 5px 4px 12px; overscroll-behavior-x: contain; touch-action: pan-x pan-y; scrollbar-width: thin; scrollbar-color: var(--soft-line) transparent; }
+.ear-piano-pan { display: flex; gap: 6px; }
+.ear-piano-pan .text-button { border: 1px solid var(--soft-line); min-width: 30px; min-height: 28px; }
+.ear-piano { --key-width: calc(100% / var(--white-count)); width: max(100%, calc(var(--white-count) * 100% / 15)); min-width: calc(var(--white-count) * 32px); height: 126px; position: relative; }
+.ear-key { position: absolute; left: calc(var(--key-position) * var(--key-width)); width: var(--key-width); height: 122px; border: 1px solid #393733; background: #f9f3e9; color: #222; display: flex; align-items: flex-end; justify-content: center; padding: 8px 1px; font-family: "IBM Plex Mono", monospace; border-radius: 0 0 3px 3px; overflow: hidden; transition: background 130ms ease, box-shadow 160ms ease; }
+.ear-key.black { z-index: 2; height: 78px; width: calc(var(--key-width) * .64); background: #212329; color: #eee5d7; box-shadow: 0 3px 0 #000; }
+.ear-key .ear-key-label { display: flex; flex-direction: column; align-items: center; line-height: 1.1; gap: 3px; font-size: .67rem; max-width: 100%; z-index: 1; }
+.ear-key.white .ear-key-label { flex-direction: row; align-items: baseline; gap: 1px; }
+.ear-key-label small { font-size: .55rem; opacity: .65; }
+.ear-key.black .ear-key-label { font-size: .56rem; letter-spacing: -.06em; }
+.ear-key.black .ear-key-label small { display: none; }
+.ear-key kbd { position: absolute; bottom: calc(14px + .75rem); left: 50%; transform: translateX(-50%); min-width: 15px; padding: 1px 2px; border: 1px solid #a99a8955; border-radius: 2px; background: #eadfce; text-align: center; color: #54483b; font: .55rem/1.2 "IBM Plex Mono", monospace; }
+.ear-key.black kbd { top: 7px; bottom: auto; background: #36383e; color: #eee5d7; border-color: #eee5d744; }
+.ear-key.keyboard-mapped .ear-key-label { font-weight: 600; }
+.ear-key.reference { outline: 3px solid var(--accent); outline-offset: -4px; }
+.ear-key.interval-tone { box-shadow: inset 0 -4px var(--accent); }
+.ear-key.selected { background: #cf7a48; color: #111; }
+.ear-key.drone-selected { background: #f0c69e; box-shadow: inset 0 -4px var(--accent); }
+.ear-key.black.drone-selected { background: #63412d; color: #fff4e8; }
+.ear-key.answer-correct { box-shadow: inset 0 -5px var(--success); }
+.ear-key.answer-wrong { box-shadow: inset 0 -3px var(--danger); }
+.ear-key:hover:not(:disabled) { background: #d9b08c; color: #111; }
+.ear-key:active:not(:disabled) { transform: translateY(2px); }
+.ear-key-light { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: linear-gradient(0deg, #ed9256aa, transparent 80%); transition: opacity 350ms ease; }
+.ear-key.sounding .ear-key-light, .ear-key.sustaining .ear-key-light { opacity: 1; }
+.ear-key.sounding { background: #efbb83; color: #111; box-shadow: inset 0 -7px #dc702d; }
+.ear-key.black.sounding { background: #9b4d23; color: #fff8ef; }
+.ear-key.is-note-hovered { background: #f4b979; color: #111; }
+.ear-key.black.is-note-hovered { background: #9b4d23; color: #fff8ef; }
+.ear-key.sustaining .ear-key-light { opacity: calc(.45 + var(--drone-energy, 0) * .55); }
+#ear-cheat .ear-key:disabled { opacity: .65; cursor: default; }
+.ear-piano-caption, .ear-octave-controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 14px; }
+.ear-piano-caption { color: var(--muted); font: .7rem/1.5 "IBM Plex Mono", monospace; }
+.ear-octave-controls { margin-left: auto; }
+.ear-octave-controls .text-button { font: inherit; }
+.ear-octave-controls [data-piano-range] { min-width: 76px; text-align: center; color: var(--text); font-variant-numeric: tabular-nums; }
+.ear-interval-buttons button { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.ear-interval-buttons kbd, .ear-lab-intervals kbd { font: .6rem "IBM Plex Mono", monospace; opacity: .55; }
+.ear-fretboard { width: 100%; min-width: 660px; }
+.ear-fret-labels, .ear-string { display: grid; grid-template-columns: 48px repeat(21, minmax(0, 1fr)); }
+.ear-fret-labels span { text-align: center; font-family: "IBM Plex Mono", monospace; color: var(--muted); font-size: .7rem; padding: 4px 0; }
+.ear-string { position: relative; }
+.ear-string > span { font-family: "IBM Plex Mono", monospace; font-size: .8rem; display: grid; place-items: center; }
+.ear-string button { display: grid; place-items: center; min-width: 0; height: 28px; padding: 0; position: relative; border: 0; border-right: 2px solid var(--soft-line); border-radius: 0; color: var(--text); background: linear-gradient(transparent calc(50% - var(--string-weight)), var(--soft-line) 50%, transparent calc(50% + var(--string-weight))); }
+.ear-string button span { font-size: .7rem; white-space: nowrap; background: var(--bg); padding: 3px 2px; border-radius: 20px; opacity: 0; }
+.ear-string button:hover:not(:disabled) span, .ear-string button.reference span, .ear-string button.selected span, .ear-string button:focus-visible span { opacity: 1; }
+/* Disabled pitches must not break the continuous strings and fret lines. */
+.ear-view .ear-string button:disabled { opacity: 1; color: var(--muted); }
+.ear-string button.reference { outline: 2px solid var(--accent); outline-offset: -4px; }
+.ear-string button.selected span { background: var(--accent); color: #111; opacity: 1; }
+.ear-string button.answer-correct span, .ear-string button.answer-wrong span, .ear-string button.sounding span { opacity: 1; }
+.ear-string button.answer-correct span { box-shadow: 0 2px var(--success); }
+.ear-string button.answer-wrong span { box-shadow: 0 2px var(--danger); }
+.ear-string button.sounding span { background: var(--accent); color: #111; }
+.ear-string button.is-note-hovered span { opacity: 1; background: var(--accent); color: #111; }
+.ear-view :is([data-note-midi], [data-note-midis]):not(:disabled) { cursor: pointer; }
+.ear-note-mention { border-radius: 2px; text-decoration: underline dotted; text-decoration-color: var(--soft-line); text-underline-offset: 3px; }
+.ear-note-mention:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:is(.ear-note-mention, .ear-drone-note, .ear-answer-slot, .ear-pitch-preview, select).is-note-hovered { color: var(--text); background: color-mix(in srgb, var(--accent) 20%, var(--surface-strong)); outline: 1px solid var(--accent); outline-offset: 2px; text-decoration-color: var(--accent); }
+.ear-string button.marked { background-color: color-mix(in srgb, var(--accent) 7%, transparent); }
+.ear-dialog { width: min(820px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); border: 1px solid var(--line); background: var(--surface-strong); color: var(--text); padding: 26px; box-shadow: 8px 8px 0 var(--line); overscroll-behavior: contain; }
+.ear-dialog::backdrop { background: rgba(0,0,0,.65); backdrop-filter: blur(5px); }
+.ear-dialog-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--soft-line); }
+.ear-dialog-header h2 { font-size: 1.55rem; font-weight: 500; letter-spacing: -.04em; }
+.ear-setting-section { padding: 22px 0; border-bottom: 1px solid var(--soft-line); }
+.ear-setting-section h3 { font-size: 1rem; font-weight: 500; margin: 0 0 18px; }
+.ear-settings-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-bottom: 18px; }
+.ear-settings-grid input[type="range"] { width: 100%; accent-color: var(--accent); }
+.ear-settings-grid output { color: var(--text); }
+.ear-checkbox { display: flex; gap: 10px; align-items: center; margin-top: 18px; font-size: .9rem; }
+.ear-checkbox input, .ear-interval-selection input { accent-color: var(--accent); width: 17px; height: 17px; flex-shrink: 0; }
+.ear-setting-presets { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 20px; }
+.ear-setting-presets .text-button { min-height: 40px; padding: 9px 12px; border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); font: .8rem/1.4 "IBM Plex Mono", monospace; text-align: center; text-decoration: none; box-shadow: 0 2px 0 var(--soft-line); }
+.ear-setting-presets .text-button:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface-strong)); }
+.ear-setting-presets .text-button:active { transform: translateY(2px); box-shadow: none; }
+.ear-interval-selection { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ear-interval-selection label { display: flex; align-items: center; gap: 9px; font-size: .875rem; }
+.ear-interval-selection strong { display: inline-block; min-width: 36px; font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+#ear-cheat { width: min(1000px, calc(100vw - 32px)); }
+.ear-lab { padding: 18px 0 0; --drone-energy: 0; }
+.ear-lab-sound-heading, .ear-lab-note-instruments, .ear-lab-piano-heading, .ear-lab-key-mode { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px; }
+.ear-lab-note-instruments { justify-content: flex-start; color: var(--muted); }
+.ear-lab-sound-heading .ear-checkbox { font-size: .75rem; margin: 0; }
+.ear-current-instrument { color: var(--text); font-size: .95rem; font-weight: 500; }
+.ear-note-instrument { padding: 8px 10px; border: 1px solid var(--soft-line); background: transparent; color: var(--muted); font: .7rem "IBM Plex Mono", monospace; }
+.ear-note-instrument[aria-pressed="true"] { color: var(--text); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface-strong)); box-shadow: inset 3px 0 var(--accent); }
+.ear-instrument-browser { min-width: 0; margin: 16px 0; border: 1px solid var(--soft-line); background: var(--surface-strong); }
+.ear-instrument-families { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--soft-line); background: var(--panel-tone); }
+.ear-family { padding: 12px 14px 10px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: .65rem/1.4 "IBM Plex Mono", monospace; letter-spacing: .06em; text-transform: uppercase; }
+.ear-family:hover { color: var(--text); background: var(--surface); }
+.ear-family[aria-pressed="true"] { color: var(--text); background: var(--surface-strong); border-bottom-color: var(--accent); font-weight: 600; }
+.ear-lab [aria-pressed="true"].text-button { color: var(--text); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 5px; }
+.ear-instrument-tiles { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; }
+.ear-instrument-tiles button { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 42px; max-width: 100%; text-align: left; background: transparent; color: var(--text); border: 1px solid var(--soft-line); padding: 10px 12px; font-size: .8rem; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; }
+.ear-instrument-tiles button:hover { border-color: var(--text); background: var(--panel-tone); }
+.ear-instrument-tiles button[aria-pressed="true"] { color: var(--bg); background: var(--text); border-color: var(--text); }
+.ear-instrument-check { visibility: hidden; flex-shrink: 0; font-size: .85rem; }
+[aria-pressed="true"] > .ear-instrument-check { visibility: visible; }
+.ear-lab-console { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 14px 0; border-top: 1px solid var(--soft-line); }
+.ear-lab-play { flex-shrink: 0; position: relative; width: 56px; height: 56px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--surface); color: var(--text); font-size: 1.3rem; }
+.ear-lab-playback { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ear-lab-repeat { display: grid; place-items: center; width: 38px; height: 40px; padding: 0; border: 1px solid transparent; background: transparent; color: var(--muted); }
+.ear-lab-repeat:hover { color: var(--text); border-color: var(--soft-line); }
+.ear-lab-repeat[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.ear-lab-repeat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ear-lab-repeat[hidden] { display: none; }
+.ear-lab-center { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.ear-lab-interval { font-size: 2rem; letter-spacing: -.05em; font-weight: 500; line-height: 1; min-width: 54px; }
+.ear-lab-description { color: var(--text); font-size: .85rem; }
+.ear-lab-notes { color: var(--muted); font: .75rem "IBM Plex Mono", monospace; margin-top: 5px; }
+.ear-lab-directions { display: flex; gap: 14px; margin-left: auto; }
+.ear-lab-directions .text-button { font-size: .7rem; }
+.ear-motion-bars { position: absolute; inset: 15px; display: flex; align-items: center; justify-content: center; gap: 3px; opacity: 0; }
+.ear-motion-bars i { display: block; width: 3px; height: 20px; background: var(--accent); transform: scaleY(.25); }
+.is-playing .ear-play-symbol { opacity: 0; }
+.is-playing .ear-motion-bars { opacity: 1; }
+.is-playing .ear-motion-bars i { animation: ear-meter-dance 600ms ease-in-out infinite alternate; }
+.ear-motion-bars i:nth-child(2n) { animation-delay: -180ms; }
+.ear-motion-bars i:nth-child(3n) { animation-delay: -380ms; }
+@keyframes ear-meter-dance { to { transform: scaleY(1); } }
+.is-loading .ear-lab-play { animation: ear-loading-pulse 1s ease-in-out infinite alternate; }
+@keyframes ear-loading-pulse { to { opacity: .4; } }
+.ear-lab-intervals { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px; margin: 2px 0 18px; }
+.ear-lab-intervals button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: var(--surface); color: var(--text); border: 1px solid var(--soft-line); padding: 8px 2px; min-height: 45px; }
+.ear-lab-intervals button:hover { border-color: var(--accent); }
+.ear-lab-intervals button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.ear-lab-intervals strong { font-size: .95rem; font-weight: 500; }
+.ear-lab-piano-heading { font: .75rem "IBM Plex Mono", monospace; color: var(--muted); margin-bottom: 10px; }
+.ear-lab-piano-section { padding: 14px; border: 1px solid var(--soft-line); background: var(--panel-tone); }
+.ear-lab-key-mode { justify-content: flex-start; gap: 3px; padding: 3px; border: 1px solid var(--soft-line); background: var(--surface); }
+.ear-piano-mode { padding: 7px 10px; border: 1px solid transparent; background: transparent; color: var(--muted); font: .7rem "IBM Plex Mono", monospace; }
+.ear-piano-mode:hover { color: var(--text); }
+.ear-piano-mode[aria-pressed="true"] { border-color: var(--text); background: var(--text); color: var(--bg); }
+.ear-drone-console { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 18px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--soft-line); }
+.ear-drone-switch { display: flex; align-items: center; gap: 10px; flex-shrink: 0; border: 0; background: none; color: var(--muted); font: .75rem "IBM Plex Mono", monospace; padding: 0; }
+.ear-drone-orbit { display: grid; place-items: center; border: 1px solid var(--soft-line); border-radius: 50%; width: 34px; height: 34px; font-size: 1.4rem; line-height: 1; transition: box-shadow 150ms ease; }
+.ear-drone-notes { display: flex; flex: 1 1 180px; align-items: center; flex-wrap: wrap; gap: 6px; }
+.ear-drone-note { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); font: .7rem "IBM Plex Mono", monospace; }
+.ear-drone-note span { color: var(--muted); }
+.ear-drone-note:hover { border-color: var(--accent); }
+.is-sustaining .ear-drone-note { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface-strong)); }
+.ear-drone-notes > .text-button { font-size: .65rem; padding: 5px; }
+.is-sustaining .ear-drone-orbit { color: var(--accent); border-color: var(--accent); transform: scale(calc(1 + var(--drone-energy) * .12)); box-shadow: 0 0 0 calc(3px + var(--drone-energy) * 10px) color-mix(in srgb, var(--accent) 12%, transparent); }
+.ear-drone-switch[aria-pressed="true"] { color: var(--text); }
+.ear-drone-controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-left: auto; }
+.ear-drone-controls .text-button { font-size: .75rem; }
+.ear-drone-controls label { display: flex; flex-direction: column; gap: 6px; font: .65rem "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-drone-controls input { width: 95px; accent-color: var(--accent); }
+.ear-lab-footer, .ear-lab-footer > div { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ear-lab-footer { margin-top: 14px; }
+.ear-lab-footer .text-button, .ear-lab-footer label { font: .75rem "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-lab-footer select { background: transparent; color: var(--text); border: 1px solid var(--soft-line); padding: 5px; font: inherit; margin-left: 8px; }
+.ear-view select { appearance: none; -webkit-appearance: none; padding-right: 36px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: right 17px center, right 12px center; background-size: 5px 5px; background-repeat: no-repeat; }
+.ear-local-status { font-size: .875rem; color: var(--muted); margin-top: 16px; line-height: 1.6; }
+
+@media (forced-colors: active) {
+  .ear-view select { appearance: auto; -webkit-appearance: auto; background-image: none; }
+}
+
+/* Keep the scrollport above the fixed footer. Results grow inside it, rather
+   than expanding the viewport's grid row past the bottom of the window. */
+@media (min-width: 1101px) {
+  .ear-view { height: calc(100% - 48px - env(safe-area-inset-bottom)); align-self: start; }
+}
+@media (min-width: 1101px) and (max-height: 760px) {
+  .ear-view .ear-main { margin-top: 6vh; grid-template-rows: auto minmax(110px, 18vh) auto; gap: 16px; }
+  .ear-view .ear-stats { top: 16%; }
+  .ear-piano { height: 100px; }
+  .ear-key { height: 96px; }
+  .ear-key.black { height: 64px; }
+}
+@media (max-width: 1100px) {
+  #ear-workspace { max-height: none; overflow: visible; scrollbar-gutter: auto; padding-bottom: 16px; }
+  .ear-setup { margin-top: 0; max-height: none; overflow: visible; }
+  .ear-challenges { padding-top: 12px; margin-top: 0; max-height: none; overflow: visible; }
+  .ear-view .ear-main { width: 100%; margin: 0; min-height: 0; grid-template-rows: auto 150px auto; gap: 18px; order: 1; }
+  .ear-view .ear-stats { order: 2; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 10px 14px; }
+  .ear-stats .stats-row { width: min(360px, 80%); }
+  .ear-view .ear-prompt, .ear-answer { max-width: 100%; margin-left: 0; }
+  .ear-view .prompt-title-row { flex-wrap: wrap; }
+  .ear-view .prompt-tools { display: flex; flex-wrap: wrap; gap: 12px; padding: 10px 12px; }
+  .ear-view .prompt-tools .text-button { width: auto; padding: 0; font-size: .75rem; }
+  .ear-view .prompt-tools .nav-separator { display: inline; }
+}
+@media (max-width: 700px) {
+  .ear-instrument-pool { margin-left: 0; padding: 12px; }
+  .ear-pool-families { grid-template-columns: 1fr; gap: 18px; }
+  .ear-dynamics { margin-left: 0; width: 100%; }
+  .ear-challenges { padding: 12px 10px 30px; }
+  .ear-challenge-picker { gap: 10px; grid-template-columns: 1fr; }
+  .ear-challenge-picker .alphabet-button, .ear-challenge-select { padding: 12px; }
+  .ear-challenge-options { margin: 0 12px; }
+  .ear-challenge-picker .alphabet-button-label { font-size: 1rem; }
+  .ear-challenge-description { font-size: .7rem; }
+  .ear-setup-inner { padding: 0 10px; }
+  .ear-setup-header { flex-wrap: wrap; }
+  .ear-setup-start { gap: 10px; }
+  .ear-setup-actions { gap: 8px 14px; }
+  .ear-view .ear-main { padding: 10px; grid-template-rows: auto 150px auto; }
+  .ear-view .ear-prompt { padding: 10px 12px; }
+  .ear-prompt-footer { gap: 8px; min-height: 48px; justify-content: center; }
+  .ear-note-dots { top: 10px; right: 12px; }
+  .ear-transport { flex-basis: 100%; justify-content: center; }
+  .ear-answer-heading { gap: 10px; }
+  .ear-interval-buttons { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+  .ear-answer-actions, .ear-comparison { gap: 10px; }
+  .ear-answer-actions .text-button, .ear-comparison .text-button { font-size: .75rem; }
+  .ear-dialog { padding: 18px; }
+  .ear-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .ear-interval-selection { gap: 14px 6px; }
+  .ear-interval-selection label { font-size: .8rem; gap: 4px; }
+  .ear-lab-intervals { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .ear-lab-directions { flex-basis: 100%; margin-left: 0; }
+  .ear-lab-piano-section { padding: 10px; }
+  .ear-piano-mode { padding: 7px; font-size: .65rem; }
+  .ear-drone-controls { gap: 14px; }
+  .ear-drone-controls input { width: 85px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ear-view *, .ear-dialog * { transition: none !important; animation: none !important; }
+}
+
+.ear-lab-footer input[data-lab="duration"] { width: 76px; padding: 8px; }
+
+.ear-analysis { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--soft-line); }
+.ear-analysis-heading, .ear-analysis-map-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ear-analysis h3, .ear-analysis h4 { margin: 0; font-size: .9rem; font-weight: 600; }
+.ear-analysis-heading > span, .ear-analysis-map-heading > span, .ear-analysis-map-heading small { color: var(--muted); font: .65rem "IBM Plex Mono", monospace; }
+.ear-analysis-notes { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 10px 0; font: .75rem "IBM Plex Mono", monospace; }
+.ear-analysis-summary { display: flex; flex-wrap: wrap; gap: 6px; }
+.ear-analysis-interval { display: flex; align-items: baseline; gap: 7px; padding: 7px 10px; border: 1px solid var(--soft-line); background: var(--surface); font-size: .72rem; }
+.ear-analysis-interval strong { font-size: .85rem; min-width: 24px; }
+.ear-analysis-interval small { color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+.ear-analysis details > summary { cursor: pointer; width: fit-content; padding: 13px 0; font: .75rem "IBM Plex Mono", monospace; color: var(--muted); }
+.ear-analysis details[open] > summary { color: var(--text); }
+[data-analysis-body] { min-width: 0; }
+.ear-analysis-map-heading { margin: 10px 0; }
+.ear-analysis-pages { display: flex; align-items: center; gap: 12px; font: .65rem "IBM Plex Mono", monospace; }
+.ear-analysis-pages button { padding: 4px 8px; }
+.ear-pair-scroll { max-height: 300px; overflow: auto; border: 1px solid var(--soft-line); }
+.ear-pair-table { width: 100%; border-collapse: collapse; font-size: .75rem; }
+.ear-pair-table th { position: sticky; top: 0; z-index: 1; background: var(--surface-strong); text-align: left; color: var(--muted); font: .65rem "IBM Plex Mono", monospace; }
+.ear-pair-table td, .ear-pair-table th { padding: 8px 10px; border-bottom: 1px solid var(--soft-line); }
+.ear-pair-table td:first-child { white-space: nowrap; font-family: "IBM Plex Mono", monospace; }
+.ear-pair-table td strong { display: inline-block; min-width: 30px; margin-right: 8px; }
+.ear-pair-table button { padding: 4px 8px; }
+.ear-analysis [data-note-midis].is-note-hovered { background: color-mix(in srgb, var(--accent) 14%, var(--surface-strong)); }
+.ear-analysis [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ear-listening-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin: 16px 0 20px; }
+.ear-listening-facts article { padding: 12px; border-left: 2px solid var(--accent); background: var(--panel-tone); }
+.ear-listening-facts h4 { font-size: .8rem; }
+.ear-listening-facts p { font-size: .75rem; line-height: 1.55; color: var(--muted); margin: 5px 0 0; }
+.ear-harmonic-scroll { max-height: 330px; overflow: auto; border: 1px solid var(--soft-line); background: var(--surface); }
+.ear-harmonics { display: block; width: 100%; min-width: 500px; color: var(--text); }
+.ear-harmonics text { fill: currentColor; font: 11px "IBM Plex Mono", monospace; }
+.ear-harmonic-grid { stroke: var(--soft-line); stroke-width: .5; }
+.ear-harmonic-tick { opacity: .6; }
+.ear-harmonic-row line { stroke: var(--muted); stroke-width: 2; }
+.ear-harmonic-row .ear-fundamental { stroke: var(--accent); stroke-width: 4; }
+.ear-harmonic-row.is-note-hovered line { stroke: var(--accent); stroke-width: 4; }
+.ear-harmonic-row.is-note-hovered text { fill: var(--accent); font-weight: 600; }
+.ear-analysis-caption { color: var(--muted); font-size: .65rem; line-height: 1.5; margin: 8px 0; }
+.ear-partial-matches ul { list-style: none; margin: 0; padding: 0; }
+.ear-partial-matches li { display: flex; flex-wrap: wrap; gap: 8px; padding: 7px 0; font: .7rem "IBM Plex Mono", monospace; }
+.ear-partial-matches li strong { margin-left: auto; font-weight: 400; }
+@media (max-width: 500px) { .ear-pair-table td, .ear-pair-table th { padding: 7px 5px; } .ear-pair-table { font-size: .65rem; } }
+
+.ear-analysis-notes .is-playing-note { box-shadow: 0 2px var(--accent); }
+.ear-harmonic-row.is-playing-note text { font-weight: 600; }

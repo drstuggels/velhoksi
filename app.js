@@ -761,7 +761,8 @@ const SYMBOL_NOTES = {
 
 const state = {
   theme: loadTheme(),
-  selectedAlphabet: localStorage.getItem(STORAGE_KEYS.alphabet) || null,
+  selectedAlphabet: new URLSearchParams(window.location.search).get("mode") === "ear-training"
+    ? "ear-training" : localStorage.getItem(STORAGE_KEYS.alphabet) || null,
   bootLoading: true,
   elementAnswerMode: localStorage.getItem(STORAGE_KEYS.elementAnswerMode) === "buttons" ? "buttons" : "typed",
   showElementFacts: localStorage.getItem(STORAGE_KEYS.showElementFacts) === "true",
@@ -864,6 +865,32 @@ const refs = {
 let musicRenderHost = null;
 let musicHydrationScheduled = false;
 const MUSIC_RENDER_VERSION = 3;
+let earTraining = null;
+let earTrainingLoading = null;
+
+function renderEarTraining() {
+  const host = document.querySelector("#ear-view");
+  const selected = state.selectedAlphabet === "ear-training";
+  host.classList.toggle("hidden", !selected);
+  if (!selected) {
+    earTraining?.deactivate();
+    return false;
+  }
+  refs.pickerView.classList.add("hidden");
+  refs.gameView.classList.add("hidden");
+  if (earTraining) earTraining.activate();
+  else if (!earTrainingLoading) {
+    host.textContent = "loading ear training…";
+    earTrainingLoading = import("./ear-training/ui.mjs").then(({ createEarTraining }) => {
+      earTraining = createEarTraining(host, { onExit: goToStartMenu });
+      if (state.selectedAlphabet === "ear-training") earTraining.activate();
+    }).catch(() => {
+      host.textContent = "Ear training could not load. Return to the start menu and try again while online.";
+      earTrainingLoading = null;
+    });
+  }
+  return true;
+}
 
 init();
 
@@ -1355,6 +1382,7 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", (event) => {
+    if (state.selectedAlphabet === "ear-training") return;
     if (handleGlobalShortcut(event)) {
       return;
     }
@@ -1414,7 +1442,19 @@ function goToStartMenu() {
   refs.pickerView?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function renderGlobalPreferences() {
+  refs.feedbackDuration.value = String(state.feedbackDuration);
+  refs.feedbackMode.value = state.feedbackMode;
+  refs.feedbackDurationControl.classList.toggle("hidden", state.feedbackMode === "manual");
+  refs.feedbackSettingsCopy.textContent =
+    state.feedbackMode === "manual"
+      ? "what happens after a wrong answer."
+      : "how long the correct answer stays visible before the next prompt.";
+}
+
 function render() {
+  renderGlobalPreferences();
+  if (renderEarTraining()) return;
   if (state.bootLoading) {
     const selectedAlphabet = getSelectedAlphabet();
     if (selectedAlphabet) {
@@ -1476,13 +1516,6 @@ function render() {
   refs.settingsToggle.disabled = !alphabet;
   refs.directionToggle.disabled = !alphabet || enforceForeignToLatin;
   refs.shortcutsToggle?.setAttribute("aria-expanded", String(Boolean(refs.shortcutsDialog?.open)));
-  refs.feedbackDuration.value = String(state.feedbackDuration);
-  refs.feedbackMode.value = state.feedbackMode;
-  refs.feedbackDurationControl.classList.toggle("hidden", state.feedbackMode === "manual");
-  refs.feedbackSettingsCopy.textContent =
-    state.feedbackMode === "manual"
-      ? "what happens after a wrong answer."
-      : "how long the correct answer stays visible before the next prompt.";
   refs.missedFocusToggle.checked = alphabet ? getMissedFocusForAlphabet(alphabet) : false;
   refs.caseSettings.classList.toggle("hidden", !alphabet || !alphabet.hasCase);
   for (const button of refs.caseOptions) {
@@ -1853,6 +1886,28 @@ function renderAlphabetPicker() {
     refs.alphabetPicker.appendChild(loading);
     return;
   }
+
+  const earButton = document.createElement("button");
+  earButton.type = "button";
+  earButton.className = "alphabet-button";
+  earButton.innerHTML = '<span class="alphabet-button-label">ear training</span><span class="alphabet-button-preview interval-name-carousel" aria-hidden="true"><span class="alphabet-button-preview-track"></span></span>';
+  import("./ear-training/theory.mjs").then(({ INTERVALS }) => {
+    const track = earButton.querySelector(".alphabet-button-preview-track");
+    const names = INTERVALS.map(interval => interval.name).join(" · ") + " · ";
+    for (let copy = 0; copy < 2; copy++) {
+      const text = document.createElement("span");
+      text.textContent = names;
+      track.append(text);
+    }
+  }).catch(() => { /* The card remains usable if the preview module is offline. */ });
+  earButton.addEventListener("click", () => {
+    clearPendingWrongState();
+    clearSuccessFeedbackTimer();
+    state.selectedAlphabet = "ear-training";
+    localStorage.setItem(STORAGE_KEYS.alphabet, state.selectedAlphabet);
+    render();
+  });
+  refs.alphabetPicker.appendChild(earButton);
 
   for (const alphabet of ALPHABETS) {
     const button = document.createElement("button");
@@ -2253,7 +2308,7 @@ function renderCheatSheet() {
 }
 
 function isAnyDialogOpen() {
-  return Boolean(refs.cheatDialog?.open || refs.settingsDialog?.open || refs.shortcutsDialog?.open);
+  return Boolean(document.querySelector("dialog[open]"));
 }
 
 function isTypingTarget(target) {
@@ -2386,6 +2441,7 @@ function toggleDirectionShortcut() {
 }
 
 function handleGlobalShortcut(event) {
+  if (document.querySelector(".global-dialog[open]")) return false;
   if (event.defaultPrevented) {
     return false;
   }
