@@ -1,13 +1,15 @@
 import { MAX_NOTE_DURATION, INTERVALS, sanitizeSettings, generateQuestion, gradeAnswer, noteName, intervalName, parseInterval, parseNote, notesFromIntervals } from './theory.mjs';
 import { CHALLENGES, challengeSettings, questionSound } from './challenges.mjs';
 import { SampleEngine } from './audio.mjs';
-import { describeInterval, analyseNotes, harmonicModel, nearbyHarmonics, uniquePitches } from './analysis.mjs';
+import { describeInterval, analyseNotes, harmonicModel, nearbyHarmonics, uniquePitches, voicingIntervals } from './analysis.mjs';
 import { PIANO_KEYS, INTERVAL_CODES, intervalShortcut } from './shortcuts.mjs';
 import { INSTRUMENTS, instrumentById } from './instruments.mjs';
+import { audioQuality } from '../preferences.mjs';
 
 const SETTINGS_KEY = 'velhoksi.ear.settings.v1';
 const STATS_KEY = 'velhoksi.ear.stats.v1';
 const EXERCISES_KEY = 'velhoksi.ear.exercises.v1';
+const ACTIVE_QUIZ_KEY = 'velhoksi.ear.activeQuiz.v1';
 const PLAY_ICON = '<svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M5 3.5v13L16 10z"/></svg>';
 const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } };
 const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Practice works without persistent storage. */ } };
@@ -44,6 +46,7 @@ export function createEarTraining(root, { onExit }) {
   let expandedChallenge = null;
   const challengeDrafts = Object.fromEntries(CHALLENGES.map(c => [c.id, { input: settings.input, intervals: [...c.settings.intervals], perNoteInstruments: settings.perNoteInstruments }]));
   let sound = null;
+  let upcoming = null;
   let quizBeforeSettings = null;
   let pianoBase = 60;
   let pianoQuestionId = null;
@@ -62,6 +65,7 @@ export function createEarTraining(root, { onExit }) {
   let question = null;
   let answer = [];
   let result = null;
+  let resultBasis = 'bass';
   let heard = false;
   let assisted = false;
   let replays = 0;
@@ -80,6 +84,7 @@ export function createEarTraining(root, { onExit }) {
     if (!active) return;
     setStatus(message, state);
     if (state === 'paused') {
+      discardUpcoming();
       operation++;
       stopExploration();
       cancelAnimationFrame(previewAnimation);
@@ -181,6 +186,10 @@ export function createEarTraining(root, { onExit }) {
     const source = hoveredNote || focusedNote;
     const pitches = source ? (source.dataset.noteMidis || source.dataset.noteMidi).split(',') : [];
     for (const note of $$('[data-note-midi], [data-note-midis]')) {
+      const reference = note.closest('#ear-cheat') ? lab.reference
+        : view === 'practice' ? question?.reference
+        : view === 'setup' && settings.reference === 'fixed' ? settings.referenceNote : null;
+      note.classList.toggle('is-reference-note', reference != null && note.dataset.noteMidi === String(reference));
       const matches = (note.dataset.noteMidis || note.dataset.noteMidi).split(',').some(midi => pitches.includes(midi));
       note.classList.toggle('is-note-hovered', !!source && scope.contains(note) && matches);
     }
@@ -274,6 +283,7 @@ export function createEarTraining(root, { onExit }) {
   }
 
   function show(next) {
+    discardUpcoming();
     stopAll();
     hoveredNote = focusedNote = null;
     view = next;
@@ -288,6 +298,8 @@ export function createEarTraining(root, { onExit }) {
       $('[data-action="start-custom"]').textContent = quizBeforeSettings ? 'new quiz →' : 'start quiz →';
       renderSettings(); renderSaveExercise(); $('#ear-setup-error').textContent = ''; $('#ear-setup').scrollTop = 0; }
     if (next === 'practice') { if (!question) newQuestion(); else renderQuestion(); }
+    save(ACTIVE_QUIZ_KEY, next === 'practice' && question
+      ? { settings, challenge: selectedChallenge, exerciseId: selectedExerciseId } : null);
     if (question || next !== 'practice') setStatus('');
   }
 
@@ -461,6 +473,7 @@ export function createEarTraining(root, { onExit }) {
   }
 
   function updateSettings(patch) {
+    discardUpcoming();
     settings = sanitizeSettings({ ...settings, ...patch });
     customSettings = { ...settings };
     customExerciseId = selectedExerciseId;
@@ -487,7 +500,7 @@ export function createEarTraining(root, { onExit }) {
     const changed = JSON.stringify(settings) !== JSON.stringify(previous.settings);
     const newExercise = exerciseKeys.some(key => JSON.stringify(settings[key]) !== JSON.stringify(previous.settings[key]));
     selectedChallenge = changed || selectedExerciseId ? 'custom' : previous.challenge;
-    sound = changed ? questionSound(settings, null) : previous.sound;
+    sound = changed ? { ...questionSound(settings, null), quality: audioQuality() } : previous.sound;
     quizBeforeSettings = null;
     if (newExercise) question = null;
     show('practice');
@@ -515,6 +528,7 @@ export function createEarTraining(root, { onExit }) {
   }
 
   function newQuestion() {
+    const wasAnswered = Boolean(result);
     stopAll(true);
     answer = [];
     result = null;
@@ -523,17 +537,50 @@ export function createEarTraining(root, { onExit }) {
     replays = 0;
     selectedSlot = 0;
     try {
+      const prepared = upcoming;
       const effective = settings.input === 'fretboard' ? { ...settings, low: Math.max(40, settings.low) } : settings;
-      question = generateQuestion(effective, stats.skills);
+      question = prepared?.question || generateQuestion(effective, stats.skills);
       pianoBase = Math.floor(Math.min(question.reference, settings.high - 12) / 12) * 12;
-      sound = questionSound(settings, sound);
+      sound = prepared?.sound || { ...questionSound(settings, sound), quality: audioQuality() };
+      upcoming = null;
       engine.configure(sound);
+      if (!prepared) engine.prefetch(question.notes, sound);
     } catch (error) {
       question = null;
       fail(error);
     }
     renderQuestion();
     if (question) { setStatus(''); $('[data-action="play"]').focus({ preventScroll: true }); }
+    if (wasAnswered && question) scrollQuizTo('start');
+  }
+
+  function scrollQuizTo(edge) {
+    const currentQuestion = question;
+    const currentResult = result;
+    window.requestAnimationFrame(() => {
+      if (!active || view !== 'practice' || question !== currentQuestion || result !== currentResult || document.querySelector('dialog[open]')) return;
+      const workspace = $('#ear-workspace');
+      const behavior = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ? 'auto' : 'smooth';
+      const internalScroll = ['auto', 'scroll'].includes(window.getComputedStyle(workspace).overflowY)
+        && workspace.scrollHeight > workspace.clientHeight;
+      if (internalScroll) workspace.scrollTo({ top: edge === 'end' ? workspace.scrollHeight : 0, behavior });
+      else (edge === 'end' ? $('#ear-comparison') : $('.ear-main')).scrollIntoView?.({ behavior, block: edge, inline: 'nearest' });
+    });
+  }
+
+  function discardUpcoming() {
+    upcoming = null;
+    engine.cancelPrefetch();
+  }
+
+  function prepareUpcoming() {
+    const effective = settings.input === 'fretboard' ? { ...settings, low: Math.max(40, settings.low) } : settings;
+    try {
+      // Generate after grading so adaptive practice includes the latest answer.
+      upcoming = { question: generateQuestion(effective, stats.skills),
+        sound: { ...questionSound(settings, sound), quality: audioQuality() } };
+      engine.prefetch(upcoming.question.notes, upcoming.sound);
+    } catch { discardUpcoming(); }
   }
 
   function renderQuestion() {
@@ -600,7 +647,7 @@ export function createEarTraining(root, { onExit }) {
     if (result) {
       explorationEvents = notes.map((midi, index) => ({ midi, start: info.start + (playbackDirection === 'harmonic' ? 0 : index * (dur + gap)), end: info.start + (playbackDirection === 'harmonic' ? 0 : index * (dur + gap)) + dur }));
       intervalEvents = notes.slice(1).map((midi, index) => ({
-        interval: Math.abs(midi - notes[playbackDirection === 'harmonic' ? 0 : index]),
+        interval: Math.abs(midi - notes[playbackDirection === 'harmonic' && resultBasis !== 'adjacent' ? 0 : index]),
         start: explorationEvents[playbackDirection === 'harmonic' ? 0 : index].start,
         end: explorationEvents[index + 1].end,
       }));
@@ -874,11 +921,13 @@ export function createEarTraining(root, { onExit }) {
       else skill.misses = Math.max(0, skill.misses - 0.25);
     });
     save(STATS_KEY, stats);
+    prepareUpcoming();
     renderAnswer();
     renderResult(reveal);
     renderStats();
     updateControls();
     $('[data-action="next"]').focus({ preventScroll: true });
+    scrollQuizTo('end');
   }
 
   function resultPair(index, mine = false) {
@@ -886,8 +935,28 @@ export function createEarTraining(root, { onExit }) {
     if (!step) return [];
     if (!mine) return [step.expectedFrom, step.expectedTo];
     if (settings.input !== 'interval') return [step.from, step.to];
+    if (question.direction === 'harmonic') return [question.reference, question.reference + step.to];
     const notes = notesFromIntervals(question, result.submitted);
-    return [notes[question.direction === 'harmonic' ? 0 : index], notes[index + 1]];
+    return [notes[index], notes[index + 1]];
+  }
+
+  function resultSpacing(mine = false) {
+    const notes = !mine ? question.notes : settings.input === 'interval'
+      ? notesFromIntervals(question, result.submitted) : [question.reference, ...result.submitted];
+    return voicingIntervals(notes, 'adjacent');
+  }
+
+  function renderSpacing(mine = false) {
+    return `<div class="ear-result-intervals ear-result-spacing">${resultSpacing(mine).map((pair, index) => {
+      const label = `Play ${mine ? 'your answer' : 'correct answer'}: ${noteName(pair.from)} and ${noteName(pair.to)}, ${pair.name}`;
+      const playable = pair.from >= 0 && pair.to <= 127;
+      return `<article class="ear-result-part">
+        <p class="ear-result-notes">${noteMention(pair.from)} <span aria-hidden="true">↔</span> ${noteMention(pair.to)}</p>
+        <div class="ear-result-line" data-playing-interval="${pair.semitones}"><div class="ear-result-heard"><strong class="ear-result-abbr">${pair.short}</strong><span class="ear-result-name">${esc(pair.name)}</span></div>
+          <button type="button" class="ear-audio-button ear-interval-play" data-spacing-play="${index}" data-spacing-mine="${mine}" aria-label="${esc(label)}" title="${esc(label)}" ${playable ? '' : 'disabled'}>${PLAY_ICON}</button>
+        </div>
+      </article>`;
+    }).join('')}</div>`;
   }
 
   function renderResult(reveal = result?.revealed) {
@@ -897,6 +966,8 @@ export function createEarTraining(root, { onExit }) {
     const title = reveal ? 'answer revealed' : correct ? 'correct' : 'not quite';
     const pitches = settings.input !== 'interval';
     const harmonic = question.direction === 'harmonic';
+    const stack = harmonic && question.count > 2;
+    const adjacent = stack && resultBasis === 'adjacent';
     const separator = harmonic ? ' + ' : ' → ';
     const intervalCount = result.relationships.filter(Boolean).length;
     const noteCount = result.parts.filter(Boolean).length;
@@ -914,8 +985,9 @@ export function createEarTraining(root, { onExit }) {
     };
     feedback.className = `ear-feedback ear-result ${correct ? 'correct' : reveal ? 'revealed' : 'incorrect'}`;
     feedback.innerHTML = `<div class="ear-result-heading"><strong>${title}</strong>${assisted ? '<span class="ear-result-assisted">assisted</span>' : ''}
-      ${!reveal ? `<div class="ear-result-counts"><span>${intervalCount} of ${result.steps.length} ${result.steps.length === 1 ? 'interval' : 'intervals'} correct</span>${pitches && !correct ? `<span>${noteCount} of ${result.steps.length} ${result.steps.length === 1 ? 'note' : 'notes'} matched</span>` : ''}</div>` : ''}</div>
-      <div class="ear-result-intervals">${result.steps.map((step, index) => {
+      ${!reveal && !adjacent ? `<div class="ear-result-counts"><span>${intervalCount} of ${result.steps.length} ${result.steps.length === 1 ? 'interval' : 'intervals'} correct</span>${pitches && !correct ? `<span>${noteCount} of ${result.steps.length} ${result.steps.length === 1 ? 'note' : 'notes'} matched</span>` : ''}</div>` : ''}</div>
+      ${stack ? `<div class="ear-result-basis" role="group" aria-label="Interval view"><button type="button" data-result-basis="bass" aria-pressed="${!adjacent}" title="Graded intervals above the bass">from bass</button><button type="button" data-result-basis="adjacent" aria-pressed="${adjacent}" title="Explore neighboring notes; scoring uses the bass reference">between notes</button></div>` : ''}
+      ${adjacent ? `${!correct ? '<span class="ear-result-your-label">correct answer</span>' : ''}${renderSpacing()}${!reveal && !correct ? `<div class="ear-result-submitted"><span class="ear-result-your-label">your answer</span>${renderSpacing(true)}</div>` : ''}` : `<div class="ear-result-intervals">${result.steps.map((step, index) => {
         const status = reveal ? 'revealed' : step.correct ? 'correct' : step.sizeCorrect ? 'direction-wrong' : 'incorrect';
         const label = reveal ? 'answer' : step.correct ? pitches && !step.noteCorrect ? 'interval correct · pitches shifted' : 'correct' : step.sizeCorrect ? 'right size · wrong direction' : Number.isFinite(step.delta) ? 'different interval' : 'not answered';
         return `<article class="ear-result-part ${status}">
@@ -924,7 +996,7 @@ export function createEarTraining(root, { onExit }) {
           <p class="ear-result-notes">${noteMention(step.expectedFrom)}${separator}${noteMention(step.expectedTo)}</p>
           ${!reveal && (!step.correct || (pitches && !step.noteCorrect)) ? `<div class="ear-result-submitted"><span class="ear-result-your-label">your answer</span><div class="ear-result-line" data-playing-interval="${Math.abs(step.delta)}"><div class="ear-result-heard">${intervalMarkup(step.delta)}</div>${playButton(index, true)}</div>${pitches ? `<p class="ear-result-notes">${Number.isFinite(step.from) ? noteMention(step.from) : '—'}${separator}${Number.isFinite(step.to) ? noteMention(step.to) : '—'}</p>` : ''}</div>` : ''}
         </article>`;
-      }).join('')}</div>`;
+      }).join('')}</div>`}`;
     $('#ear-comparison').classList.remove('hidden');
   }
 
@@ -1333,6 +1405,21 @@ export function createEarTraining(root, { onExit }) {
   root.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (!button || button.disabled) return;
+    if (button.dataset.resultBasis && result) {
+      resultBasis = button.dataset.resultBasis;
+      stopAll(true);
+      renderResult();
+      $(`[data-result-basis="${resultBasis}"]`).focus({ preventScroll: true });
+      return;
+    }
+    if (button.dataset.spacingPlay !== undefined && result) {
+      const pair = resultSpacing(button.dataset.spacingMine === 'true')[Number(button.dataset.spacingPlay)];
+      if (!pair) return;
+      const instruments = sound.noteInstruments;
+      const pairInstruments = instruments?.length ? [pair.fromIndex, pair.toIndex].map(i => instruments[i % instruments.length]) : null;
+      safely(() => playQuestion(false, [pair.from, pair.to], 'harmonic', false, pairInstruments));
+      return;
+    }
     if (button.dataset.resultPlay !== undefined && result) {
       const index = Number(button.dataset.resultPlay);
       const notes = resultPair(index, button.dataset.resultMine === 'true');
@@ -1412,7 +1499,7 @@ export function createEarTraining(root, { onExit }) {
     }
     const action = button.dataset.action;
     safely(async () => {
-      if (action === 'home') onExit();
+      if (action === 'home') { save(ACTIVE_QUIZ_KEY, null); onExit(); }
       if (action === 'menu') show('menu');
       if (action === 'practice') show('challenges');
       if (action === 'custom') openCustom();
@@ -1558,14 +1645,16 @@ export function createEarTraining(root, { onExit }) {
     dialog.addEventListener('close', () => { stopAll(); engine.configure(view === 'practice' && sound ? sound : settings); setStatus(''); });
     dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
   }
-  document.addEventListener('visibilitychange', () => { if (document.hidden && active) { stopAll(); engine.suspend(); setStatus('Paused while the page was away. Press play to resume.'); } });
-  document.addEventListener('velhoksi:global-panel-open', () => { if (active) stopAll(true); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && active) { discardUpcoming(); stopAll(); engine.suspend(); setStatus('Paused while the page was away. Press play to resume.'); } });
+  document.addEventListener('velhoksi:global-panel-open', () => { if (active) { discardUpcoming(); stopAll(true); } });
   window.addEventListener('velhoksi:volume', () => engine.configure(engine.settings));
+  window.addEventListener('velhoksi:audio-quality', discardUpcoming);
   document.addEventListener('velhoksi:clear-recordings', event => {
+    discardUpcoming();
     if (active) stopAll(true);
     event.detail.waitUntil(Promise.allSettled([...engine.pending.values()].map(job => job.promise)).then(() => engine.clearCache()));
   });
-  window.addEventListener('pagehide', () => { if (active) { stopAll(); engine.suspend(); } });
+  window.addEventListener('pagehide', () => { if (active) { discardUpcoming(); stopAll(); engine.suspend(); } });
   document.addEventListener('keydown', event => {
     if (document.querySelector('.global-dialog[open]')) return;
     if (!active || event.ctrlKey || event.metaKey || event.repeat) return;
@@ -1595,8 +1684,22 @@ export function createEarTraining(root, { onExit }) {
     }
   });
 
+  // Restore the exercise, with a fresh unanswered question and no autoplay.
+  // Keep custom defaults separate from the effective settings of a preset level.
+  const savedQuiz = read(ACTIVE_QUIZ_KEY, null);
+  if (savedQuiz?.settings && typeof savedQuiz.settings === 'object' && !Array.isArray(savedQuiz.settings)) {
+    try {
+      const restored = sanitizeSettings(savedQuiz.settings);
+      generateQuestion(restored.input === 'fretboard' ? { ...restored, low: Math.max(40, restored.low) } : restored);
+      settings = restored;
+      selectedChallenge = CHALLENGES.some(c => c.id === savedQuiz.challenge) ? savedQuiz.challenge : 'custom';
+      selectedExerciseId = savedExercises.some(e => e.id === savedQuiz.exerciseId) ? savedQuiz.exerciseId : null;
+      view = 'practice';
+    } catch { save(ACTIVE_QUIZ_KEY, null); }
+  }
+
   return {
     activate() { if (!active) { active = true; show(view); } },
-    deactivate() { if (active) { active = false; stopAll(); engine.suspend(); for (const dialog of $$('.ear-dialog')) if (dialog.open) dialog.close(); } },
+    deactivate() { if (active) { active = false; discardUpcoming(); stopAll(); engine.suspend(); for (const dialog of $$('.ear-dialog')) if (dialog.open) dialog.close(); } },
   };
 }

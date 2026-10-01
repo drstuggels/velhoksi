@@ -7,7 +7,7 @@
 .ear-breadcrumbs .text-button { font: inherit; }
 .ear-card-multitimbral { font-size: .75rem !important; }
 .ear-menu-tools { display: flex; align-items: center; gap: 14px; color: var(--muted); }
-.ear-challenges { gap: 24px; padding: 20px 24px 28px; margin-top: 90px; height: auto; max-height: calc(100dvh - 200px); overflow-y: auto; align-content: start; overscroll-behavior: contain; }
+.ear-challenges { gap: 24px; padding: 20px 24px 28px; margin-top: 24px; height: auto; max-height: calc(100% - 24px); overflow-y: auto; align-content: start; overscroll-behavior: contain; }
 .ear-challenge-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .ear-challenge-card { min-width: 0; border: 2px solid var(--line); background: var(--surface-strong); transition: border-color 160ms ease, box-shadow 160ms ease; }
 .ear-challenge-card:hover, .ear-challenge-card:focus-within { box-shadow: 4px 4px 0 var(--line); }
@@ -47,7 +47,7 @@
 .ear-card-error { font-size: .8rem; line-height: 1.5; color: var(--danger); margin-top: 10px; }
 .ear-card-error:empty { display: none; }
 .ear-challenge-picker .ear-custom-choice { grid-column: 1 / -1; min-height: 64px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 16px 20px; }
-.ear-setup { max-height: calc(100dvh - 200px); height: auto; margin-top: 90px; overflow-y: auto; overscroll-behavior: contain; }
+.ear-setup { max-height: calc(100% - 24px); height: auto; margin-top: 24px; overflow-y: auto; overscroll-behavior: contain; }
 .ear-setup-inner { width: min(860px, 100%); margin: 0 auto; padding: 0 24px; }
 .ear-setup-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 8px 0 20px; border-bottom: 1px solid var(--soft-line); }
 .ear-setup-header h2 { font-size: 1.6rem; margin-top: 8px; }
@@ -101,7 +101,7 @@
 .ear-dynamics input { grid-column: 1 / -1; width: 100%; margin: 0; accent-color: var(--accent); }
 .ear-dynamics-scale { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: .65rem; }
 #ear-workspace { min-height: 0; max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; scroll-padding-block: 24px; padding-bottom: 28px; }
-.ear-view .ear-main { position: relative; inset: auto; width: 87%; margin: min(8vh, 80px) 8% 0 5%; padding-bottom: 24px; min-height: calc(100% - 110px); grid-template-columns: minmax(0, 1fr); grid-template-rows: auto clamp(130px, 22vh, 230px) auto; align-content: start; gap: 22px; }
+.ear-view .ear-main { position: relative; inset: auto; width: 87%; margin: 24px 8% 0 5%; padding-bottom: 24px; min-height: calc(100% - 24px); grid-template-columns: minmax(0, 1fr); grid-template-rows: auto clamp(130px, 22vh, 230px) auto; align-content: start; gap: 22px; }
 .ear-view .ear-prompt { position: relative; grid-template-rows: 1fr auto; padding: 12px 20px; }
 .ear-play { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 0; background: none; color: var(--text); width: 100%; height: 100%; min-height: 0; padding: 0; }
 .ear-play-icon { font-size: clamp(2.5rem, 6vh, 5rem); line-height: 1; }
@@ -165,6 +165,15 @@
 .ear-result.correct .ear-result-heading > strong { color: var(--success); }
 .ear-result-assisted { color: var(--muted); font-size: .65rem; }
 .ear-result-counts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-left: auto; color: var(--muted); font-size: .65rem; }
+.ear-result-basis { display: flex; width: fit-content; max-width: 100%; margin: 12px 0; border: 1px solid var(--soft-line); }
+.ear-result-basis button { min-height: 36px; padding: 7px 12px; border: 0; background: transparent; color: var(--muted); font: .65rem/1.4 "IBM Plex Mono", monospace; cursor: pointer; }
+.ear-result-basis button + button { border-left: 1px solid var(--soft-line); }
+.ear-result-basis button[aria-pressed="true"] { color: var(--text); background: var(--panel-tone); box-shadow: inset 0 -2px var(--accent); }
+.ear-result-basis button:hover { color: var(--text); background: var(--panel-tone); }
+.ear-result-basis button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ear-result-spacing .ear-result-notes { margin: 0 0 8px; }
+.ear-result-spacing .ear-result-notes > span[aria-hidden] { padding: 0 6px; color: var(--soft-line); }
+.ear-result-submitted > .ear-result-spacing { margin-top: 8px; }
 .ear-result-intervals { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; margin-top: 14px; }
 .ear-result-part { min-width: 0; border-top: 2px solid var(--soft-line); padding: 10px 0 0; }
 .ear-result-part.correct { border-top-color: var(--success); }
@@ -213,7 +222,7 @@
 .ear-key kbd { position: absolute; bottom: calc(14px + .75rem); left: 50%; transform: translateX(-50%); min-width: 15px; padding: 1px 2px; border: 1px solid #a99a8955; border-radius: 2px; background: #eadfce; text-align: center; color: #54483b; font: .55rem/1.2 "IBM Plex Mono", monospace; }
 .ear-key.black kbd { top: 7px; bottom: auto; background: #36383e; color: #eee5d7; border-color: #eee5d744; }
 .ear-key.keyboard-mapped .ear-key-label { font-weight: 600; }
-.ear-key.reference { outline: 3px solid var(--accent); outline-offset: -4px; }
+.ear-key.reference { outline: 3px solid var(--reference-note); outline-offset: -4px; }
 .ear-key.interval-tone { box-shadow: inset 0 -4px var(--accent); }
 .ear-key.selected { background: #cf7a48; color: #111; }
 .ear-key.drone-selected { background: #f0c69e; box-shadow: inset 0 -4px var(--accent); }
@@ -247,7 +256,7 @@
 .ear-string button:hover:not(:disabled) span, .ear-string button.reference span, .ear-string button.selected span, .ear-string button:focus-visible span { opacity: 1; }
 /* Disabled pitches must not break the continuous strings and fret lines. */
 .ear-view .ear-string button:disabled { opacity: 1; color: var(--muted); }
-.ear-string button.reference { outline: 2px solid var(--accent); outline-offset: -4px; }
+.ear-string button.reference { outline: 2px solid var(--reference-note); outline-offset: -4px; }
 .ear-string button.selected span { background: var(--accent); color: #111; opacity: 1; }
 .ear-string button.answer-correct span, .ear-string button.answer-wrong span, .ear-string button.sounding span { opacity: 1; }
 .ear-string button.answer-correct span { box-shadow: 0 2px var(--success); }
@@ -259,8 +268,20 @@
 .ear-note-mention:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 :is(.ear-note-mention, .ear-drone-note, .ear-answer-slot, .ear-pitch-preview, select).is-note-hovered { color: var(--text); background: color-mix(in srgb, var(--accent) 20%, var(--surface-strong)); outline: 1px solid var(--accent); outline-offset: 2px; text-decoration-color: var(--accent); }
 .ear-string button.marked { background-color: color-mix(in srgb, var(--accent) 7%, transparent); }
-.ear-dialog { width: min(820px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); border: 1px solid var(--line); background: var(--surface-strong); color: var(--text); padding: 26px; box-shadow: 8px 8px 0 var(--line); overscroll-behavior: contain; }
-.ear-dialog::backdrop { background: rgba(0,0,0,.65); backdrop-filter: blur(5px); }
+/* Reference pitches retain their own color during selection, linked hover,
+   playback and drone sustain. Correct/wrong grading still uses green/red. */
+.ear-view :is(.reference, .is-reference-note, [data-note-index="0"], [data-lab-key-mode="reference"], [data-lab-focus="0"], [data-setting="referenceNote"], [data-preview-pitch="referenceNote"]) { --accent: var(--reference-note); }
+.ear-note-mention.is-reference-note { color: var(--reference-note); text-decoration-color: currentColor; }
+.ear-drone-note.is-reference-note { border-color: var(--reference-note); }
+.ear-key.reference:is(.selected, .drone-selected, .sounding, .sustaining, .is-note-hovered, :hover:not(:disabled)) { background: color-mix(in srgb, var(--reference-note) 30%, #f9f3e9); color: #111; }
+.ear-key.black.reference:is(.selected, .drone-selected, .sounding, .sustaining, .is-note-hovered, :hover:not(:disabled)) { background: color-mix(in srgb, var(--reference-note) 45%, #212329); color: #fff; }
+.ear-key.reference.sounding:not(.answer-correct):not(.answer-wrong) { box-shadow: inset 0 -7px var(--reference-note); }
+.ear-key.reference.answer-correct { box-shadow: inset 0 -5px var(--success); }
+.ear-key.reference.answer-wrong { box-shadow: inset 0 -3px var(--danger); }
+.ear-key.reference .ear-key-light { background: linear-gradient(0deg, color-mix(in srgb, var(--reference-note) 65%, transparent), transparent 80%); }
+.ear-string button.reference:is(.selected, .sounding, .is-note-hovered) span { background: color-mix(in srgb, var(--reference-note) 25%, var(--surface-strong)); color: var(--text); }
+.ear-dialog { width: min(820px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); border: 1px solid var(--line); background: var(--modal-surface); color: var(--text); padding: 26px; box-shadow: 8px 8px 0 var(--line); overscroll-behavior: contain; }
+.ear-dialog::backdrop { background: rgba(0,0,0,.65); backdrop-filter: none; }
 .ear-dialog-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--soft-line); }
 .ear-dialog-header h2 { font-size: 1.55rem; font-weight: 500; letter-spacing: -.04em; }
 .ear-setting-section { padding: 22px 0; border-bottom: 1px solid var(--soft-line); }
@@ -358,13 +379,13 @@
   .ear-view select { appearance: auto; -webkit-appearance: auto; background-image: none; }
 }
 
-/* Keep the scrollport above the fixed footer. Results grow inside it, rather
-   than expanding the viewport's grid row past the bottom of the window. */
+/* The shared viewport reserves the header and footer space. Keep results
+   scrolling inside it without reserving that footer space a second time. */
 @media (min-width: 1101px) {
-  .ear-view { height: calc(100% - 48px - env(safe-area-inset-bottom)); align-self: start; }
+  .ear-view { height: 100%; align-self: start; }
 }
 @media (min-width: 1101px) and (max-height: 760px) {
-  .ear-view .ear-main { margin-top: 6vh; grid-template-rows: auto minmax(110px, 18vh) auto; gap: 16px; }
+  .ear-view .ear-main { margin-top: 16px; grid-template-rows: auto minmax(110px, 18vh) auto; gap: 16px; }
   .ear-view .ear-stats { top: 16%; }
   .ear-piano { height: 100px; }
   .ear-key { height: 96px; }

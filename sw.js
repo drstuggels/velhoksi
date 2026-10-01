@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v70";
+const CACHE_NAME = "velhoksi-v86";
 const ASSETS = [
   "/index.html",
   "/styles.css",
@@ -9,12 +9,14 @@ const ASSETS = [
   "/ear-training/ui.mjs",
   "/ear-training/analysis.mjs",
   "/ear-training/audio.mjs",
+  "/ear-training/quality.mjs",
   "/ear-training/theory.mjs",
   "/ear-training/instruments.mjs",
   "/ear-training/challenges.mjs",
   "/ear-training/shortcuts.mjs",
   "/ear-training/drone.mjs",
   "/audio/samples/manifest.json",
+  "/audio/samples/qualities.json",
   "/audio/samples/salamander/LICENSE.txt",
   "/audio/samples/wurlitzer/LICENSE.txt",
   "/audio/samples/shinyguitar/LICENSE.txt",
@@ -92,9 +94,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Lossless recordings have their own bounded/on-demand storage policy.
+  // Recordings have their own on-demand storage policy, across all qualities.
   // The sampler owns this cache, avoiding duplicated banks and update eviction.
-  if (url.pathname.startsWith("/audio/samples/") && url.pathname.endsWith(".flac")) return;
+  if (url.pathname.startsWith("/audio/samples/") && /\.(flac|opus)$/.test(url.pathname)) return;
 
   // Linked credits/license files must stay files, including when opened in a tab.
   const isAssetDocument = ASSETS.includes(url.pathname) && url.pathname !== "/index.html";

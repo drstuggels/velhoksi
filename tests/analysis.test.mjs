@@ -1,6 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analyseNotes, describeInterval, harmonicModel, nearbyHarmonics } from '../ear-training/analysis.mjs';
+import { analyseNotes, describeInterval, harmonicModel, nearbyHarmonics, voicingIntervals } from '../ear-training/analysis.mjs';
+
+test('voicing views distinguish bass distances from neighboring gaps', () => {
+  for (const [notes, bass, adjacent] of [
+    [[67, 76, 77], ['M6', 'm7'], ['M6', 'm2']],
+    [[60, 64, 67], ['M3', 'P5'], ['M3', 'm3']],
+    [[64, 67, 72], ['m3', 'm6'], ['m3', 'P4']],
+    [[67, 72, 76], ['P4', 'M6'], ['P4', 'M3']],
+    [[60, 67, 76], ['P5', 'M10'], ['P5', 'M6']],
+    [[60, 64, 67, 72], ['M3', 'P5', 'P8'], ['M3', 'm3', 'P4']],
+    [[60, 66, 72], ['TT', 'P8'], ['TT', 'TT']],
+    [[60, 60, 72], ['P1', 'P8'], ['P1', 'P8']],
+    [[60, 67], ['P5'], ['P5']],
+  ]) {
+    assert.deepEqual(voicingIntervals(notes).map(pair => pair.short), bass);
+    assert.deepEqual(voicingIntervals(notes, 'adjacent').map(pair => pair.short), adjacent);
+  }
+});
+
+test('voicing views retain voice indices when pitches are unordered or incomplete', () => {
+  const notes = [67, 77, undefined, 76];
+  const pairs = voicingIntervals(notes, 'adjacent');
+  assert.deepEqual(pairs.map(({ from, to, fromIndex, toIndex }) => [from, to, fromIndex, toIndex]), [[67, 76, 0, 3], [76, 77, 3, 1]]);
+  assert.deepEqual(notes, [67, 77, undefined, 76]);
+  assert.deepEqual(voicingIntervals([60]), []);
+});
 
 test('all cross intervals include inner pairs, compound intervals, and doubled thirds', () => {
   const data = analyseNotes([60, 64, 67, 76]);

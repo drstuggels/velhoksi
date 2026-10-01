@@ -5,6 +5,7 @@ import { JSDOM } from 'jsdom';
 import { createEarTraining } from '../ear-training/ui.mjs';
 import { SampleEngine } from '../ear-training/audio.mjs';
 import { DEFAULTS } from '../ear-training/theory.mjs';
+import { setAudioQuality } from '../preferences.mjs';
 
 const manifest = JSON.parse(fs.readFileSync(new URL('../audio/samples/manifest.json', import.meta.url)));
 const recordings = [];
@@ -20,7 +21,7 @@ SampleEngine.prototype.cacheInfo = async () => ({ available: true, bytes: 0, tot
 SampleEngine.prototype.drone = async function (notes) { recordings.push({ drone: notes }); this.droneNotes = [...notes]; return true; };
 SampleEngine.prototype.preview = async function (note) { recordings.push({ preview: note }); this.context = { currentTime: 2 }; return { start: 0, end: 1 }; };
 
-function setup(overrides = {}, exercises = []) {
+function setup(overrides = {}, exercises = [], stored = {}) {
   const dom = new JSDOM('<!doctype html><section id="ear"></section>', { url: 'https://velhoksi.test/', pretendToBeVisual: true });
   const w = dom.window;
   globalThis.window = w;
@@ -32,6 +33,7 @@ function setup(overrides = {}, exercises = []) {
   w.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new w.Event('close')); };
   localStorage.setItem('velhoksi.ear.settings.v1', JSON.stringify({ ...DEFAULTS, input: 'interval', reference: 'fixed', referenceNote: 60, intervals: [4], ...overrides }));
   localStorage.setItem('velhoksi.ear.exercises.v1', JSON.stringify(exercises));
+  for (const [key, value] of Object.entries(stored)) localStorage.setItem(key, value);
   const root = document.getElementById('ear');
   let exited = false;
   const app = createEarTraining(root, { onExit: () => { exited = true; app.deactivate(); } });
@@ -42,6 +44,127 @@ function setup(overrides = {}, exercises = []) {
   return { dom, root, app, click, change, startCustom, w, exited: () => exited };
 }
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
+
+for (const action of ['check', 'reveal']) for (const internal of [true, false]) {
+  test(`${action} scrolls the ${internal ? 'quiz panel' : 'page'} to its result and next question returns to the prompt`, async () => {
+    const { dom, w, root, app, click, startCustom } = setup();
+    const calls = [];
+    w.matchMedia = () => ({ matches: !internal });
+    const workspace = root.querySelector('#ear-workspace');
+    workspace.style.overflowY = internal ? 'auto' : 'visible';
+    Object.defineProperties(workspace, { scrollHeight: { value: 1200 }, clientHeight: { value: 600 } });
+    workspace.scrollTo = options => calls.push({ target: 'workspace', ...options });
+    root.querySelector('#ear-comparison').scrollIntoView = options => calls.push({ target: 'result', ...options });
+    root.querySelector('.ear-main').scrollIntoView = options => calls.push({ target: 'prompt', ...options });
+    try {
+      startCustom();
+      click('[data-action="play"]'); await flush();
+      if (action === 'check') click('[data-interval="4"]');
+      click(`[data-action="${action}"]`);
+      await new Promise(resolve => w.requestAnimationFrame(resolve));
+      assert.deepEqual(calls, [internal
+        ? { target: 'workspace', top: 1200, behavior: 'smooth' }
+        : { target: 'result', block: 'end', inline: 'nearest', behavior: 'auto' }]);
+      click('[data-action="next"]');
+      await new Promise(resolve => w.requestAnimationFrame(resolve));
+      assert.deepEqual(calls[1], internal
+        ? { target: 'workspace', top: 0, behavior: 'smooth' }
+        : { target: 'prompt', block: 'start', inline: 'nearest', behavior: 'auto' });
+    } finally { app.deactivate(); dom.window.close(); }
+  });
+}
+
+test('leaving the quiz cancels a pending result scroll', async () => {
+  const { dom, w, root, app, click, startCustom } = setup();
+  let scrolled = false;
+  root.querySelector('#ear-comparison').scrollIntoView = () => { scrolled = true; };
+  startCustom();
+  click('[data-action="play"]'); await flush();
+  click('[data-action="reveal"]');
+  click('[data-action="menu"]');
+  await new Promise(resolve => w.requestAnimationFrame(resolve));
+  assert.equal(scrolled, false);
+  app.deactivate(); dom.window.close();
+});
+
+const snapshotStorage = storage => Object.fromEntries(Array.from({ length: storage.length }, (_, index) => {
+  const key = storage.key(index);
+  return [key, storage.getItem(key)];
+}));
+
+for (const kind of ['custom', 'level', 'saved']) test(`refresh resumes a ${kind} interval quiz without autoplay`, async () => {
+  const exercises = [{ id: 'thirds', name: 'My thirds', settings: { ...DEFAULTS, input: 'interval', intervals: [4], reference: 'fixed', referenceNote: 60 } }];
+  const first = setup({ inputDefaultVersion: 2 }, exercises);
+  if (kind === 'custom') first.startCustom();
+  else {
+    first.click('[data-action="practice"]');
+    if (kind === 'saved') first.click('[data-start-exercise="thirds"]');
+    else {
+      first.click('[data-challenge="3"]');
+      first.click('[data-for-challenge="3"][data-challenge-input="note"]');
+      first.click('[data-start-challenge="3"]');
+    }
+  }
+  first.click('[data-action="play"]'); await flush();
+  if (kind !== 'level') { first.click('[data-interval="4"]'); first.click('[data-action="check"]'); }
+  const caption = first.root.querySelector('#ear-challenge-caption').textContent;
+  const stored = snapshotStorage(first.w.localStorage);
+  const playbackCount = recordings.length;
+  first.app.deactivate(); first.dom.window.close();
+
+  const reloaded = setup({}, [], stored);
+  try {
+    assert.equal(reloaded.root.querySelector('#ear-workspace').classList.contains('hidden'), false);
+    assert.equal(reloaded.root.querySelector('#ear-menu').classList.contains('hidden'), true);
+    assert.equal(reloaded.root.querySelector('#ear-challenge-caption').textContent, caption);
+    assert.equal(reloaded.root.querySelector('#ear-play-label').textContent, 'listen');
+    assert.equal(reloaded.root.querySelector('[data-action="check"]').disabled, true);
+    assert.equal(recordings.length, playbackCount);
+    assert.equal(reloaded.w.localStorage.getItem('velhoksi.ear.stats.v1'), stored['velhoksi.ear.stats.v1'] ?? null);
+    assert.equal(reloaded.w.localStorage.getItem('velhoksi.ear.settings.v1'), stored['velhoksi.ear.settings.v1']);
+    reloaded.click('[data-action="play"]'); await flush();
+    assert.equal(recordings.at(-1).settings.input, kind === 'level' ? 'note' : 'interval');
+    assert.equal(recordings.at(-1).settings.direction, kind === 'level' ? 'harmonic' : 'ascending');
+  } finally { reloaded.app.deactivate(); reloaded.dom.window.close(); }
+});
+
+for (const destination of ['home', 'menu', 'practice']) test(`leaving a quiz for ${destination} clears automatic resume`, () => {
+  const first = setup();
+  first.startCustom();
+  first.click(`[data-action="${destination}"]`);
+  const stored = snapshotStorage(first.w.localStorage);
+  first.app.deactivate(); first.dom.window.close();
+  const reloaded = setup({}, [], stored);
+  assert.equal(reloaded.root.querySelector('#ear-workspace').classList.contains('hidden'), true);
+  reloaded.app.deactivate(); reloaded.dom.window.close();
+});
+
+test('invalid saved quiz falls back to the menu', () => {
+  for (const value of ['{broken', JSON.stringify({ settings: [] }), JSON.stringify({ settings: { low: 60, high: 61, intervals: [24] } })]) {
+    const { dom, app, root } = setup({}, [], { 'velhoksi.ear.activeQuiz.v1': value });
+    assert.equal(root.querySelector('#ear-menu').classList.contains('hidden'), false);
+    app.deactivate(); dom.window.close();
+  }
+});
+
+test('quality stays fixed for replays and changes with the next question', async () => {
+  const { dom, click, startCustom } = setup();
+  try {
+    setAudioQuality('balanced');
+    startCustom();
+    click('[data-action="play"]');
+    await flush();
+    assert.equal(recordings.at(-1).settings.quality, 'balanced');
+    setAudioQuality('high');
+    click('[data-action="play"]');
+    await flush();
+    assert.equal(recordings.at(-1).settings.quality, 'balanced');
+    click('[data-action="next"]');
+    click('[data-action="play"]');
+    await flush();
+    assert.equal(recordings.at(-1).settings.quality, 'high');
+  } finally { setAudioQuality('balanced'); dom.window.close(); }
+});
 
 test('main and secondary menus, replay, grading, comparison, and next-question lifecycle', async () => {
   const { dom, root, app, click, startCustom, exited } = setup();
@@ -128,6 +251,49 @@ test('piano wheel scrolls beyond the exercise range and releases page scrolling 
   pane.dispatchEvent(edge);
   assert.equal(edge.defaultPrevented, false);
   app.deactivate(); dom.window.close();
+});
+
+test('stack feedback switches interpretation and auditions the actual neighboring voices', async () => {
+  const { dom, root, app, click, startCustom } = setup({ input: 'piano', direction: 'harmonic',
+    referenceNote: 67, low: 60, high: 84, intervals: [9, 10], minNotes: 3, maxNotes: 3,
+    perNoteInstruments: true, instrumentPool: ['salamander', 'rhodes', 'guitar-electric'] });
+  try {
+    startCustom(); click('[data-action="play"]'); await flush();
+    const sound = recordings.at(-1).settings;
+    click('[data-pitch="77"]'); click('[data-pitch="76"]'); click('[data-action="check"]');
+    const stats = root.querySelector('#ear-stats').textContent;
+    assert.deepEqual([...root.querySelectorAll('.ear-result-abbr')].map(node => node.textContent), ['M6', 'm7']);
+    click('[data-result-basis="adjacent"]');
+    assert.deepEqual([...root.querySelectorAll('.ear-result-abbr')].map(node => node.textContent), ['M6', 'm2']);
+    assert.equal(root.querySelector('.ear-result-counts'), null);
+    assert.equal(root.querySelector('#ear-stats').textContent, stats);
+    click('[data-spacing-play="1"][data-spacing-mine="false"]'); await flush();
+    assert.deepEqual(recordings.at(-1).notes, [76, 77]);
+    assert.deepEqual(recordings.at(-1).settings.noteInstruments, sound.noteInstruments.slice(1, 3));
+    click('[data-result-basis="bass"]');
+    click('[data-result-play="1"][data-result-mine="false"]'); await flush();
+    assert.deepEqual(recordings.at(-1).notes, [67, 77]);
+  } finally { app.deactivate(); dom.window.close(); }
+});
+
+test('partial stack answers keep their graded pairing and a separate neighboring-note view', async () => {
+  const { dom, root, app, click, startCustom, w } = setup({ input: 'interval', direction: 'harmonic',
+    intervals: [4, 7], minNotes: 3, maxNotes: 3 });
+  try {
+    startCustom(); click('[data-action="play"]'); await flush();
+    root.querySelector('#ear-typed-answer').value = 'P5, M6';
+    root.querySelector('#ear-typed-form').dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
+    assert.match(root.querySelector('.ear-result-counts').textContent, /1 of 2 intervals correct/);
+    click('[data-result-play="0"][data-result-mine="true"]'); await flush();
+    assert.deepEqual(recordings.at(-1).notes, [60, 69], 'the unmatched M6 is paired with the missed M3');
+    click('[data-result-basis="adjacent"]');
+    assert.equal(root.querySelector('.ear-result-step-status'), null, 'exploration does not invent a second grade');
+    assert.deepEqual([...root.querySelectorAll('.ear-result-submitted .ear-result-abbr')].map(node => node.textContent), ['P5', 'M2']);
+    click('[data-spacing-play="1"][data-spacing-mine="true"]'); await flush();
+    assert.deepEqual(recordings.at(-1).notes, [67, 69]);
+    click('[data-result-basis="bass"]');
+    assert.match(root.querySelector('.ear-result-counts').textContent, /1 of 2 intervals correct/);
+  } finally { app.deactivate(); dom.window.close(); }
 });
 
 test('fretboard accepts equivalent positions; harmonic selection toggles and sorts', async () => {

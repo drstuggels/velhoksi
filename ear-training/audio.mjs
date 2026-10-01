@@ -1,5 +1,6 @@
 import { LivingDrone } from './drone.mjs';
-import { masterVolume } from '../preferences.mjs';
+import { masterVolume, audioQuality } from '../preferences.mjs';
+import { recordingFor, supportsOpus } from './quality.mjs';
 
 const SAMPLE_BASE = new URL('../audio/samples/', import.meta.url);
 export const SAMPLE_CACHE = 'velhoksi-instruments-v1';
@@ -69,6 +70,7 @@ export class SampleEngine {
     this.onStatus = onStatus;
     this.buffers = new Map();
     this.pending = new Map();
+    this.warming = new Map();
     this.voices = new Set();
     this.roundRobin = new Map();
     this.parameterTargets = new WeakMap();
@@ -81,8 +83,12 @@ export class SampleEngine {
   }
 
   async manifest() {
-    if (!manifestPromise) manifestPromise = fetch(new URL('manifest.json', SAMPLE_BASE))
-      .then(response => { if (!response.ok) throw new Error('The instrument catalog could not load. Try again while online.'); return response.json(); })
+    if (!manifestPromise) manifestPromise = Promise.all([
+      fetch(new URL('manifest.json', SAMPLE_BASE))
+        .then(response => { if (!response.ok) throw new Error('The instrument catalog could not load. Try again while online.'); return response.json(); }),
+      fetch(new URL('qualities.json', SAMPLE_BASE)).then(response => response.ok ? response.json() : null).catch(() => null),
+    ])
+      .then(([manifest, qualities]) => ({ ...manifest, qualities: qualities?.files || {} }))
       .catch(error => { manifestPromise = null; throw error; });
     return manifestPromise;
   }
@@ -183,20 +189,20 @@ export class SampleEngine {
     }
   }
 
-  async fetchSample(file, requireStorage = false) {
+  async fetchSample(file, requireStorage = false, signal) {
     const url = new URL(file, SAMPLE_BASE).href;
     let cache;
     try { if (globalThis.caches) cache = await caches.open(SAMPLE_CACHE); } catch { /* Storage may be unavailable; playback can still work. */ }
+    if (requireStorage && !cache) throw new Error('Browser storage is unavailable. Offline download was not saved.');
     const cached = cache && await cache.match(url).catch(() => null);
     if (cached) {
       if (!requireStorage) return cached.arrayBuffer();
       await cached.body?.cancel();
       return;
     }
-    const response = await fetch(url);
+    const response = await fetch(url, { signal });
     if (!response.ok) throw new Error('A recording could not load. Reconnect and press play to retry.');
     if (requireStorage) {
-      if (!cache) { await response.body?.cancel(); throw new Error('Browser storage is unavailable. Offline download was not saved.'); }
       try { await cache.put(url, response); }
       catch { throw new Error('Browser storage is full. Remove downloaded recordings or free some space, then retry.'); }
       return;
@@ -231,11 +237,14 @@ export class SampleEngine {
       // A released slot is handed directly to its waiter, so new arrivals cannot steal it.
       try {
         if (![...job.wanted].some(wanted => wanted())) throw cancelledLoad();
+        // Join a speculative disk write for this file rather than downloading twice.
+        if (this.warming.has(file)) await this.warming.get(file).catch(() => {});
+        if (![...job.wanted].some(wanted => wanted())) throw cancelledLoad();
         const data = await this.fetchSample(file);
         if (![...job.wanted].some(wanted => wanted())) throw cancelledLoad();
         let buffer;
         try { buffer = await this.context.decodeAudioData(data); }
-        catch { throw new Error('This browser could not decode the lossless recordings. Try an up-to-date browser.'); }
+        catch { throw new Error('This browser could not decode the recording. Try an up-to-date browser.'); }
         this.buffers.set(file, buffer);
         this.trimBuffers();
         return buffer;
@@ -290,6 +299,8 @@ export class SampleEngine {
 
   async prepare(notes, settings = this.settings, { allowOutside = false, sustain = true, isCurrent = () => true } = {}) {
     const manifest = await this.manifest();
+    const quality = settings.quality ?? audioQuality();
+    const opus = quality !== 'original' && await supportsOpus();
     const instrument = manifest.instruments[settings.instrument];
     if (!instrument) throw new Error('Choose an available instrument.');
     const choose = prefix => (group, length) => {
@@ -299,9 +310,20 @@ export class SampleEngine {
       return next;
     };
     const load = async (midi, { region, weight }) => {
-      const original = await this.buffer(region.file, isCurrent);
+      const sourceFile = region.file;
+      let file = recordingFor(manifest, sourceFile, quality, opus).file;
+      let original;
+      try { original = await this.buffer(file, isCurrent); }
+      catch (error) {
+        if (!isCurrent() || error.name === 'AbortError' || file === sourceFile) throw error;
+        // An unavailable/corrupt variant must not prevent practice, including
+        // offline sessions that already have the original recording cached.
+        file = sourceFile;
+        original = await this.buffer(file, isCurrent);
+      }
       if (!isCurrent()) throw cancelledLoad();
-      const buffer = sustain ? this.sustainedBuffer(region.file, original, region) : original;
+      region = { ...region, file }; // Derived sustain/drone caches also use the variant identity.
+      const buffer = sustain ? this.sustainedBuffer(file, original, region) : original;
       const velocityGain = region.velocityTracking === undefined ? 1 : (settings.velocity / 127) ** (region.velocityTracking / 50);
       return { midi, region, buffer, instrument, weight, velocityGain, offset: settings.instrument === 'salamander' ? pianoOnset(buffer, region.offset) : region.offset };
     };
@@ -411,9 +433,9 @@ export class SampleEngine {
     const epoch = this.epoch;
     await this.unlock();
     if (epoch !== this.epoch) return null;
-    const snapshot = { ...this.settings, ...settings };
+    const snapshot = { ...this.settings, ...settings, quality: settings.quality ?? audioQuality() };
     this.configure(snapshot);
-    this.onStatus('Loading lossless recordings…', 'loading');
+    this.onStatus('Loading recordings…', 'loading');
     const isCurrent = () => epoch === this.epoch;
     let prepared;
     try { prepared = snapshot.noteInstruments?.length
@@ -452,7 +474,7 @@ export class SampleEngine {
     const added = notes.filter(note => !this.activeDrone?.tones.has(note));
     let prepared;
     try {
-      prepared = await this.prepare(added, { ...this.settings, instrument: 'pipe-organ', velocity: 76 }, { sustain: false, isCurrent: () => token === this.droneEpoch });
+      prepared = await this.prepare(added, { ...this.settings, quality: audioQuality(), instrument: 'pipe-organ', velocity: 76 }, { sustain: false, isCurrent: () => token === this.droneEpoch });
     } catch (error) {
       if (token !== this.droneEpoch) return false;
       this.stopDrone();
@@ -495,46 +517,100 @@ export class SampleEngine {
     return { start, end: start + duration, epoch };
   }
 
-  async downloadInstrument(id, progress, isCancelled = () => false) {
+  async downloadInstrument(id, progress, isCancelled = () => false, quality = audioQuality()) {
     const manifest = await this.manifest();
+    const opus = quality !== 'original' && await supportsOpus();
     const instrument = manifest.instruments[id];
     const files = instrumentFiles(instrument);
     let index = 0;
-    // Cache compressed originals without decoding the whole bank into memory.
+    // Snapshot quality for the entire download; never decode a whole bank.
     for (const file of files) {
       if (isCancelled()) return false;
-      await this.fetchSample(file, true);
+      await this.fetchSample(recordingFor(manifest, file, quality, opus).file, true);
       progress(++index, files.length);
     }
     return true;
   }
 
-  async cacheInfo() {
+  async cacheInfo(quality = audioQuality()) {
     const manifest = await this.manifest();
+    const opus = quality !== 'original' && await supportsOpus();
     let cached = new Set();
     try {
       const cache = await caches.open(SAMPLE_CACHE);
       cached = new Set((await cache.keys()).map(request => request.url));
     } catch { return { available: false, bytes: 0, total: 0 }; }
     let bytes = 0;
-    for (const [name, meta] of Object.entries(manifest.files)) if (cached.has(new URL(name, SAMPLE_BASE).href)) bytes += meta.bytes;
+    for (const [name, meta] of Object.entries(manifest.files)) {
+      const variants = [{ file: name, ...meta }, ...Object.values(manifest.qualities?.[name]?.variants || {})];
+      for (const entry of variants) if (cached.has(new URL(entry.file, SAMPLE_BASE).href)) bytes += entry.bytes;
+    }
     const instruments = Object.fromEntries(Object.entries(manifest.instruments).map(([id, instrument]) => {
-      const files = instrumentFiles(instrument);
-      const stored = files.filter(file => cached.has(new URL(file, SAMPLE_BASE).href));
+      const files = instrumentFiles(instrument).map(file => recordingFor(manifest, file, quality, opus));
+      const stored = files.filter(entry => cached.has(new URL(entry.file, SAMPLE_BASE).href));
       return [id, { count: stored.length, total: files.length,
-        bytes: stored.reduce((sum, file) => sum + manifest.files[file].bytes, 0),
-        size: files.reduce((sum, file) => sum + manifest.files[file].bytes, 0) }];
+        bytes: stored.reduce((sum, entry) => sum + entry.bytes, 0),
+        size: files.reduce((sum, entry) => sum + entry.bytes, 0) }];
     }));
-    return { available: true, bytes, instruments, total: Object.values(manifest.files).reduce((sum, meta) => sum + meta.bytes, 0) };
+    return { available: true, bytes, instruments, quality: opus ? quality : 'original',
+      total: Object.keys(manifest.files).reduce((sum, file) => sum + recordingFor(manifest, file, quality, opus).bytes, 0) };
+  }
+
+  cancelPrefetch() { this.prefetchController?.abort(); }
+
+  prefetch(notes, settings) {
+    this.cancelPrefetch();
+    const previous = this.prefetchTask;
+    const controller = this.prefetchController = new AbortController();
+    const { signal } = controller;
+    this.prefetchTask = (async () => {
+      await previous; // Finish the aborted disk write before starting another.
+      if (signal.aborted) return;
+      if (!globalThis.caches || globalThis.navigator?.connection?.saveData) return;
+      const manifest = await this.manifest();
+      const quality = settings.quality ?? audioQuality();
+      const opus = quality !== 'original' && await supportsOpus();
+      const files = new Set();
+      // Peek at round-robin choices without advancing them or allocating PCM.
+      const turns = new Map(this.roundRobin);
+      notes.forEach((midi, index) => {
+        const id = settings.noteInstruments?.[index % settings.noteInstruments.length] || settings.instrument;
+        const instrument = manifest.instruments[id];
+        for (const [kind, regions] of [['attack', instrument.regions], ['release', instrument.releaseRegions || []]]) {
+          if (!regions.length) continue;
+          const selected = selectRegions({ regions }, midi, settings.velocity, { choose: (group, length) => {
+            const key = `${id}:${kind}:${group}`;
+            const next = turns.get(key) || 0;
+            turns.set(key, (next + 1) % length);
+            return next;
+          } });
+          for (const { region } of selected) files.add(region.file);
+        }
+      });
+      let bytes = 0;
+      for (const source of files) {
+        const entry = recordingFor(manifest, source, quality, opus);
+        bytes += entry.bytes;
+        if (signal.aborted || this.activeLoads || bytes > 12 * 1024 * 1024) return;
+        const write = this.fetchSample(entry.file, true, signal);
+        this.warming.set(entry.file, write);
+        try { await write; }
+        finally { if (this.warming.get(entry.file) === write) this.warming.delete(entry.file); }
+      }
+    })().catch(() => {}); // Speculation must never surface an error or block practice.
+    return this.prefetchTask;
   }
 
   async clearCache() {
+    this.cancelPrefetch();
+    await this.prefetchTask;
     this.cancel();
     this.buffers.clear();
     if (globalThis.caches) await caches.delete(SAMPLE_CACHE);
   }
 
   suspend() {
+    this.cancelPrefetch();
     this.cancel();
     if (this.context?.state === 'running') this.context.suspend().catch(() => {});
   }

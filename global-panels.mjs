@@ -1,4 +1,4 @@
-import { masterVolume, setMasterVolume } from './preferences.mjs';
+import { masterVolume, setMasterVolume, audioQuality, setAudioQuality, AUDIO_QUALITIES } from './preferences.mjs';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -6,9 +6,11 @@ const size = bytes => `${(bytes / 1048576).toFixed(1)} MB`;
 let library;
 let loading;
 let downloading = null;
+let downloadQuality = null;
 let cancelling = false;
 let clearing = false;
 let inventory;
+let inventoryRequest = 0;
 
 // Downloads use compressed files only. This engine never opens an audio context.
 async function recordings() {
@@ -31,8 +33,8 @@ async function appStorage() {
     const core = [
       '/index.html', '/app.js', '/styles.css', '/global-panels.mjs', '/preferences.mjs',
       '/data/word-lists.json', '/vendor/abcjs-basic-min.js', '/vendor/dattorro/dattorroReverb.js',
-      '/ear-training/ear.css', '/audio/samples/manifest.json',
-      ...['ui', 'analysis', 'audio', 'theory', 'instruments', 'challenges', 'shortcuts', 'drone'].map(name => `/ear-training/${name}.mjs`),
+      '/ear-training/ear.css', '/audio/samples/manifest.json', '/audio/samples/qualities.json',
+      ...['ui', 'analysis', 'audio', 'quality', 'theory', 'instruments', 'challenges', 'shortcuts', 'drone'].map(name => `/ear-training/${name}.mjs`),
     ];
     const ready = await Promise.all(keys.map(async key => {
       const cache = await caches.open(key);
@@ -66,23 +68,32 @@ function renderBanks() {
   $('#offline-remove').disabled = Boolean(downloading || clearing || !inventory?.available || !inventory.bytes);
   $('#offline-cancel').hidden = !downloading;
   $('#offline-cancel').disabled = cancelling;
+  $('#audio-quality').disabled = Boolean(downloading || clearing);
+  const selected = AUDIO_QUALITIES.find(item => item.id === (inventory?.quality || audioQuality()));
+  $('#offline-quality').textContent = inventory?.quality === 'original' && audioQuality() !== 'original'
+    ? 'lossless · browser fallback' : `${selected.name} downloads`;
 }
 
 async function refreshRecordings() {
+  const request = ++inventoryRequest;
   await recordings();
-  inventory = await library.engine.cacheInfo();
+  const next = await library.engine.cacheInfo(downloadQuality || audioQuality());
+  if (request !== inventoryRequest) return;
+  inventory = next;
   renderBanks();
 }
 
 async function refreshPreferences() {
   connection();
   syncVolume();
+  syncQuality();
   await Promise.all([appStorage(), refreshRecordings().catch(error => status(error.message || 'Recordings could not load. Reconnect and reopen preferences.'))]);
 }
 
 async function download(id) {
   if (downloading || clearing) return;
   downloading = id;
+  downloadQuality = audioQuality();
   cancelling = false;
   renderBanks();
   const name = library.instruments.find(item => item.id === id).name;
@@ -92,11 +103,12 @@ async function download(id) {
       const progress = $(`[data-bank="${id}"] progress`);
       if (progress) { progress.max = total; progress.value = count; }
       if (!cancelling) status(`${name} · ${count} / ${total}`);
-    }, () => cancelling);
+    }, () => cancelling, downloadQuality);
     status(complete ? `${name} downloaded.` : 'Download stopped. Completed recordings are kept.');
   } catch (error) { status(error.message || 'Download failed. Reconnect to resume.'); }
   finally {
     downloading = null;
+    downloadQuality = null;
     cancelling = false;
     await refreshRecordings().catch(error => status(error.message));
   }
@@ -125,6 +137,15 @@ function syncVolume() {
   $('#global-volume').value = masterVolume();
   $('#global-volume-value').textContent = `${Math.round(masterVolume() * 100)}%`;
 }
+$('#audio-quality-options').innerHTML = AUDIO_QUALITIES.map(item => `<label class="audio-quality-choice"><input type="radio" name="audio-quality" value="${item.id}"><span><strong>${item.name}</strong><small>${item.detail}</small></span></label>`).join('');
+function syncQuality() {
+  for (const input of document.querySelectorAll('[name="audio-quality"]')) input.checked = input.value === audioQuality();
+}
+$('#audio-quality').addEventListener('change', event => setAudioQuality(event.target.value));
+window.addEventListener('velhoksi:audio-quality', () => {
+  syncQuality();
+  if ($('#preferences-dialog').open) refreshRecordings().catch(error => status(error.message));
+});
 $('#global-volume').addEventListener('input', event => setMasterVolume(Number(event.target.value)));
 window.addEventListener('velhoksi:volume', syncVolume);
 window.addEventListener('online', connection);
@@ -157,3 +178,4 @@ for (const button of document.querySelectorAll('[data-global-panel]')) {
   dialog.addEventListener('close', () => button.focus({ preventScroll: true }));
 }
 syncVolume();
+syncQuality();

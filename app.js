@@ -17,6 +17,7 @@ const STORAGE_KEYS = {
   elementAnswerMode: "velhoksi.elementAnswerMode",
   showElementFacts: "velhoksi.showElementFacts",
   elementNameLanguage: "velhoksi.elementNameLanguage",
+  elementCheatLayout: "velhoksi.elementCheatLayout",
 };
 
 const BASE_ALPHABETS = [
@@ -767,6 +768,7 @@ const state = {
   elementAnswerMode: localStorage.getItem(STORAGE_KEYS.elementAnswerMode) === "buttons" ? "buttons" : "typed",
   showElementFacts: localStorage.getItem(STORAGE_KEYS.showElementFacts) === "true",
   elementNameLanguage: loadElementNameLanguage(),
+  elementCheatLayout: localStorage.getItem(STORAGE_KEYS.elementCheatLayout) === "table" ? "table" : "cards",
   direction: localStorage.getItem(STORAGE_KEYS.direction) || "foreignToLatin",
   cyrillicVariant: loadCyrillicVariant(),
   enabledMap: loadEnabledMap(),
@@ -845,6 +847,8 @@ const refs = {
   cheatTitle: document.querySelector("#cheat-title"),
   cheatFontControl: document.querySelector("#cheat-font-control"),
   cheatFontSelect: document.querySelector("#cheat-font-select"),
+  cheatLayoutControl: document.querySelector("#cheat-layout-control"),
+  cheatLayoutSelect: document.querySelector("#cheat-layout-select"),
   cheatGrid: document.querySelector("#cheat-grid"),
   cheatTooltip: document.querySelector("#cheat-tooltip"),
   promptCard: document.querySelector("#prompt-card"),
@@ -908,6 +912,11 @@ async function init() {
 }
 
 function bindEvents() {
+  refs.cheatLayoutSelect.addEventListener("change", () => {
+    state.elementCheatLayout = refs.cheatLayoutSelect.value === "table" ? "table" : "cards";
+    localStorage.setItem(STORAGE_KEYS.elementCheatLayout, state.elementCheatLayout);
+    renderCheatSheet();
+  });
   refs.elementNameLanguage.addEventListener("change", () => {
     const language = refs.elementNameLanguage.value;
     if (!Object.hasOwn(ELEMENT_NAME_LANGUAGES, language)) {
@@ -939,27 +948,66 @@ function bindEvents() {
       goToStartMenu();
     });
 
-    const prefersReducedMotion = Boolean(
-      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
-    );
-
-    const updateBrandPointer = (event) => {
-      const rect = refs.brandHome.getBoundingClientRect();
-      const px = rect.width ? (event.clientX - rect.left) / rect.width : 0.5;
-      const py = rect.height ? (event.clientY - rect.top) / rect.height : 0.5;
-      const x = `${Math.max(0, Math.min(1, px)) * 100}%`;
-      const y = `${Math.max(0, Math.min(1, py)) * 100}%`;
-      refs.brandHome.style.setProperty("--brand-mx", x);
-      refs.brandHome.style.setProperty("--brand-my", y);
-    };
-
-    refs.brandHome.addEventListener("pointerenter", (event) => updateBrandPointer(event));
-    if (!prefersReducedMotion) {
-      refs.brandHome.addEventListener("pointermove", (event) => updateBrandPointer(event));
+    // Clip the original markup so the logo and both captions dissolve alike.
+    // CSS controls the delayed sequence; leaving hover resets it without timers.
+    const targets = [refs.brandHome, ...refs.brandHome.closest(".brand-lockup").querySelectorAll(".brand-caption")];
+    for (const target of targets) {
+      const fragments = document.createElement("span");
+      fragments.className = "brand-fragments";
+      fragments.setAttribute("aria-hidden", "true");
+      const source = target.querySelector(".brand-word, .brand-caption-text");
+      const columns = target === refs.brandHome ? 21 : Math.min(28, Math.max(12, source.textContent.length));
+      const rows = target === refs.brandHome ? 4 : 2;
+      for (let row = 0; row < rows; row++) {
+        for (let column = 0; column < columns; column++) {
+          const piece = document.createElement("span");
+          piece.className = "brand-fragment";
+          piece.append(...source.cloneNode(true).childNodes);
+          const seed = (column * 17 + row * 31) % 29;
+          piece.style.setProperty("--piece-clip", `inset(${row / rows * 100}% ${100 - (column + 1) / columns * 100}% ${100 - (row + 1) / rows * 100}% ${column / columns * 100}%)`);
+          piece.style.setProperty("--piece-origin", `${(column + .5) / columns * 100}% ${(row + .5) / rows * 100}%`);
+          piece.style.setProperty("--piece-x", `${.12 + seed / 35}em`);
+          piece.style.setProperty("--piece-y", `${-.25 - seed / 28 - (rows - row) * .08}em`);
+          piece.style.setProperty("--piece-turn", `${seed * 2 - 28}deg`);
+          piece.style.setProperty("--piece-delay", `${column * 18 + row * 24}ms`);
+          fragments.appendChild(piece);
+        }
+      }
+      target.appendChild(fragments);
+      target.classList.add("has-fragments");
     }
+
+    // Refract the entire word; no circular lens or page-level backdrop filter.
+    const glassMedia = window.matchMedia?.("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
+    let glassFrame = 0;
+    let glassPointer = null;
+    let glassStartedAt = 0;
+    const positionGlass = () => {
+      glassFrame = 0;
+      if (!glassPointer) return;
+      const rect = refs.brandHome.getBoundingClientRect();
+      const x = Math.max(0, Math.min(1, (glassPointer.x - rect.left) / (rect.width || 1)));
+      const y = Math.max(0, Math.min(1, (glassPointer.y - rect.top) / (rect.height || 1)));
+      refs.brandHome.style.setProperty("--glass-yaw", `${(x - .5) * 16}deg`);
+      refs.brandHome.style.setProperty("--glass-pitch", `${(.5 - y) * 10}deg`);
+      refs.brandHome.style.setProperty("--glass-sheen", `${25 + x * 50}%`);
+    };
+    refs.brandHome.addEventListener("pointerenter", event => {
+      if (!glassMedia?.matches || event.pointerType === "touch") return;
+      glassStartedAt = performance.now();
+      glassPointer = { x: event.clientX, y: event.clientY };
+      positionGlass();
+    });
+    refs.brandHome.addEventListener("pointermove", event => {
+      if (!glassMedia?.matches || !glassPointer || performance.now() - glassStartedAt > 3000) return;
+      glassPointer = { x: event.clientX, y: event.clientY };
+      if (!glassFrame) glassFrame = window.requestAnimationFrame(positionGlass);
+    });
     refs.brandHome.addEventListener("pointerleave", () => {
-      refs.brandHome.style.setProperty("--brand-mx", "50%");
-      refs.brandHome.style.setProperty("--brand-my", "50%");
+      window.cancelAnimationFrame(glassFrame);
+      glassFrame = 0;
+      glassPointer = null;
+      for (const property of ["--glass-yaw", "--glass-pitch", "--glass-sheen"]) refs.brandHome.style.removeProperty(property);
     });
   }
 
@@ -2263,6 +2311,22 @@ function getSettingSymbolMarkup(symbol, alphabet) {
 
 function renderCheatSheet() {
   const alphabet = getSelectedAlphabet();
+  const isElements = alphabet?.id === "periodic-elements";
+  const tableLayout = isElements && state.elementCheatLayout === "table";
+  refs.cheatLayoutControl.classList.toggle("hidden", !isElements);
+  refs.cheatLayoutSelect.value = state.elementCheatLayout;
+  refs.cheatGrid.classList.toggle("periodic-table", tableLayout);
+  refs.cheatDialog.classList.toggle("element-table-dialog", tableLayout);
+  // Make the horizontally scrolling table reachable by keyboard.
+  if (tableLayout) {
+    refs.cheatGrid.tabIndex = 0;
+    refs.cheatGrid.setAttribute("role", "region");
+    refs.cheatGrid.setAttribute("aria-label", "periodic table");
+  } else {
+    refs.cheatGrid.removeAttribute("tabindex");
+    refs.cheatGrid.removeAttribute("role");
+    refs.cheatGrid.removeAttribute("aria-label");
+  }
 
   if (!alphabet) {
     refs.cheatGrid.innerHTML = "";
@@ -2301,7 +2365,23 @@ function renderCheatSheet() {
       item.classList.add("disabled");
     }
     item.innerHTML = getCheatSheetMarkup(symbol, alphabet, caseMode);
+    if (tableLayout) {
+      item.style.gridRow = String(symbol.tablePosition.row);
+      item.style.gridColumn = String(symbol.tablePosition.column);
+    }
     refs.cheatGrid.appendChild(item);
+  }
+
+  if (tableLayout) {
+    for (const [row, label] of [[6, "57–71"], [7, "89–103"]]) {
+      const marker = document.createElement("span");
+      marker.className = "element-series-marker";
+      marker.style.gridRow = String(row);
+      marker.style.gridColumn = "3";
+      marker.textContent = label;
+      marker.setAttribute("aria-hidden", "true");
+      refs.cheatGrid.appendChild(marker);
+    }
   }
 
   scheduleMusicPreviewHydration();
@@ -2516,6 +2596,9 @@ function handleGlobalShortcut(event) {
 }
 
 function getCheatSheetMarkup(symbol, alphabet, caseMode) {
+  if (alphabet?.id === "periodic-elements") {
+    return `<span class="cheat-atomic-number" aria-label="atomic number ${symbol.atomicNumber}">${symbol.atomicNumber}</span><div class="cheat-item-head"><strong>${symbol.foreign}</strong></div><span lang="${state.elementNameLanguage}">${symbol.latin}</span>`;
+  }
   const note = getSymbolNote(alphabet.id, symbol.foreign);
   const noteButton = note
     ? `<button type="button" class="cheat-note-trigger" aria-label="note about ${symbol.foreign}" aria-expanded="false" data-note="${escapeHtml(note)}">?</button>`
@@ -3615,6 +3698,7 @@ function applyTheme(theme) {
     theme === "dark"
       ? "dark, but you can switch"
       : "light, but you can switch";
+  refs.themeToggle.setAttribute("aria-label", `switch to ${theme === "dark" ? "light" : "dark"} mode`);
 }
 
 async function loadWordLists() {

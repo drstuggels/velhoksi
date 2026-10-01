@@ -21,6 +21,18 @@ export function describeInterval(semitones) {
   return { semitones: distance, short: `${quality}${number}`, name: `${name} ${ORDINALS[number] || `${number}th`}` };
 }
 
+// Keep register, duplicated pitches and original voice indices. The bass is the
+// lowest sounding note, which need not be the root of a chord.
+export function voicingIntervals(input, basis = 'bass') {
+  const voices = input.map((midi, index) => ({ midi, index })).filter(voice => Number.isFinite(voice.midi))
+    .sort((a, b) => a.midi - b.midi);
+  return voices.slice(1).map((to, index) => {
+    const from = voices[basis === 'adjacent' ? index : 0];
+    return { from: from.midi, to: to.midi, fromIndex: from.index, toIndex: to.index,
+      ...describeInterval(to.midi - from.midi) };
+  });
+}
+
 export function analyseNotes(input) {
   const notes = uniquePitches(input), pairs = [], groups = new Map(), facts = [];
   for (let i = 0; i < notes.length; i++) for (let j = i + 1; j < notes.length; j++) {

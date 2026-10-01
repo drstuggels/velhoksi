@@ -56,14 +56,15 @@
     <div class="app-shell">
       <header class="site-header" aria-label="site header">
         <div class="brand-lockup">
-          <p class="eyebrow"><span class="brand-foreign">grind</span> season</p>
+          <p class="eyebrow"><span class="brand-caption"><span class="brand-caption-text"><span class="brand-foreign">grind</span> season</span></span></p>
           <div class="brand-row">
             <h1>
-              <button id="brand-home" class="brand-home" type="button" aria-label="back to start menu" data-text="velhoksi">
-                velhoksi
+              <button id="brand-home" class="brand-home" type="button" aria-label="back to start menu">
+                <span class="brand-word">velhoksi</span>
+                <span class="brand-return" aria-hidden="true"><span><span class="brand-return-click">click</span> to return to start</span></span>
               </button>
             </h1>
-            <span class="brand-quote">"to become a wizard"</span>
+            <span class="brand-quote brand-caption"><span class="brand-caption-text">"to become a wizard"</span></span>
           </div>
         </div>
       </header>
@@ -174,7 +175,7 @@
       <footer class="site-footer" aria-label="site footer">
         <span class="theme-prefix">current mode is</span>
         <button id="theme-toggle" class="text-button" type="button" aria-label="toggle theme">
-          current mode is dark, switch it
+          dark, but you can switch
         </button>
         <nav class="footer-links" aria-label="app information">
           <button class="text-button" type="button" data-global-panel="preferences" aria-haspopup="dialog" aria-controls="preferences-dialog">preferences</button>
@@ -192,6 +193,8 @@
             <header class="preference-card-head"><h3 id="preference-sound-title">sound</h3></header>
             <div class="preference-card-body">
               <label class="global-volume" for="global-volume"><span>volume <output id="global-volume-value" for="global-volume"></output></span><input type="range" id="global-volume" min="0" max="1" step="0.01" value="0.65" /></label>
+              <fieldset class="audio-quality" id="audio-quality" aria-describedby="audio-quality-help"><legend>audio quality</legend><div id="audio-quality-options"></div></fieldset>
+              <p class="preference-help" id="audio-quality-help">Applies from the next question and to new cheat sheet notes.</p>
             </div>
           </section>
           <section class="preference-card" aria-labelledby="preference-reveal-title">
@@ -222,7 +225,7 @@
         <details class="preference-section preference-downloads" open>
           <summary>downloads &amp; offline practice</summary>
           <div class="preference-section-body">
-            <div class="offline-overview"><span id="offline-connection"></span><span id="offline-app-status" role="status">checking app storage…</span></div>
+            <div class="offline-overview"><span id="offline-connection"></span><span id="offline-app-status" role="status">checking app storage…</span><span id="offline-quality" role="status"></span></div>
             <p class="preference-help">Download instruments for offline practice. The drone uses pipe organ · quiet. Fonts may need a connection.</p>
             <div id="offline-banks"><p class="preference-help">loading recordings…</p></div>
             <div class="offline-actions"><span id="offline-storage"></span><button type="button" class="text-button" id="offline-cancel" hidden>cancel download</button><button type="button" class="text-button" id="offline-remove" disabled>remove recordings</button></div>
@@ -242,6 +245,7 @@
       <div class="dialog-card">
         <div class="global-dialog-head"><h2 id="credits-title" tabindex="-1">credits</h2><button type="button" class="text-button" data-close-global>close</button></div>
         <details class="global-section" open><summary>recordings</summary>
+          <p>Opus playback copies are encoded from these recordings. Original quality uses the preserved FLAC files.</p>
           <div class="credit-entries"><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/SalamanderGrandPiano" target="_blank" rel="noopener">Salamander Grand Piano V3</a></h3><p>Alexander Holm · mapping by kinwie · retuning by Markus Fiedler.</p><div class="credit-links"><a href="./audio/samples/salamander/LICENSE.txt" target="_blank" rel="noopener">CC BY 3.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/GregSullivan.E-Pianos" target="_blank" rel="noopener">Wurlitzer EP200</a></h3><p>Greg Sullivan · mapping by kinwie.</p><div class="credit-links"><a href="./audio/samples/wurlitzer/LICENSE.txt" target="_blank" rel="noopener">CC BY 3.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/karoryfer.shinyguitar" target="_blank" rel="noopener">Shinyguitar</a></h3><p>Sampled and mapped by D. Smolken / Karoryfer Samples. Electric pickup and acoustic microphone recordings.</p><div class="credit-links"><a href="./audio/samples/shinyguitar/LICENSE.txt" target="_blank" rel="noopener">CC0 1.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sgossner/VCSL" target="_blank" rel="noopener">Versilian Community Sample Library</a></h3><p>Versilian Studios LLC. Vibraphone, bowed vibraphone, marimba, Renaissance organ, pipe organ, Yamaha TX81Z, concert harp and kalimbas.</p><p>Pipe organ recorded by Simon Dalzell / Ivy Audio; SFZ generation by Peter Eastman.</p><div class="credit-links"><a href="./audio/samples/vcsl/LICENSE.txt" target="_blank" rel="noopener">CC0 1.0</a></div></article><article class="credit-entry"><h3><a href="https://github.com/sfzinstruments/jlearman.jRhodes3d" target="_blank" rel="noopener">jRhodes3d</a></h3><p>1977 Rhodes Mark I Stage 73 recorded by Jeffrey Learman. Samples used for this noncommercial app.</p><div class="credit-links"><a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a><a href="./audio/samples/rhodes/LICENSE.txt" target="_blank" rel="noopener">Author’s license</a></div></article></div>
           <div class="credit-note"><p>Playback mappings are adapted for Velhoksi. Original PCM is preserved; WAV sources are losslessly packed as FLAC. Organ sustain loops are crossfaded during playback.</p><a href="./audio/samples/manifest.json" download>Recording sources, revisions & mappings ↓</a></div>
         </details>
@@ -335,6 +339,13 @@
             <label id="cheat-font-control" class="duration-control cheat-font-control hidden" for="cheat-font-select">
               <span class="eyebrow">font</span>
               <select id="cheat-font-select"></select>
+            </label>
+            <label id="cheat-layout-control" class="duration-control hidden" for="cheat-layout-select">
+              <span class="eyebrow">layout</span>
+              <select id="cheat-layout-select">
+                <option value="cards">cards</option>
+                <option value="table">periodic table</option>
+              </select>
             </label>
 	        </div>
 	        <button id="close-cheat" class="text-button close-cheat-button" type="button" aria-label="close cheat sheet">
