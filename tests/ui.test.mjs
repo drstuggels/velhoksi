@@ -641,9 +641,11 @@ test('cheat sheet length defaults to maximum and can change independently of the
   assert.equal(length.value, length.max);
   click('[data-action="lab-play"]'); await flush();
   assert.equal(recordings.at(-1).settings.duration, Number(length.max));
+  assert.equal(recordings.at(-1).settings.spacing, .75);
   change('[data-lab="duration"]', '2.5');
   click('[data-action="lab-play"]'); await flush();
   assert.equal(recordings.at(-1).settings.duration, 2.5);
+  assert.equal(recordings.at(-1).settings.spacing, .75);
   click('[data-close="ear-cheat"]');
   click('[data-action="play"]'); await flush();
   assert.equal(recordings.at(-1).settings.duration, .8);
@@ -690,5 +692,55 @@ test('result gives a shifted later interval credit and shows the actual mistaken
   assert.match(steps[0].querySelector('.ear-result-submitted').textContent, /minor third/);
   assert.match(root.querySelector('.ear-result-counts').textContent, /1 of 2 intervals correct/);
   assert.match(root.querySelector('.ear-result-counts').textContent, /0 of 2 notes matched/);
+  const score = localStorage.getItem('velhoksi.ear.stats.v1');
+  click('[data-result-play="1"][data-result-mine="false"]'); await flush();
+  assert.deepEqual(recordings.at(-1).notes, [64, 68]);
+  click('[data-result-play="1"][data-result-mine="true"]'); await flush();
+  assert.deepEqual(recordings.at(-1).notes, [63, 67]);
+  assert.equal(localStorage.getItem('velhoksi.ear.stats.v1'), score);
+  app.deactivate(); dom.window.close();
+});
+
+test('answer playback links matching interval labels and clears highlights on stop', async () => {
+  const { dom, root, app, click, startCustom } = setup({ input: 'interval', intervals: [3, 4] });
+  const originalPlay = SampleEngine.prototype.play;
+  try {
+    startCustom();
+    click('[data-action="play"]'); await flush();
+    const expected = recordings.at(-1).notes[1] - recordings.at(-1).notes[0];
+    const submitted = expected === 3 ? 4 : 3;
+    click(`[data-interval="${submitted}"]`); click('[data-action="check"]');
+    SampleEngine.prototype.play = async function () {
+      this.context = { currentTime: .1 };
+      return { start: 0, end: 2 };
+    };
+    click('[data-result-play="0"][data-result-mine="false"]'); await flush();
+    assert.ok(root.querySelector(`[data-interval="${expected}"]`).classList.contains('is-playing-interval'));
+    assert.ok(root.querySelector(`[data-playing-interval="${expected}"]`).classList.contains('is-playing-interval'));
+    assert.equal(root.querySelector(`[data-playing-interval="${submitted}"]`).classList.contains('is-playing-interval'), false);
+    click('[data-result-play="0"][data-result-mine="true"]'); await flush();
+    assert.ok(root.querySelector(`[data-playing-interval="${submitted}"]`).classList.contains('is-playing-interval'));
+    assert.equal(root.querySelector(`[data-playing-interval="${expected}"]`).classList.contains('is-playing-interval'), false);
+    click('[data-action="stop"]');
+    assert.equal(root.querySelectorAll('.is-playing-interval').length, 0);
+  } finally {
+    SampleEngine.prototype.play = originalPlay;
+    app.deactivate(); dom.window.close();
+  }
+});
+
+test('interval answer playback reconstructs later submitted pitches and retains their instruments', async () => {
+  const { dom, app, click, startCustom } = setup({ input: 'interval', direction: 'ascending', intervals: [3, 4], minNotes: 3, maxNotes: 3, perNoteInstruments: true, instrumentPool: ['salamander', 'rhodes'] });
+  startCustom();
+  click('[data-action="play"]'); await flush();
+  const original = recordings.at(-1);
+  const first = original.notes[1] - original.notes[0] === 3 ? 4 : 3;
+  const second = original.notes[2] - original.notes[1] === 3 ? 4 : 3;
+  click(`[data-interval="${first}"]`); click(`[data-interval="${second}"]`); click('[data-action="check"]');
+  click('[data-result-play="1"][data-result-mine="false"]'); await flush();
+  assert.deepEqual(recordings.at(-1).notes, original.notes.slice(1));
+  assert.deepEqual(recordings.at(-1).settings.noteInstruments, original.settings.noteInstruments.slice(1));
+  click('[data-result-play="1"][data-result-mine="true"]'); await flush();
+  assert.deepEqual(recordings.at(-1).notes, [original.notes[0] + first, original.notes[0] + first + second]);
   app.deactivate(); dom.window.close();
 });

@@ -405,7 +405,7 @@ export class SampleEngine {
     if (resetReverb) this.reverb?.port.postMessage('reset');
   }
 
-  async play(notes, { direction = 'ascending', duration = 0.8, gap = 0.25, keepDrone = false, allowOutside = false, ...settings } = {}) {
+  async play(notes, { direction = 'ascending', duration = 0.8, gap = 0.25, spacing = duration + gap, keepDrone = false, allowOutside = false, ...settings } = {}) {
     // Replace the notes while letting the existing room tail decay naturally.
     this.cancel(!keepDrone, { resetReverb: false, fade: 0.12 });
     const epoch = this.epoch;
@@ -424,8 +424,8 @@ export class SampleEngine {
     const start = Math.max(this.context.currentTime + 0.14, this.readyAt || 0);
     const together = direction === 'harmonic';
     const strength = (0.4 + snapshot.velocity / 127 * 0.3) / Math.sqrt(together ? notes.length : 1);
-    prepared.forEach((note, index) => this.voice(note, start + (together ? 0 : index * (duration + gap)), duration, { strength }));
-    const end = start + (together ? 0 : (notes.length - 1) * (duration + gap)) + duration;
+    prepared.forEach((note, index) => this.voice(note, start + (together ? 0 : index * spacing), duration, { strength }));
+    const end = start + (together ? 0 : (notes.length - 1) * spacing) + duration;
     this.onStatus('Playing', 'playing');
     return { start, end, epoch };
   }

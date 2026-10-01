@@ -116,8 +116,7 @@ python3 scripts/generate_word_lists.py
     - demand streak of 2-3 rounds
     - green bubble that fills up
 - [ ] finish ear training
-    - [ ] try all features
-    - [ ] try mobile
+    - [x] try mobile
     - [ ] harmonics view finetune
     - [ ] chords
     - [ ] progressions

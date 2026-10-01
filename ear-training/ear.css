@@ -141,6 +141,16 @@
 .ear-typed input { min-width: 0; width: min(440px, 100%); border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); padding: 12px; font: 1rem "IBM Plex Mono", monospace; }
 .ear-answer-actions, .ear-comparison { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px; margin-top: 12px; }
 .ear-answer-actions > [data-action="next"] { margin-left: auto; }
+.ear-comparison { justify-content: space-between; align-items: stretch; }
+.ear-replay-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.ear-audio-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); font: .75rem/1.4 "IBM Plex Mono", monospace; }
+.ear-audio-button svg { flex-shrink: 0; }
+.ear-audio-button:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+.ear-audio-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ear-result-line { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.ear-interval-play { width: 40px; min-height: 40px; padding: 0; }
+.ear-result-line.is-playing-interval { background: color-mix(in srgb, var(--accent) 16%, var(--surface-strong)); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 16%, var(--surface-strong)); }
+.ear-result-line.is-playing-interval .ear-interval-play, .ear-interval-buttons button.is-playing-interval { color: var(--text); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 22%, var(--surface-strong)); box-shadow: inset 0 -3px var(--accent); }
 .ear-primary { border: 1px solid var(--line); background: var(--surface-strong); color: var(--text); padding: 8px 12px; font: .85rem "IBM Plex Mono", monospace; min-height: 36px; }
 .ear-primary:hover { background: var(--text); color: var(--bg); }
 .ear-feedback { font-size: .875rem; line-height: 1.5; margin-top: 10px; }
@@ -150,10 +160,9 @@
 .ear-feedback.ear-result { display: block; color: var(--text); padding: 16px 18px; margin-top: 18px; border: 1px solid var(--soft-line); border-left: 3px solid var(--accent); background: var(--surface-strong); }
 .ear-feedback.ear-result.correct { border-left-color: var(--success); }
 .ear-feedback.ear-result:empty { display: none; }
-.ear-result-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font: .8rem "IBM Plex Mono", monospace; }
+.ear-result-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; font: .8rem/1.5 "IBM Plex Mono", monospace; }
 .ear-result-heading > strong { font-weight: 500; }
-.ear-result.correct .ear-result-heading > strong, .ear-result.correct .ear-result-mark { color: var(--success); }
-.ear-result-mark { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid currentColor; border-radius: 50%; font-size: .9rem; }
+.ear-result.correct .ear-result-heading > strong { color: var(--success); }
 .ear-result-assisted { color: var(--muted); font-size: .65rem; }
 .ear-result-counts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-left: auto; color: var(--muted); font-size: .65rem; }
 .ear-result-intervals { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; margin-top: 14px; }
@@ -172,7 +181,7 @@
 .ear-result-notes { margin: 5px 0 0; color: var(--muted); font: .75rem/1.7 "IBM Plex Mono", monospace; }
 .ear-result-submitted { margin-top: 10px; padding: 9px 10px; background: var(--panel-tone); border-left: 2px solid var(--soft-line); }
 .ear-result-your-label { display: block; margin-bottom: 4px; color: var(--muted); font: .6rem "IBM Plex Mono", monospace; }
-@media (max-width: 500px) { .ear-result-counts { flex-basis: 100%; margin-left: 32px; } }
+@media (max-width: 500px) { .ear-result-counts { flex-basis: 100%; margin-left: 0; } }
 
 .ear-stats .stats-row span { color: var(--muted); font: .875rem "IBM Plex Mono", monospace; }
 .ear-sound-status { margin-top: 8px; color: var(--muted); font: .8rem/1.5 "IBM Plex Mono", monospace; }
@@ -369,10 +378,16 @@
   .ear-view .ear-stats { order: 2; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 10px 14px; }
   .ear-stats .stats-row { width: min(360px, 80%); }
   .ear-view .ear-prompt, .ear-answer { max-width: 100%; margin-left: 0; }
-  .ear-view .prompt-title-row { flex-wrap: wrap; }
-  .ear-view .prompt-tools { display: flex; flex-wrap: wrap; gap: 12px; padding: 10px 12px; }
-  .ear-view .prompt-tools .text-button { width: auto; padding: 0; font-size: .75rem; }
-  .ear-view .prompt-tools .nav-separator { display: inline; }
+  .ear-view .prompt-meta { gap: 8px; border: 0; background: transparent; }
+  .ear-view .prompt-title-row { padding: 0; border: 0; }
+  .ear-view .prompt-meta .ear-breadcrumbs { width: 100%; flex-wrap: nowrap; gap: 8px; overflow-x: auto; font-size: .7rem; letter-spacing: 0; }
+  .ear-view .prompt-meta .ear-breadcrumbs > * { flex-shrink: 0; }
+  .ear-view .prompt-meta .ear-breadcrumbs .text-button { min-height: 40px; white-space: nowrap; }
+  .ear-view .prompt-meta .ear-breadcrumbs .text-button:last-child { color: var(--text); font-weight: 600; }
+  .ear-view .prompt-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 0; }
+  .ear-view .prompt-tools .text-button { width: 100%; min-height: 44px; justify-content: center; padding: 8px 6px; border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); font-size: .7rem; line-height: 1.4; letter-spacing: 0; text-align: center; white-space: normal; }
+  .ear-view .prompt-tools .text-button:hover, .ear-view .prompt-tools .text-button:focus-visible { border-color: var(--accent); }
+  .ear-view .prompt-tools .nav-separator { display: none; }
 }
 @media (max-width: 700px) {
   .ear-instrument-pool { margin-left: 0; padding: 12px; }
@@ -396,6 +411,9 @@
   .ear-answer-heading { gap: 10px; }
   .ear-interval-buttons { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
   .ear-answer-actions, .ear-comparison { gap: 10px; }
+  .ear-comparison { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .ear-comparison > [data-action="next"] { justify-self: start; min-height: 44px; }
+  .ear-replay-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
   .ear-answer-actions .text-button, .ear-comparison .text-button { font-size: .75rem; }
   .ear-dialog { padding: 18px; }
   .ear-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }

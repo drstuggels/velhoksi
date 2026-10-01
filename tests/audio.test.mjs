@@ -119,6 +119,22 @@ test('notes use audio-clock timestamps, harmonic attacks are simultaneous', asyn
   assert.deepEqual(times, [10.14, 10.14, 10.14]);
 });
 
+test('long ringing notes can have closely spaced melodic onsets', async () => {
+  const engine = new SampleEngine();
+  engine.context = { currentTime: 10 };
+  engine.unlock = async () => {};
+  engine.configure = () => {};
+  engine.prepare = async notes => notes.map(midi => ({ midi }));
+  const voices = [];
+  engine.voice = (note, time, duration) => voices.push({ midi: note.midi, time, duration });
+  for (const notes of [[60, 67], [67, 60]]) {
+    voices.length = 0;
+    const info = await engine.play(notes, { duration: 12, spacing: .75 });
+    assert.deepEqual(voices, [{ midi: notes[0], time: 10.14, duration: 12 }, { midi: notes[1], time: 10.89, duration: 12 }]);
+    assert.ok(Math.abs(info.end - 22.89) < 1e-9);
+  }
+});
+
 test('different recordings per note still share one audio clock', async () => {
   const engine = new SampleEngine();
   engine.context = { currentTime: 10 };

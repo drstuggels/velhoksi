@@ -8,6 +8,7 @@ import { INSTRUMENTS, instrumentById } from './instruments.mjs';
 const SETTINGS_KEY = 'velhoksi.ear.settings.v1';
 const STATS_KEY = 'velhoksi.ear.stats.v1';
 const EXERCISES_KEY = 'velhoksi.ear.exercises.v1';
+const PLAY_ICON = '<svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M5 3.5v13L16 10z"/></svg>';
 const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } };
 const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Practice works without persistent storage. */ } };
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -48,6 +49,7 @@ export function createEarTraining(root, { onExit }) {
   let pianoQuestionId = null;
   let explorationAnimation = 0;
   let explorationEvents = [];
+  let intervalEvents = [];
   let hoveredNote = null;
   let focusedNote = null;
   let instrumentPreview = null;
@@ -137,7 +139,7 @@ export function createEarTraining(root, { onExit }) {
       <div id="ear-practice" class="floating floating-main ear-main">
         <div class="prompt-meta">
           <div class="prompt-title-row">${breadcrumbs()}</div>
-          <div class="prompt-tools"><button type="button" class="text-button" data-action="settings">edit challenge</button><span class="nav-separator">/</span><button type="button" class="text-button" data-action="cheat">cheat sheet</button><span class="nav-separator">/</span><button type="button" class="text-button" data-action="shortcuts">shortcuts</button></div>
+          <div class="prompt-tools" role="group" aria-label="quiz tools"><button type="button" class="text-button" data-action="settings">edit challenge</button><span class="nav-separator" aria-hidden="true">/</span><button type="button" class="text-button" data-action="cheat">cheat sheet</button><span class="nav-separator" aria-hidden="true">/</span><button type="button" class="text-button" data-action="shortcuts">shortcuts</button></div>
         </div>
         <section class="prompt-card ear-prompt" aria-labelledby="ear-question-title">
           <h2 id="ear-question-title" class="visually-hidden">intervals</h2>
@@ -152,7 +154,7 @@ export function createEarTraining(root, { onExit }) {
           <div id="ear-answer-surface"></div>
           <div class="ear-answer-actions"><button type="button" class="ear-primary" data-action="check">check answer</button><button type="button" class="text-button" data-action="undo">undo</button><button type="button" class="text-button" data-action="clear">clear</button><button type="button" class="text-button" data-action="next">next question →</button></div>
           <div id="ear-feedback" class="ear-feedback" role="status" aria-live="polite"></div>
-          <div id="ear-comparison" class="ear-comparison hidden"><button type="button" class="text-button" data-action="target">replay answer</button><button type="button" class="text-button" data-action="mine">compare mine</button></div>
+          <div id="ear-comparison" class="ear-comparison hidden"><div class="ear-replay-controls" role="group" aria-label="compare answers"><button type="button" class="ear-audio-button" data-action="target">${PLAY_ICON}<span>replay answer</span></button><button type="button" class="ear-audio-button" data-action="mine">${PLAY_ICON}<span>compare mine</span></button></div></div>
           <div id="ear-sound-status" class="ear-sound-status" role="status" aria-live="polite"></div>
         </section>
       </div>
@@ -579,23 +581,29 @@ export function createEarTraining(root, { onExit }) {
     $('.ear-transport').classList.toggle('hidden', !busy && (!heard || !!result));
   }
 
-  async function playQuestion(hint = false, notes = question?.notes, direction = question?.direction, markHeard = true) {
+  async function playQuestion(hint = false, notes = question?.notes, direction = question?.direction, markHeard = true, noteInstruments = sound?.noteInstruments) {
     if (!question || !notes?.length) return;
     const current = ++operation;
     if (hint) assisted = true;
     else if (heard && markHeard && !result) replays++;
     stopAnimation();
+    stopExploration();
     busy = true;
     updateControls();
     const alternate = hint && settings.hint === 'alternate';
     const playbackDirection = alternate ? direction === 'harmonic' ? 'ascending' : 'harmonic' : direction;
     const dur = hint && !alternate ? sound.duration * 1.35 : sound.duration;
     const gap = hint ? sound.gap + 0.3 : sound.gap;
-    const info = await engine.play(notes, { ...sound, direction: playbackDirection,
+    const info = await engine.play(notes, { ...sound, noteInstruments, direction: playbackDirection,
       duration: dur, gap, allowOutside: !markHeard });
     if (!info || current !== operation || !active || view !== 'practice') return;
     if (result) {
       explorationEvents = notes.map((midi, index) => ({ midi, start: info.start + (playbackDirection === 'harmonic' ? 0 : index * (dur + gap)), end: info.start + (playbackDirection === 'harmonic' ? 0 : index * (dur + gap)) + dur }));
+      intervalEvents = notes.slice(1).map((midi, index) => ({
+        interval: Math.abs(midi - notes[playbackDirection === 'harmonic' ? 0 : index]),
+        start: explorationEvents[playbackDirection === 'harmonic' ? 0 : index].start,
+        end: explorationEvents[index + 1].end,
+      }));
       animateExploration();
     }
     playback = info;
@@ -763,14 +771,22 @@ export function createEarTraining(root, { onExit }) {
     explorationEvents = explorationEvents.filter(e => e.end > now);
     const sounding = explorationEvents.filter(e => e.start <= now).map(e => e.midi);
     $$('[data-pitch]').forEach(key => key.classList.toggle('sounding', sounding.includes(Number(key.dataset.pitch))));
-    if (explorationEvents.length && active && view === 'practice') explorationAnimation = requestAnimationFrame(animateExploration);
+    intervalEvents = intervalEvents.filter(event => event.end > now);
+    const intervals = intervalEvents.filter(event => event.start <= now).map(event => event.interval);
+    $$('[data-interval], [data-playing-interval]').forEach(element => {
+      const playing = intervals.includes(Number(element.dataset.interval ?? element.dataset.playingInterval));
+      element.classList.toggle('is-playing-interval', playing);
+    });
+    if ((explorationEvents.length || intervalEvents.length) && active && view === 'practice') explorationAnimation = requestAnimationFrame(animateExploration);
   }
 
   function stopExploration() {
     cancelAnimationFrame(explorationAnimation);
     explorationAnimation = 0;
     explorationEvents = [];
+    intervalEvents = [];
     $$('[data-pitch].sounding').forEach(key => key.classList.remove('sounding'));
+    $$('.is-playing-interval').forEach(element => element.classList.remove('is-playing-interval'));
   }
 
   async function explorePitch(midi) {
@@ -865,6 +881,15 @@ export function createEarTraining(root, { onExit }) {
     $('[data-action="next"]').focus({ preventScroll: true });
   }
 
+  function resultPair(index, mine = false) {
+    const step = result?.steps[index];
+    if (!step) return [];
+    if (!mine) return [step.expectedFrom, step.expectedTo];
+    if (settings.input !== 'interval') return [step.from, step.to];
+    const notes = notesFromIntervals(question, result.submitted);
+    return [notes[question.direction === 'harmonic' ? 0 : index], notes[index + 1]];
+  }
+
   function renderResult(reveal = result?.revealed) {
     result.revealed = reveal;
     const feedback = $('#ear-feedback');
@@ -881,17 +906,23 @@ export function createEarTraining(root, { onExit }) {
       const interval = describeInterval(delta);
       return `<strong class="ear-result-abbr">${interval.short}</strong><span class="ear-result-name">${esc(interval.name)}</span>${motion(delta)}`;
     };
+    const playButton = (index, mine = false) => {
+      const notes = resultPair(index, mine);
+      const playable = notes.length === 2 && notes.every(note => Number.isFinite(note) && note >= 0 && note <= 127);
+      const label = `Play ${mine ? 'your' : 'correct'} interval ${index + 1}`;
+      return `<button type="button" class="ear-audio-button ear-interval-play" data-result-play="${index}" data-result-mine="${mine}" aria-label="${label}" title="${label}" ${playable ? '' : 'disabled'}>${PLAY_ICON}</button>`;
+    };
     feedback.className = `ear-feedback ear-result ${correct ? 'correct' : reveal ? 'revealed' : 'incorrect'}`;
-    feedback.innerHTML = `<div class="ear-result-heading"><span class="ear-result-mark" aria-hidden="true">${correct ? '✓' : reveal ? '♪' : '↗'}</span><strong>${title}</strong>${assisted ? '<span class="ear-result-assisted">assisted</span>' : ''}
+    feedback.innerHTML = `<div class="ear-result-heading"><strong>${title}</strong>${assisted ? '<span class="ear-result-assisted">assisted</span>' : ''}
       ${!reveal ? `<div class="ear-result-counts"><span>${intervalCount} of ${result.steps.length} ${result.steps.length === 1 ? 'interval' : 'intervals'} correct</span>${pitches && !correct ? `<span>${noteCount} of ${result.steps.length} ${result.steps.length === 1 ? 'note' : 'notes'} matched</span>` : ''}</div>` : ''}</div>
       <div class="ear-result-intervals">${result.steps.map((step, index) => {
         const status = reveal ? 'revealed' : step.correct ? 'correct' : step.sizeCorrect ? 'direction-wrong' : 'incorrect';
         const label = reveal ? 'answer' : step.correct ? pitches && !step.noteCorrect ? 'interval correct · pitches shifted' : 'correct' : step.sizeCorrect ? 'right size · wrong direction' : Number.isFinite(step.delta) ? 'different interval' : 'not answered';
         return `<article class="ear-result-part ${status}">
-          <div class="ear-result-step"><span>${harmonic ? `note ${index + 2}` : `${index + 1} → ${index + 2}`}</span><span class="ear-result-step-status">${reveal ? '' : step.correct ? '✓ ' : '↗ '}${label}</span></div>
-          <div class="ear-result-heard">${intervalMarkup(step.interval * (question.direction === 'descending' ? -1 : 1))}</div>
+          <div class="ear-result-step"><span>${harmonic ? `note ${index + 2}` : `${index + 1} → ${index + 2}`}</span><span class="ear-result-step-status">${!reveal && step.correct ? '✓ ' : ''}${label}</span></div>
+          <div class="ear-result-line" data-playing-interval="${step.interval}"><div class="ear-result-heard">${intervalMarkup(step.interval * (question.direction === 'descending' ? -1 : 1))}</div>${playButton(index)}</div>
           <p class="ear-result-notes">${noteMention(step.expectedFrom)}${separator}${noteMention(step.expectedTo)}</p>
-          ${!reveal && (!step.correct || (pitches && !step.noteCorrect)) ? `<div class="ear-result-submitted"><span class="ear-result-your-label">your answer</span><div class="ear-result-heard">${intervalMarkup(step.delta)}</div>${pitches ? `<p class="ear-result-notes">${Number.isFinite(step.from) ? noteMention(step.from) : '—'}${separator}${Number.isFinite(step.to) ? noteMention(step.to) : '—'}</p>` : ''}</div>` : ''}
+          ${!reveal && (!step.correct || (pitches && !step.noteCorrect)) ? `<div class="ear-result-submitted"><span class="ear-result-your-label">your answer</span><div class="ear-result-line" data-playing-interval="${Math.abs(step.delta)}"><div class="ear-result-heard">${intervalMarkup(step.delta)}</div>${playButton(index, true)}</div>${pitches ? `<p class="ear-result-notes">${Number.isFinite(step.from) ? noteMention(step.from) : '—'}${separator}${Number.isFinite(step.to) ? noteMention(step.to) : '—'}</p>` : ''}</div>` : ''}
         </article>`;
       }).join('')}</div>`;
     $('#ear-comparison').classList.remove('hidden');
@@ -1186,12 +1217,13 @@ export function createEarTraining(root, { onExit }) {
   async function playLabNotes(notes, direction = 'harmonic', instruments = labSound().noteInstruments, updateAnalysis = true) {
     const token = ++labRequest;
     lab.busy = true; syncLab();
-    const duration = lab.duration, gap = settings.gap;
-    const info = await engine.play(notes, { ...labSound(), noteInstruments: instruments, direction, duration, gap, keepDrone: lab.drone });
+    // Let notes ring for the selected length without delaying the next onset.
+    const duration = lab.duration, spacing = .75;
+    const info = await engine.play(notes, { ...labSound(), noteInstruments: instruments, direction, duration, spacing, keepDrone: lab.drone });
     if (!info || token !== labRequest || !$('#ear-cheat').open) return null;
     lab.busy = false;
     if (updateAnalysis) setLabAnalysis([...notes, ...(lab.drone ? lab.droneNotes : [])], lab.drone ? 'drone + notes' : direction === 'harmonic' ? 'together' : 'sequence');
-    labEvents = notes.map((midi, index) => ({ midi, start: info.start + (direction === 'harmonic' ? 0 : index * (duration + gap)), end: info.start + (direction === 'harmonic' ? 0 : index * (duration + gap)) + duration }));
+    labEvents = notes.map((midi, index) => ({ midi, start: info.start + (direction === 'harmonic' ? 0 : index * spacing), end: info.start + (direction === 'harmonic' ? 0 : index * spacing) + duration }));
     syncLab();
     return info;
   }
@@ -1301,6 +1333,14 @@ export function createEarTraining(root, { onExit }) {
   root.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (!button || button.disabled) return;
+    if (button.dataset.resultPlay !== undefined && result) {
+      const index = Number(button.dataset.resultPlay);
+      const notes = resultPair(index, button.dataset.resultMine === 'true');
+      const instruments = sound.noteInstruments;
+      const pairInstruments = instruments?.length ? [question.direction === 'harmonic' ? 0 : index, index + 1].map(i => instruments[i % instruments.length]) : null;
+      safely(() => playQuestion(false, notes, question.direction, false, pairInstruments));
+      return;
+    }
     if (button.dataset.analysisPage) { lab.analysisPage += Number(button.dataset.analysisPage); renderLabAnalysis(); return; }
     if (button.dataset.analysisPair) { safely(() => playLabNotes(button.dataset.analysisPair.split(',').map(Number), 'harmonic', undefined, false)); return; }
     if (button.dataset.startExercise) { openSavedExercise(button.dataset.startExercise, true); return; }
