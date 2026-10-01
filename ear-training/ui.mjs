@@ -10,7 +10,14 @@ const SETTINGS_KEY = 'velhoksi.ear.settings.v1';
 const STATS_KEY = 'velhoksi.ear.stats.v1';
 const EXERCISES_KEY = 'velhoksi.ear.exercises.v1';
 const ACTIVE_QUIZ_KEY = 'velhoksi.ear.activeQuiz.v1';
-const PLAY_ICON = '<svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M5 3.5v13L16 10z"/></svg>';
+const PLAY_ICON = '<svg data-audio-icon="play" viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M5 3.5v13L16 10z"/></svg>';
+const STOP_ICON = '<svg data-audio-icon="stop" viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><rect x="4" y="4" width="12" height="12"/></svg>';
+const DRONE_ICON = '<svg data-audio-icon="drone" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M12 12c-2-3-3-5-6-5a5 5 0 0 0 0 10c3 0 4-2 6-5s3-5 6-5a5 5 0 0 1 0 10c-3 0-4-2-6-5Z"/></svg>';
+const AUDIO_ICONS = { play: PLAY_ICON, stop: STOP_ICON, drone: DRONE_ICON };
+function setAudioIcon(host, name) {
+  // The cheat sheet also syncs on animation frames; replace only on state changes.
+  if (host.firstElementChild?.dataset.audioIcon !== name) host.innerHTML = AUDIO_ICONS[name];
+}
 const read = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } };
 const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Practice works without persistent storage. */ } };
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -150,7 +157,7 @@ export function createEarTraining(root, { onExit }) {
           <h2 id="ear-question-title" class="visually-hidden">intervals</h2>
           <p id="ear-question-description" class="visually-hidden"></p>
           <div class="ear-note-dots" id="ear-note-dots" aria-hidden="true"></div>
-          <button type="button" class="ear-play" data-action="play"><span class="ear-play-icon" aria-hidden="true">▶</span><span id="ear-play-label">listen</span></button>
+          <button type="button" class="ear-play" data-action="play"><span class="ear-play-icon" aria-hidden="true">${PLAY_ICON}</span><span id="ear-play-label">listen</span></button>
           <div class="ear-prompt-footer"><span id="ear-challenge-caption" class="ear-challenge-caption"></span><div class="ear-transport"><button type="button" class="text-button" data-action="stop">stop</button><button type="button" class="text-button" data-action="hint">listen slowly</button><button type="button" class="text-button" data-action="reveal">reveal</button></div></div>
         </section>
         <section class="ear-answer" aria-label="answer">
@@ -1006,7 +1013,7 @@ export function createEarTraining(root, { onExit }) {
   }
 
   function pitchControl(key, label, notes, value) {
-    return `<div class="ear-setting-field"><label for="ear-pitch-${key}">${label}</label><div class="ear-pitch-control"><select id="ear-pitch-${key}" data-note-midi="${value}" data-setting="${key}">${options(notes, value)}</select><button type="button" class="ear-pitch-preview" data-note-midi="${value}" data-preview-pitch="${key}" aria-label="Preview ${label}: ${noteName(value)}" title="Preview ${noteName(value)}"><span aria-hidden="true">▶</span></button></div></div>`;
+    return `<div class="ear-setting-field"><label for="ear-pitch-${key}">${label}</label><div class="ear-pitch-control"><select id="ear-pitch-${key}" data-note-midi="${value}" data-setting="${key}">${options(notes, value)}</select><button type="button" class="ear-pitch-preview" data-note-midi="${value}" data-preview-pitch="${key}" aria-label="Preview ${label}: ${noteName(value)}" title="Preview ${noteName(value)}"><span aria-hidden="true">${PLAY_ICON}</span></button></div></div>`;
   }
 
   function renderSettings() {
@@ -1028,7 +1035,7 @@ export function createEarTraining(root, { onExit }) {
       </div><p class="ear-muted">range: ${noteMention(rangeLow)}–${noteMention(rangeHigh)}${s.varyInstrument || s.perNoteInstruments ? ' (shared)' : ''}</p>
       <label class="ear-checkbox"><input type="checkbox" data-setting="varyInstrument" ${s.varyInstrument ? 'checked' : ''} /> alternate instruments between questions</label>
       <label class="ear-checkbox"><input type="checkbox" data-setting="perNoteInstruments" ${s.perNoteInstruments ? 'checked' : ''} /> different instrument per note</label>
-      ${s.varyInstrument || s.perNoteInstruments ? `<fieldset class="ear-instrument-pool"><legend>instruments <span>${s.instrumentPool.length} selected</span></legend><div class="ear-pool-families">${['keys', 'guitars', 'organs', 'synths', 'mallets', 'plucked strings'].map(family => `<div class="ear-pool-family" role="group" aria-label="${family}"><h4>${family}</h4><div>${INSTRUMENTS.filter(i => i.family === family).map(i => `<div class="ear-pool-choice ${s.instrumentPool.includes(i.id) ? 'is-selected' : ''}"><label class="ear-pool-toggle"><input type="checkbox" data-pool="${i.id}" ${s.instrumentPool.includes(i.id) ? 'checked' : ''} /><span>${esc(i.name)}</span></label><button type="button" class="ear-instrument-preview" data-preview-instrument="${i.id}" aria-label="Preview ${esc(i.name)}" title="Preview ${esc(i.name)}"><span aria-hidden="true">▶</span></button></div>`).join('')}</div></div>`).join('')}</div></fieldset>` : ''}
+      ${s.varyInstrument || s.perNoteInstruments ? `<fieldset class="ear-instrument-pool"><legend>instruments <span>${s.instrumentPool.length} selected</span></legend><div class="ear-pool-families">${['keys', 'guitars', 'organs', 'synths', 'mallets', 'plucked strings'].map(family => `<div class="ear-pool-family" role="group" aria-label="${family}"><h4>${family}</h4><div>${INSTRUMENTS.filter(i => i.family === family).map(i => `<div class="ear-pool-choice ${s.instrumentPool.includes(i.id) ? 'is-selected' : ''}"><label class="ear-pool-toggle"><input type="checkbox" data-pool="${i.id}" ${s.instrumentPool.includes(i.id) ? 'checked' : ''} /><span>${esc(i.name)}</span></label><button type="button" class="ear-instrument-preview" data-preview-instrument="${i.id}" aria-label="Preview ${esc(i.name)}" title="Preview ${esc(i.name)}"><span aria-hidden="true">${PLAY_ICON}</span></button></div>`).join('')}</div></div>`).join('')}</div></fieldset>` : ''}
       <div class="ear-variation-block"><label class="ear-checkbox"><input type="checkbox" data-setting="varyDynamics" ${s.varyDynamics ? 'checked' : ''} /> gently vary dynamics between questions</label>
       ${s.varyDynamics ? `<div class="ear-dynamics"><label for="ear-dynamic-spread">touch variation <output for="ear-dynamic-spread">±${s.dynamicSpread}</output><input id="ear-dynamic-spread" type="range" data-setting="dynamicSpread" min="1" max="30" value="${s.dynamicSpread}" /><span class="ear-dynamics-scale"><span>subtle</span><span>expressive</span></span></label></div>` : ''}</div>
       </section>
@@ -1057,7 +1064,7 @@ export function createEarTraining(root, { onExit }) {
       button.classList.toggle('is-playing', playing);
       button.setAttribute('aria-label', `${playing ? 'Stop' : 'Preview'} ${name}`);
       button.title = `${playing ? 'Stop' : 'Preview'} ${name}`;
-      button.querySelector('span').textContent = playing ? '■' : '▶';
+      setAudioIcon(button.querySelector('span'), playing ? 'stop' : 'play');
     }
   }
 
@@ -1125,7 +1132,7 @@ export function createEarTraining(root, { onExit }) {
       <div class="ear-lab-sound-heading"><div class="ear-lab-note-instruments">${lab.perNoteInstruments ? `<button type="button" class="ear-note-instrument" data-lab-focus="0" aria-pressed="${lab.noteFocus === 0}">reference: ${esc(instrumentById(labSound().instrument).name)}</button><button type="button" class="ear-note-instrument" data-lab-focus="1" aria-pressed="${lab.noteFocus === 1}">second note: ${esc(instrumentById(lab.instrument2).name)}</button>` : `<span class="ear-current-instrument">${esc(instrumentById(labSound().instrument).name)}</span>`}</div><label class="ear-checkbox"><input type="checkbox" data-lab="perNoteInstruments" ${lab.perNoteInstruments ? 'checked' : ''} /> different instruments</label></div>
       ${instrumentPalette()}
       <div class="ear-lab-console">
-        <div class="ear-lab-playback" role="group" aria-label="interval playback"><button type="button" class="ear-lab-play" data-action="lab-play" aria-label="play interval"><span class="ear-play-symbol" aria-hidden="true">▶</span><span class="ear-motion-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></button><button type="button" class="ear-lab-repeat" data-action="loop" aria-label="repeat interval" title="Repeat interval" aria-pressed="${lab.loop}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 4 4-4 4M4 11V9a2 2 0 0 1 2-2h14M8 21l-4-4 4-4m12 0v2a2 2 0 0 1-2 2H4"/></svg></button></div>
+        <div class="ear-lab-playback" role="group" aria-label="interval playback"><button type="button" class="ear-lab-play" data-action="lab-play" aria-label="play interval"><span class="ear-play-symbol" aria-hidden="true">${PLAY_ICON}</span><span class="ear-motion-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></button><button type="button" class="ear-lab-repeat" data-action="loop" aria-label="repeat interval" title="Repeat interval" aria-pressed="${lab.loop}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 4 4-4 4M4 11V9a2 2 0 0 1 2-2h14M8 21l-4-4 4-4m12 0v2a2 2 0 0 1-2 2H4"/></svg></button></div>
         <div class="ear-lab-center"><strong class="ear-lab-interval">${intervalName(lab.interval)}</strong><div><p class="ear-lab-description"></p><p class="ear-lab-notes" aria-live="polite"></p></div></div>
         <div class="ear-lab-directions" role="group" aria-label="playback">${DIRECTIONS.slice(0, 3).map(([id, label]) => `<button type="button" class="text-button" data-lab-direction="${id}" aria-pressed="${lab.direction === id}">${id === 'ascending' ? '↗' : id === 'descending' ? '↘' : '∥'} ${label}</button>`).join('')}</div>
       </div>
@@ -1134,7 +1141,7 @@ export function createEarTraining(root, { onExit }) {
         <div class="ear-lab-piano-heading"><div class="ear-lab-key-mode" role="group" aria-label="piano action">${[['reference', 'set reference'], ['play', 'play notes'], ['drone', 'drone notes']].map(([mode, label]) => `<button type="button" class="ear-piano-mode" data-lab-key-mode="${mode}" aria-pressed="${lab.keyMode === mode}">${label}</button>`).join('')}</div><span>reference <strong>${noteMention(lab.reference)}</strong></span></div>
         <div id="ear-lab-piano"></div>
         <div class="ear-drone-console">
-          <button type="button" class="ear-drone-switch" data-action="drone" aria-pressed="${lab.drone}"><span class="ear-drone-orbit" aria-hidden="true">∞</span><span class="ear-drone-label">${lab.drone ? 'stop drone' : 'start drone'}</span></button>
+          <button type="button" class="ear-drone-switch" data-action="drone" aria-pressed="${lab.drone}"><span class="ear-drone-orbit" aria-hidden="true">${DRONE_ICON}</span><span class="ear-drone-label">${lab.drone ? 'stop drone' : 'start drone'}</span></button>
           <div class="ear-drone-notes" role="group" aria-label="held drone notes"></div>
           <div class="ear-drone-controls"><label>level<input type="range" data-lab="level" min="0" max="1.5" step="0.01" value="${lab.level}" /></label><label>motion<input type="range" data-lab="motion" min="0" max="1" step="0.01" value="${lab.motion}" /></label></div>
         </div>
@@ -1188,7 +1195,7 @@ export function createEarTraining(root, { onExit }) {
     const play = host.querySelector('[data-action="lab-play"]');
     if (play) {
       play.setAttribute('aria-label', droneTransport ? lab.drone ? 'stop drone' : 'start drone' : 'play interval');
-      play.querySelector('.ear-play-symbol').textContent = droneTransport ? lab.drone ? '■' : '∞' : '▶';
+      setAudioIcon(play.querySelector('.ear-play-symbol'), droneTransport ? lab.drone ? 'stop' : 'drone' : 'play');
       play.disabled = droneTransport && !lab.droneNotes.length && !lab.drone;
     }
     host.querySelectorAll('[data-action="loop"]').forEach(b => { b.hidden = droneTransport; });
@@ -1254,7 +1261,7 @@ export function createEarTraining(root, { onExit }) {
     const pairs = data.pairs.slice(lab.analysisPage * pageSize, (lab.analysisPage + 1) * pageSize);
     const matches = data.matches ||= nearbyHarmonics(data.notes);
     body.innerHTML = `<div class="ear-analysis-map-heading"><h4>all pairs <small>${data.pairs.length}</small></h4>${pages > 1 ? `<div class="ear-analysis-pages"><button type="button" class="text-button" data-analysis-page="-1" ${lab.analysisPage === 0 ? 'disabled' : ''} aria-label="previous interval pairs">←</button><span>${lab.analysisPage + 1} / ${pages}</span><button type="button" class="text-button" data-analysis-page="1" ${lab.analysisPage === pages - 1 ? 'disabled' : ''} aria-label="next interval pairs">→</button></div>` : ''}</div>
-      <div class="ear-pair-scroll"><table class="ear-pair-table"><thead><tr><th>notes</th><th>interval</th><th><span class="visually-hidden">listen</span></th></tr></thead><tbody>${pairs.map(pair => `<tr data-note-midis="${pair.low},${pair.high}" tabindex="0"><td>${noteMention(pair.low)} <span aria-hidden="true">–</span> ${noteMention(pair.high)}</td><td><strong>${pair.short}</strong> ${pair.name}</td><td><button type="button" class="text-button" data-analysis-pair="${pair.low},${pair.high}" aria-label="Play ${noteName(pair.low)} and ${noteName(pair.high)}, ${pair.name}">▶</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="ear-pair-scroll"><table class="ear-pair-table"><thead><tr><th>notes</th><th>interval</th><th><span class="visually-hidden">listen</span></th></tr></thead><tbody>${pairs.map(pair => `<tr data-note-midis="${pair.low},${pair.high}" tabindex="0"><td>${noteMention(pair.low)} <span aria-hidden="true">–</span> ${noteMention(pair.high)}</td><td><strong>${pair.short}</strong> ${pair.name}</td><td><button type="button" class="text-button" data-analysis-pair="${pair.low},${pair.high}" aria-label="Play ${noteName(pair.low)} and ${noteName(pair.high)}, ${pair.name}">${PLAY_ICON}</button></td></tr>`).join('')}</tbody></table></div>
       ${data.facts.length ? `<div class="ear-listening-facts">${data.facts.map(fact => `<article tabindex="0" data-note-midis="${fact.notes.join(',')}"><h4>${fact.title}</h4><p>${fact.text}</p></article>`).join('')}</div>` : ''}
       <div class="ear-analysis-map-heading"><h4>harmonics</h4><span>model · 1–8 · Hz</span></div>
       ${data.harmonicMarkup ||= harmonicMarkup(data.notes)}

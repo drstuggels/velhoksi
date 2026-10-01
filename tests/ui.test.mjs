@@ -711,15 +711,20 @@ test('drone piano builds a held set and interval changes preserve extras without
 
 test('drone transport and Space pause and resume held notes without replaying an instrument', async () => {
   const { dom, root, app, click, w } = setup();
+  assert.ok(root.querySelector('[data-action="play"] svg[data-audio-icon="play"]'));
   click('[data-action="cheat"]');
+  assert.ok(root.querySelector('[data-action="lab-play"] svg[data-audio-icon="play"]'));
   click('[data-lab-key-mode="drone"]');
+  assert.ok(root.querySelector('[data-action="lab-play"] svg[data-audio-icon="drone"]'));
   click('[data-action="lab-play"]'); await flush();
   assert.deepEqual(recordings.at(-1).drone, [60, 67]);
   assert.equal(root.querySelector('[data-action="lab-play"]').getAttribute('aria-label'), 'stop drone');
+  assert.ok(root.querySelector('[data-action="lab-play"] svg[data-audio-icon="stop"]'));
   const count = recordings.length;
   const space = () => document.dispatchEvent(new w.KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true, cancelable: true }));
   space(); await flush();
   assert.equal(root.querySelector('[data-action="drone"]').getAttribute('aria-pressed'), 'false');
+  assert.ok(root.querySelector('[data-action="lab-play"] svg[data-audio-icon="drone"]'));
   assert.equal(recordings.length, count);
   space(); await flush();
   assert.deepEqual(recordings.at(-1).drone, [60, 67]);
