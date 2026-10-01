@@ -203,6 +203,33 @@ test('piano and note input preserve reference and accept enharmonic answers', as
   app.deactivate(); dom.window.close();
 });
 
+for (const direction of ['ascending', 'descending', 'harmonic']) {
+  test(`single-note ${direction} piano answers can be replaced before checking`, async () => {
+    const { dom, root, app, click, startCustom, w } = setup({ input: 'piano', direction, minNotes: 2, maxNotes: 2 });
+    const correct = direction === 'descending' ? 56 : 64;
+    try {
+      startCustom();
+      click('[data-action="play"]'); await flush();
+      click('[data-pitch="63"]');
+      click(`[data-pitch="${correct}"]`);
+      assert.equal(root.querySelector('[data-pitch="63"]').getAttribute('aria-pressed'), 'false');
+      assert.equal(root.querySelector(`[data-pitch="${correct}"]`).getAttribute('aria-pressed'), 'true');
+      assert.equal(root.querySelector('#ear-selected-answer [data-note-midi]').dataset.noteMidi, String(correct));
+      document.dispatchEvent(new w.KeyboardEvent('keydown', { code: 'KeyS', key: 's', bubbles: true, cancelable: true }));
+      assert.equal(root.querySelector('[data-pitch="62"]').getAttribute('aria-pressed'), 'true');
+      click('[data-pitch="63"]');
+      click(`[data-pitch="${correct}"]`);
+      click('[data-action="check"]');
+      assert.equal(root.querySelector('.ear-result-heading strong').textContent, 'correct');
+      const feedback = root.querySelector('#ear-feedback').innerHTML;
+      const score = localStorage.getItem('velhoksi.ear.stats.v1');
+      click('[data-pitch="63"]'); await flush();
+      assert.equal(root.querySelector('#ear-feedback').innerHTML, feedback);
+      assert.equal(localStorage.getItem('velhoksi.ear.stats.v1'), score);
+    } finally { app.deactivate(); dom.window.close(); }
+  });
+}
+
 test('graded piano stays playable without changing the submitted answer or score', async () => {
   const { dom, root, app, click, startCustom, w } = setup({ input: 'piano' });
   startCustom();

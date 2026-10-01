@@ -871,6 +871,7 @@ export function createEarTraining(root, { onExit }) {
     if (question.direction === 'harmonic' && settings.input !== 'interval') {
       if (value === question.reference) return;
       if (answer.includes(value)) answer.splice(answer.indexOf(value), 1);
+      else if (question.answers.length === 1) answer[0] = value;
       else if (answer.length < question.answers.length) answer.push(value);
       answer.sort((a, b) => a - b);
     } else {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v89";
+const CACHE_NAME = "velhoksi-v90";
 const ASSETS = [
   "/index.html",
   "/styles.css",
