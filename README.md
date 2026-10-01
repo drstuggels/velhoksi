@@ -1,15 +1,15 @@
 # velhoksi
 
-Static HTML/CSS/JS site for Cloudflare Pages.
+Static HTML/CSS/JS site deployed through Cloudflare Workers Builds.
 
-## Cloudflare Pages settings
+## Cloudflare deployment
 
-- Framework preset: `None`
+- Production branch: `main`
 - Build command: leave blank
-- Build output directory: `/`
+- Deploy command: `npm run deploy` (the existing `npx wrangler deploy` also works)
 - Root directory: `/`
 
-This repo deploys directly because `index.html`, `styles.css`, and `app.js` are already at the project root.
+`wrangler.jsonc` serves static assets from the project root. `.assetsignore` allows only public site files, including recordings and credits, and excludes dependencies, tests, and development tooling. No build step is required.
 
 ## Ear training
 
@@ -79,7 +79,7 @@ npm run check
 npm run dev
 ```
 
-The existing Cloudflare Pages root deployment is unchanged; no build step is required. Tests cover exercise constraints, grading, input surfaces, cancellation, sample hashes and complete region coverage, and finite stereo reverb tails/reset at 44.1/48/96 kHz. Real-device latency, mobile interruptions, and subjective listening quality still require browser/device audition.
+Tests cover exercise constraints, grading, input surfaces, cancellation, sample hashes and complete region coverage, and finite stereo reverb tails/reset at 44.1/48/96 kHz. Real-device latency, mobile interruptions, and subjective listening quality still require browser/device audition.
 
 ## Word mode data
 

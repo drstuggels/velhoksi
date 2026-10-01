@@ -2,11 +2,13 @@
   "name": "velhoksi",
   "private": true,
   "scripts": {
+    "deploy": "wrangler deploy",
     "dev": "python3 -m http.server 8087 --bind 127.0.0.1",
     "test": "node --test tests/*.test.mjs",
     "check": "node --check app.js && node --check preferences.mjs && node --check global-panels.mjs && node --check ear-training/analysis.mjs && node --check ear-training/ui.mjs && node --check ear-training/audio.mjs && node --check ear-training/theory.mjs && node --check ear-training/instruments.mjs && node --check ear-training/challenges.mjs && node --check ear-training/shortcuts.mjs && node --check ear-training/drone.mjs && node --check sw.js"
   },
   "devDependencies": {
-    "jsdom": "30.1.1"
+    "jsdom": "30.1.1",
+    "wrangler": "^4.145.0"
   }
 }

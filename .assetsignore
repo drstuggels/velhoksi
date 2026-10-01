@@ -1,0 +1,19 @@
+# Deploy only public site assets, never development dependencies or tooling.
+/*
+!/index.html
+!/styles.css
+!/app.js
+!/global-panels.mjs
+!/preferences.mjs
+!/sw.js
+!/site.webmanifest
+!/robots.txt
+!/sitemap.xml
+!/velhoksi.png
+!/icon-192.png
+!/icon-512.png
+!/og-image.png
+!/ear-training/
+!/audio/
+!/data/
+!/vendor/
