@@ -6,6 +6,7 @@ const SAMPLE_BASE = new URL('../audio/samples/', import.meta.url);
 export const SAMPLE_CACHE = 'velhoksi-instruments-v1';
 const MAX_BUFFER_BYTES = 96 * 1024 * 1024;
 const NOTE_LEAD = 0.025;
+const SUSTAIN_INSTRUMENTS = new Set(['pipe-organ', 'pipe-organ-full']);
 const onsetOffsets = new WeakMap();
 let manifestPromise;
 const cancelledLoad = () => new DOMException('Playback replaced', 'AbortError');
@@ -323,9 +324,13 @@ export class SampleEngine {
       }
       if (!isCurrent()) throw cancelledLoad();
       region = { ...region, file }; // Derived sustain/drone caches also use the variant identity.
-      const buffer = sustain ? this.sustainedBuffer(file, original, region) : original;
+      // A recorded loop is not permission to hold a decaying instrument forever.
+      // Sustain is opt-in per preset, never inferred from instrument family.
+      // The drone gets the untouched recording and builds its own loops.
+      const loop = sustain && SUSTAIN_INSTRUMENTS.has(settings.instrument) && instrument.sustainLoop === 'crossfade' && Number.isFinite(region.loopEnd);
+      const buffer = loop ? this.sustainedBuffer(file, original, region) : original;
       const velocityGain = region.velocityTracking === undefined ? 1 : (settings.velocity / 127) ** (region.velocityTracking / 50);
-      return { midi, region, buffer, instrument, weight, velocityGain, offset: settings.instrument === 'salamander' ? pianoOnset(buffer, region.offset) : region.offset };
+      return { midi, region, buffer, instrument, loop, weight, velocityGain, offset: settings.instrument === 'salamander' ? pianoOnset(buffer, region.offset) : region.offset };
     };
     return Promise.all(notes.map(async midi => {
       const selected = selectRegions(instrument, midi, settings.velocity, { allowOutside, choose: choose('attack') });
@@ -367,7 +372,7 @@ export class SampleEngine {
     }
     source.connect(gain);
     gain.connect(this.dry); gain.connect(this.send);
-    source.loop = Number.isFinite(region.loopEnd);
+    source.loop = prepared.loop === true && !options.releaseNoise;
     if (source.loop) {
       source.loopStart = region.loopStart + (region.loopCrossfade || 0);
       source.loopEnd = region.loopEnd;

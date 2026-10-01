@@ -59,6 +59,38 @@ test('lossless recordings match the pinned hashes; original Wurlitzer loops are 
   }
 });
 
+test('ordinary sustain is restricted to pipe-organ presets, regardless of family or loop markers', async () => {
+  const engine = new SampleEngine();
+  engine.manifest = async () => manifest;
+  const raw = { sampleRate: 48000, length: 48000, numberOfChannels: 1, copyFromChannel: target => target.fill(0) };
+  engine.buffer = async () => raw;
+  const adapted = [];
+  engine.sustainedBuffer = (file, buffer) => { adapted.push(file); return buffer; };
+  const sources = [];
+  engine.context = {
+    createBufferSource: () => {
+      const source = { playbackRate: {}, connect() {}, start() {}, stop() {} };
+      sources.push(source);
+      return source;
+    },
+    createGain: () => ({ gain: { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} }),
+  };
+  const allowed = new Set(['pipe-organ', 'pipe-organ-full']);
+  for (const instrument of Object.keys(manifest.instruments)) {
+    const before = adapted.length;
+    const [note] = await engine.prepare([60], { instrument, velocity: 78, quality: 'original' });
+    assert.equal(note.layers[0].loop, allowed.has(instrument), instrument);
+    assert.equal(adapted.length > before, allowed.has(instrument), instrument);
+    engine.voice(note.layers[0], 1, 12);
+    assert.equal(sources.at(-1).loop, allowed.has(instrument), instrument);
+  }
+  const before = adapted.length;
+  const [drone] = await engine.prepare([60], { instrument: 'pipe-organ', velocity: 76, quality: 'original' }, { sustain: false });
+  assert.equal(drone.layers[0].buffer, raw);
+  assert.equal(adapted.length, before);
+  assert.ok(drone.layers[0].region.loopEnd > drone.layers[0].region.loopStart, 'drone loop metadata stays intact');
+});
+
 test('reverb renders finite stereo tails and resets cleanly at common sample rates', () => {
   const code = fs.readFileSync(new URL('../vendor/dattorro/dattorroReverb.js', import.meta.url), 'utf8');
   for (const rate of [44100, 48000, 96000]) {

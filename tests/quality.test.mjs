@@ -51,24 +51,27 @@ test('Opus capability is decoded once, and a failed probe falls back', async t =
 
 test('derived loops use the decoded variant identity; FLAC fallback preserves mapping', async () => {
   const engine = engineFor();
+  const loopSettings = { ...settings, instrument: 'pipe-organ' };
+  engine.manifest = async () => ({ ...catalog, instruments: { 'pipe-organ': { family: 'organs', sustainLoop: 'crossfade',
+    regions: [{ ...region, loopStart: .1, loopEnd: .8, loopCrossfade: .06 }] } } });
   const loaded = [], derived = [];
   engine.buffer = async file => { loaded.push(file); return { file }; };
   engine.sustainedBuffer = (file, buffer) => { derived.push(file); return buffer; };
-  const [balanced] = await engine.prepare([60], settings);
+  const [balanced] = await engine.prepare([60], loopSettings);
   assert.equal(balanced.layers[0].region.file, 'opus/balanced/note.opus');
-  assert.ok(derived.every(file => file === 'opus/balanced/note.opus'));
+  assert.deepEqual(derived, ['opus/balanced/note.opus']);
   assert.equal(region.file, 'note.flac', 'the original mapping stays immutable');
   engine.buffer = async file => {
     loaded.push(file);
     if (file.endsWith('.opus')) throw new Error('unavailable');
     return { file };
   };
-  const [fallback] = await engine.prepare([60], settings);
+  const [fallback] = await engine.prepare([60], loopSettings);
   assert.equal(fallback.layers[0].region.file, 'note.flac');
   assert.equal(fallback.layers[0].offset, .02);
   assert.ok(loaded.includes('note.flac'));
   engine.buffer = async () => { throw new DOMException('cancelled', 'AbortError'); };
-  await assert.rejects(engine.prepare([60], settings), { name: 'AbortError' });
+  await assert.rejects(engine.prepare([60], loopSettings), { name: 'AbortError' });
 });
 
 test('offline inventory separates selected-quality completion from total disk use', async t => {
