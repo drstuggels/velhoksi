@@ -762,8 +762,8 @@ const SYMBOL_NOTES = {
 
 const state = {
   theme: loadTheme(),
-  selectedAlphabet: new URLSearchParams(window.location.search).get("mode") === "ear-training"
-    ? "ear-training" : localStorage.getItem(STORAGE_KEYS.alphabet) || null,
+  selectedAlphabet: ["ear-training", "wait"].includes(new URLSearchParams(window.location.search).get("mode"))
+    ? new URLSearchParams(window.location.search).get("mode") : localStorage.getItem(STORAGE_KEYS.alphabet) || null,
   bootLoading: true,
   elementAnswerMode: localStorage.getItem(STORAGE_KEYS.elementAnswerMode) === "buttons" ? "buttons" : "typed",
   showElementFacts: localStorage.getItem(STORAGE_KEYS.showElementFacts) === "true",
@@ -871,6 +871,30 @@ let musicHydrationScheduled = false;
 const MUSIC_RENDER_VERSION = 3;
 let earTraining = null;
 let earTrainingLoading = null;
+let waitMode = null;
+let waitLoading = null;
+function renderWait() {
+  const host = document.querySelector('#wait-view');
+  const selected = state.selectedAlphabet === 'wait';
+  host.classList.toggle('hidden', !selected);
+  document.body.classList.toggle('wait-active', selected);
+  if (!selected) { waitMode?.deactivate(); return false; }
+  refs.pickerView.classList.add('hidden'); refs.gameView.classList.add('hidden');
+  if (waitMode) waitMode.activate();
+  else if (!waitLoading) {
+    host.textContent = 'loading wait…';
+    waitLoading = Promise.all([import('./wait/player.mjs'), import('./preferences.mjs')]).then(([{ createWait }, preferences]) => {
+      host.textContent = '';
+      waitMode = createWait(host, { onExit: goToStartMenu, volume: preferences.masterVolume, onVolume: preferences.setMasterVolume });
+      if (state.selectedAlphabet === 'wait') waitMode.activate();
+    }).catch(() => {
+      host.textContent = 'wait could not load. return to start and try again.';
+      waitLoading = null;
+    });
+  }
+  return true;
+}
+
 
 function renderEarTraining() {
   const host = document.querySelector("#ear-view");
@@ -1430,7 +1454,7 @@ function bindEvents() {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (state.selectedAlphabet === "ear-training") return;
+    if (["ear-training", "wait"].includes(state.selectedAlphabet)) return;
     if (handleGlobalShortcut(event)) {
       return;
     }
@@ -1480,6 +1504,7 @@ function goToStartMenu() {
   }
   clearPendingWrongState();
   clearSuccessFeedbackTimer();
+  const url = new URL(window.location.href); url.searchParams.delete('mode'); history.replaceState(null, '', url);
   state.selectedAlphabet = null;
   state.currentPromptId = null;
   state.currentPromptFontId = FONT_OPTION_DEFAULT_ID;
@@ -1502,7 +1527,9 @@ function renderGlobalPreferences() {
 
 function render() {
   renderGlobalPreferences();
-  if (renderEarTraining()) return;
+  const earSelected = renderEarTraining();
+  const waitSelected = renderWait();
+  if (earSelected || waitSelected) return;
   if (state.bootLoading) {
     const selectedAlphabet = getSelectedAlphabet();
     if (selectedAlphabet) {
@@ -1895,6 +1922,8 @@ async function runManualResetFlow() {
       await Promise.all(keys.map((key) => caches.delete(key).catch(() => false)));
     }
 
+    if (waitMode) await waitMode.resetSaved();
+    else { const { clearSavedWait } = await import('./wait/player.mjs'); await clearSavedWait(); }
     localStorage.clear();
     state.theme = "dark";
     setManualResetStatus("reset complete. reloading...", "success");
@@ -1935,6 +1964,18 @@ function renderAlphabetPicker() {
     return;
   }
 
+  const addGroup = (id, label) => {
+    const section = document.createElement('section');
+    section.className = 'start-group'; section.setAttribute('aria-labelledby', `start-${id}`);
+    const heading = document.createElement('h3'); heading.id = `start-${id}`; heading.textContent = label;
+    const grid = document.createElement('div'); grid.className = 'start-group-grid';
+    section.append(heading, grid); refs.alphabetPicker.append(section);
+    return grid;
+  };
+  const musicGroup = addGroup('music', 'music');
+  const languageGroup = addGroup('languages', 'languages');
+  const scienceGroup = addGroup('science', 'science');
+
   const earButton = document.createElement("button");
   earButton.type = "button";
   earButton.className = "alphabet-button";
@@ -1955,7 +1996,18 @@ function renderAlphabetPicker() {
     localStorage.setItem(STORAGE_KEYS.alphabet, state.selectedAlphabet);
     render();
   });
-  refs.alphabetPicker.appendChild(earButton);
+  musicGroup.appendChild(earButton);
+  const waitButton = document.createElement('button');
+  waitButton.type = 'button'; waitButton.className = 'alphabet-button';
+  const waitPreview = 'audio &amp; video · slow · loop · transcribe · learn by ear · ';
+  waitButton.innerHTML = `<span class="alphabet-button-label">wait</span><span class="alphabet-button-preview"><span class="alphabet-button-preview-track">${waitPreview}${waitPreview}</span></span>`;
+  waitButton.addEventListener('click', () => {
+    clearPendingWrongState(); clearSuccessFeedbackTimer();
+    state.selectedAlphabet = 'wait'; localStorage.setItem(STORAGE_KEYS.alphabet, 'wait');
+    const url = new URL(window.location.href); url.searchParams.set('mode', 'wait'); history.replaceState(null, '', url);
+    render();
+  });
+  musicGroup.appendChild(waitButton);
 
   for (const alphabet of ALPHABETS) {
     const button = document.createElement("button");
@@ -1988,7 +2040,9 @@ function renderAlphabetPicker() {
       setFeedback("");
       render();
     });
-    refs.alphabetPicker.appendChild(button);
+    if (alphabet.id === 'music-notes') musicGroup.insertBefore(button, waitButton);
+    else if (alphabet.id === 'periodic-elements') scienceGroup.appendChild(button);
+    else languageGroup.appendChild(button);
   }
 }
 

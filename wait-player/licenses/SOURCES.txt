@@ -1,0 +1,9 @@
+@ffmpeg/ffmpeg 0.12.15: MIT, copyright 2019 Jerome Wu.
+License: https://github.com/ffmpegwasm/ffmpeg.wasm/blob/v12.15/LICENSE
+
+@ffmpeg/core 0.12.10: GPL-2.0-or-later.
+Source, build scripts and pinned dependencies:
+https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v0.12.10
+GPL text: https://github.com/FFmpeg/FFmpeg/blob/n5.1.4/COPYING.GPLv2
+The distributed WebAssembly binary is unchanged. Its two transport chunks are
+concatenated byte-for-byte in the browser before loading.

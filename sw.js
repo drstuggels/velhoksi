@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v90";
+const CACHE_NAME = "velhoksi-v97";
 const ASSETS = [
   "/index.html",
   "/styles.css",
@@ -91,6 +91,24 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Built media modules use the current network version, with an offline fallback.
+  // This avoids pairing a newly loaded entry module with stale cached chunks.
+  if (url.pathname.startsWith('/wait/')) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
+      try {
+        const response = await fetch(event.request);
+        if (response.ok) await cache.put(event.request, response.clone());
+        return response;
+      } catch {
+        const cached = await cache.match(event.request);
+        if (cached) return cached;
+        return Response.error();
+      }
+    })());
     return;
   }
 

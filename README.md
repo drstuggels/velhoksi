@@ -1,15 +1,23 @@
 # velhoksi
 
-Static HTML/CSS/JS site deployed through Cloudflare Workers Builds.
+HTML/CSS/JS site deployed through Cloudflare Workers Builds. The wait player is built with pnpm and Vite; the other modes remain native JavaScript.
 
 ## Cloudflare deployment
 
 - Production branch: `main`
 - Build command: leave blank
-- Deploy command: `npm run deploy` (the existing `npx wrangler deploy` also works)
+- Deploy command: `pnpm run deploy` (builds the player, then deploys)
 - Root directory: `/`
 
-`wrangler.jsonc` serves static assets from the project root. `.assetsignore` allows only public site files, including recordings and credits, and excludes dependencies, tests, and development tooling. No build step is required.
+`wrangler.jsonc` serves static assets from the project root. `.assetsignore` allows only public site files, including recordings and credits, and excludes dependencies, tests, and development tooling. `pnpm build` generates the local wait player and converter assets in `wait/`. Do not deploy with raw `wrangler deploy` before building.
+
+## Wait
+
+Choose **wait** in the main picker, or open `/?mode=wait`. Drop local audio/video files to practice at 25–200% speed with pitch correction. Each file has its own tab, position, speed, checkpoints, loop ranges, and video zoom. Drag checkpoints, ranges, or range edges; edit names and timestamps directly. Short fades smooth loop boundaries. The −1f / +1f buttons beside ±5s (or comma / period) pause and step between actual video presentation timestamps, including variable-rate video. Frame controls are disabled for audio. Video layout adapts to its aspect ratio, with zoom, pan, and fullscreen.
+
+Wait shares the app theme, global volume, preferences, and credits. **start** or the velhoksi logo returns to the picker and pauses playback; returning to wait preserves the open files and edits across page reloads. IndexedDB saves the original files, converted playback copies, active tab, position, speed, mute, ranges, checkpoints and video view in this browser. Restoring never autoplays. Drops always append new tabs. Closing a tab deletes its saved media. Storage is tied to this origin and browser profile; private browsing, clearing site data, storage pressure or quota limits can remove/prevent saved copies. The footer reports saving failures, and playback stays usable even when storage is unavailable. Files are never uploaded.
+
+Source: `wait-player/`. Run `pnpm build` after changes there; `pnpm dev` builds before serving at `http://127.0.0.1:8087`. The build outputs `wait/`, which is excluded from Git and included in deployment. Native formats stream directly from local object URLs. Other formats try an on-device FFmpeg conversion (256 MiB input limit, ten-minute timeout). The ~32 MB converter downloads only when needed; its WASM is shipped as two local assets to fit static hosting limits. There is no YouTube fetching or media export. Previously loaded player assets remain available offline through the service worker.
 
 ## Ear training
 
@@ -78,19 +86,19 @@ Ordinary note playback permits extended sustain only for the quiet and full pipe
 
 **DattorroReverbNode**, by khoin, is a vendored AudioWorklet implementation of Jon Dattorro’s reverb topology. Studio, room, hall and dry settings; no dry-path pitch modulation. Local changes add a tank-reset message, remove zero-input allocations and use 32-bit tap indices. Replay replaces notes while preserving the room tail; explicit stop and mode changes clear it. The reverb source is public domain with its no-liability notice preserved. No affiliation or endorsement is implied.
 
-`audio/samples/manifest.json` records pinned revisions, source URLs, sizes, SHA-256 hashes and playback metadata. Reproduce all banks with `python3 scripts/prepare_ear_samples.py`, or extend an existing piano/Wurlitzer bank with `python3 scripts/prepare_extra_samples.py`. The additional importer requires the `flac` command-line encoder and also generates `ear-training/instruments.mjs`. Then run `python3 scripts/prepare_audio_qualities.py` (requires FFmpeg with libopus) to rebuild playback variants. `audio/samples/qualities.json` records the encoding recipe, source hashes, variant sizes and hashes. Encodes use 20 ms frames, VBR and compression level 10, without normalization or trimming; Opus uses a 48 kHz decode clock. The generator verifies duration and channels against each original, including encoder pre-skip, and reuses unchanged outputs. The app itself has no build step. See `vendor/dattorro/SOURCE.txt` for the pinned reverb revision.
+`audio/samples/manifest.json` records pinned revisions, source URLs, sizes, SHA-256 hashes and playback metadata. Reproduce all banks with `python3 scripts/prepare_ear_samples.py`, or extend an existing piano/Wurlitzer bank with `python3 scripts/prepare_extra_samples.py`. The additional importer requires the `flac` command-line encoder and also generates `ear-training/instruments.mjs`. Then run `python3 scripts/prepare_audio_qualities.py` (requires FFmpeg with libopus) to rebuild playback variants. `audio/samples/qualities.json` records the encoding recipe, source hashes, variant sizes and hashes. Encodes use 20 ms frames, VBR and compression level 10, without normalization or trimming; Opus uses a 48 kHz decode clock. The generator verifies duration and channels against each original, including encoder pre-skip, and reuses unchanged outputs. The ear-training engine itself has no build step. See `vendor/dattorro/SOURCE.txt` for the pinned reverb revision.
 
 Decoded and regular sustain buffers share a 96 MiB LRU budget (active voices and in-flight decodes can temporarily exceed that). Drone loops have a separate 32 MiB LRU budget, reuse file/rate/region entries across source-buffer eviction, and do not retain original recordings. These cache limits exclude live voices, in-flight decodes, and browser overhead; they are not a tab RAM ceiling. At most three sample fetch/decode jobs run concurrently, obsolete queued requests skip loading, ended sources clear their buffers and handlers, and unchanged audio parameters do not accumulate automation. Offline downloads stream directly to disk cache without materializing or decoding an entire bank. All recording qualities share a disk cache separate from the app shell, keyed by their distinct URLs. Decoded and derived buffers also retain that variant identity. Smaller downloads do not shrink decoded PCM; the memory budgets remain necessary. The footer’s preferences panel offers full-instrument offline downloads, including release recordings, per-bank storage status, cancellation/resume, and deletion; first uncached playback requires a connection. For drones, also download the quiet pipe-organ bank. Playback needs a current browser with FLAC decoding and AudioWorklet support, over HTTPS or localhost. Audio starts only after an interaction and stops on mode changes, hidden pages and interruptions.
 
 ### Development and validation
 
-The production app has no package/runtime dependencies or required bundler. Development-only tests use jsdom for simulated DOM interaction; they do not replace a real browser/headphone audition.
+The practice modes use native browser APIs. The wait player bundles its TypeScript and lazy local FFmpeg converter with Vite. Development-only tests use jsdom for simulated DOM interaction; they do not replace a real browser/headphone audition.
 
 ```sh
-npm install
-npm test
-npm run check
-npm run dev
+pnpm install
+pnpm test
+pnpm check
+pnpm dev
 ```
 
 Tests cover exercise constraints, grading, input surfaces, cancellation, sample hashes and complete region coverage, and finite stereo reverb tails/reset at 44.1/48/96 kHz. Real-device latency, mobile interruptions, and subjective listening quality still require browser/device audition.
@@ -134,6 +142,7 @@ python3 scripts/generate_word_lists.py
     - [ ] harmonics view finetune
     - [ ] chords
     - [ ] progressions
+    - [ ] key changes
     - [ ] scale degree
     - [ ] real world scenarios? for example, what is bass doing what is piano doing... is there some db that isn't too difficult...?
 

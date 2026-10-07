@@ -170,6 +170,7 @@
 
         </section>
         <section id="ear-view" class="view ear-view hidden" aria-label="ear training"></section>
+        <section id="wait-view" class="view wait-view hidden" aria-label="wait"></section>
       </main>
 
       <footer class="site-footer" aria-label="site footer">
@@ -234,7 +235,7 @@
         </details>
         <details class="preference-section preference-reset"><summary>reset app</summary>
           <div class="preference-section-body">
-            <p class="preference-help">Removes saved exercises, progress, preferences and downloaded app data, then reloads. A connection is needed to use the app again after resetting.</p>
+            <p class="preference-help">Removes saved exercises, progress, preferences, saved media and downloaded app data, then reloads. A connection is needed to use the app again after resetting.</p>
             <button id="manual-reset-button" class="text-button danger-button" type="button">reset app completely</button>
             <p id="manual-reset-status" class="preference-help settings-status hidden" aria-live="polite"></p>
           </div>
@@ -250,6 +251,8 @@
           <div class="credit-note"><p>Playback mappings are adapted for Velhoksi. Original PCM is preserved; WAV sources are losslessly packed as FLAC. Organ sustain loops are crossfaded during playback.</p><a href="./audio/samples/manifest.json" download>Recording sources, revisions & mappings ↓</a></div>
         </details>
         <details class="global-section"><summary>software</summary>
+          <div class="credit-entries"><article class="credit-entry"><h3><a href="https://mediabunny.dev/" target="_blank" rel="noopener">Mediabunny</a></h3><p>Vanilagy · frame timestamps in wait.</p><div class="credit-links"><a href="./wait/licenses/mediabunny.txt" target="_blank" rel="noopener">MPL 2.0 license</a><a href="https://github.com/Vanilagy/mediabunny/tree/v1.61.3" target="_blank" rel="noopener">Source</a></div></article></div>
+          <div class="credit-entries"><article class="credit-entry"><h3><a href="https://github.com/ffmpegwasm/ffmpeg.wasm" target="_blank" rel="noopener">FFmpeg.wasm</a></h3><p>Local format conversion in wait. @ffmpeg/ffmpeg 0.12.15 (MIT), @ffmpeg/core 0.12.10 (GPL-2.0-or-later).</p><div class="credit-links"><a href="./wait/licenses/ffmpeg.txt" target="_blank" rel="noopener">Wrapper license</a><a href="./wait/licenses/core.txt" target="_blank" rel="noopener">Core license</a><a href="https://github.com/ffmpegwasm/ffmpeg.wasm/tree/v0.12.10" target="_blank" rel="noopener">Core source &amp; build scripts</a></div></article></div>
           <div class="credit-entries"><article class="credit-entry"><h3><a href="https://abcjs.net/" target="_blank" rel="noopener">abcjs 6.6.2</a></h3><p>Paul Rosen and Gregory Dyke · music notation.</p><div class="credit-links"><a href="./vendor/abcjs-LICENSE.txt" target="_blank" rel="noopener">MIT license</a><a href="./vendor/abcjs-SOURCE.txt" target="_blank" rel="noopener">Source & version</a></div></article><article class="credit-entry"><h3><a href="https://github.com/khoin/DattorroReverbNode" target="_blank" rel="noopener">DattorroReverbNode</a></h3><p>khoin · implementation of Jon Dattorro’s reverb topology.</p><div class="credit-links"><a href="./vendor/dattorro/LICENSE" target="_blank" rel="noopener">Public-domain notice</a><a href="./vendor/dattorro/SOURCE.txt" target="_blank" rel="noopener">Revision & local changes</a></div></article></div>
 
         </details>

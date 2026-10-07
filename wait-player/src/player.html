@@ -1,0 +1,49 @@
+<div class="wait-body">
+
+<div class="shell">
+  <header><div class="brand-lockup"><button id="sidebar-toggle" aria-label="toggle files sidebar" aria-expanded="true" aria-controls="sidebar">☰</button><nav class="breadcrumbs" aria-label="mode"><button id="exit-mode" class="text-button">start</button><span aria-hidden="true">/</span><h2>wait</h2></nav></div><button id="open-top" class="text-button">open file <span class="key-hint">o</span></button></header>
+  <div class="app-layout" id="app-layout">
+  <button id="sidebar-backdrop" aria-label="close files sidebar" hidden></button>
+  <aside id="sidebar" aria-label="files"><div class="sidebar-head"><h2>files <span id="file-count">0</span></h2><button id="add-files" class="text-button" aria-label="add files">+</button></div><div id="file-tabs" role="tablist" aria-label="open files" aria-orientation="vertical"></div><p id="no-files">no files</p></aside>
+  <main id="workspace" role="tabpanel" aria-label="player">
+    <section class="player" aria-label="media player">
+      <div class="source-row"><span id="filename">no file loaded</span><span id="filetype" class="muted">audio / video</span></div>
+      <div id="stage" class="stage">
+        <button id="drop-target" class="drop-target"><span class="drop-symbol" aria-hidden="true">↓</span><span class="drop-title">drop files</span><span class="drop-sub">or click to open</span></button>
+        <div id="video-viewport" tabindex="0" role="group" aria-label="video view" title="drag to pan · ctrl/⌘ + scroll to zoom" hidden><video id="media" playsinline preload="metadata" hidden></video></div>
+        <div id="audio-face" hidden><span class="eyebrow">audio</span><span id="audio-name"></span></div>
+        <div id="video-tools" hidden><div class="zoom-controls" role="group" aria-label="video zoom"><button id="zoom-out" aria-label="zoom out">−</button><output id="zoom-value" aria-live="polite">100%</output><button id="zoom-in" aria-label="zoom in">+</button><button id="zoom-fit" aria-label="fit video">fit</button></div><button id="fullscreen" class="text-button fullscreen" aria-label="fullscreen video" hidden>⛶</button></div>
+        <div id="drag-overlay" hidden>drop to add a tab</div>
+      </div>
+      <div class="timeline-area">
+        <div id="waveform" class="waveform"><canvas id="wave-canvas" aria-hidden="true"></canvas><div id="loop-region" hidden></div><div id="playhead"></div><input id="seek" type="range" min="0" max="100" step="0.01" value="0" aria-label="seek" disabled /></div>
+        <div id="marker-lanes" aria-label="checkpoint and range timeline"></div>
+        <div class="time-row"><output id="current">0:00</output><span id="wave-status"></span><output id="duration">0:00</output></div>
+      </div>
+      <div class="transport">
+        <div class="play-controls"><button id="back" aria-label="back 5 seconds" title="back 5 seconds (←)" disabled>−5s</button><button id="frame-back" class="frame-step" aria-label="previous frame" title="previous frame (,)" disabled>−1f</button><button id="play" class="play" aria-label="play" disabled><span id="play-icon" aria-hidden="true">▶</span><span id="play-label">play</span></button><button id="frame-forward" class="frame-step" aria-label="next frame" title="next frame (.)" disabled>+1f</button><button id="forward" aria-label="forward 5 seconds" title="forward 5 seconds (→)" disabled>+5s</button></div>
+        <div class="volume-control"><button id="mute" class="text-button" aria-label="mute" title="mute (m)">volume</button><input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="volume" /></div>
+      </div>
+    </section>
+    <div class="settings-grid">
+      <section class="control-panel speed-panel" aria-labelledby="speed-heading">
+        <div class="panel-heading"><h2 id="speed-heading">speed</h2><span class="pitch-label">pitch locked</span></div>
+        <div class="speed-value"><button id="slower" class="step" aria-label="slower">−</button><div><input id="speed-number" type="number" min="25" max="200" step="1" value="100" aria-label="speed percent" /><span>%</span></div><button id="faster" class="step" aria-label="faster">+</button></div>
+        <input id="speed" type="range" min="25" max="200" step="1" value="100" aria-label="playback speed" />
+        <div class="presets" role="group" aria-label="speed presets"><button data-speed="25">25%</button><button data-speed="50">50%</button><button data-speed="75">75%</button><button data-speed="100" aria-pressed="true">100%</button><button data-speed="150">150%</button></div>
+      </section>
+      <section class="control-panel marks-panel" aria-labelledby="marks-heading">
+        <div class="panel-heading"><h2 id="marks-heading">checkpoints & ranges</h2><div class="mark-actions"><button id="add-checkpoint" class="text-button" disabled>+ checkpoint</button><button id="add-range" class="text-button" disabled>+ range</button></div></div>
+        <p class="timeline-help">drag to move · drag edges to resize</p>
+        <div id="marks-list"></div><p id="no-marks" class="muted">no checkpoints or ranges</p>
+      </section>
+    </div>
+    <div class="status-line"><p id="message" role="status" aria-live="polite"></p><button id="cancel-conversion" class="text-button" hidden>cancel</button></div>
+  </main>
+  </div>
+  <footer><span id="storage-status" role="status" aria-live="polite"></span><div><button id="policy" class="text-button">policy</button><button id="shortcuts" class="text-button">shortcuts</button></div></footer>
+</div>
+<input id="file-input" type="file" multiple accept="audio/*,video/*,.mkv,.flac,.opus,.m4a,.aiff,.aif,.avi,.mov,.wav,.wma,.wmv,.mpeg,.mpg,.mkv,.ts" hidden />
+<dialog id="keys-dialog" aria-labelledby="keys-title"><div class="dialog-heading"><h2 id="keys-title">shortcuts</h2><button id="close-keys" class="text-button">close</button></div><dl><div><dt><kbd>space</kbd></dt><dd>play / pause</dd></div><div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>back / forward 5s</dd></div><div><dt><kbd>,</kbd> <kbd>.</kbd></dt><dd>previous / next video frame</dd></div><div><dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>slower / faster</dd></div><div><dt><kbd>c</kbd> <kbd>r</kbd></dt><dd>add checkpoint / range</dd></div><div><dt><kbd>l</kbd></dt><dd>selected range on / off</dd></div><div><dt><kbd>m</kbd></dt><dd>mute / unmute</dd></div><div><dt><kbd>o</kbd></dt><dd>open file</dd></div><div><dt><kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd></dt><dd>zoom / fit focused video</dd></div><div><dt><kbd>arrows</kbd></dt><dd>pan focused, zoomed video</dd></div></dl></dialog>
+<dialog id="policy-dialog" aria-labelledby="policy-title"><div class="dialog-heading"><h2 id="policy-title">policy</h2><button id="close-policy" class="text-button">close</button></div><p>files don't get uploaded. they're saved in this browser for next time. closing a tab removes its saved copy.</p></dialog>
+</div>

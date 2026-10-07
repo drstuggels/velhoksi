@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Loop envelope render test</title>
+<pre id="result">rendering</pre>
+<script type="module">
+  import { fadeLoopOut, fadeLoopIn } from '../src/loop-envelope.ts';
+  const sampleRate = 48000;
+  const context = new OfflineAudioContext(1, sampleRate / 10, sampleRate);
+  const buffer = context.createBuffer(1, sampleRate / 10, sampleRate);
+  const raw = buffer.getChannelData(0);
+  // A deliberately discontinuous seam: +0.5 to -0.5 full scale.
+  raw.forEach((_, i) => { raw[i] = i < sampleRate * .05 ? .5 : -.5; });
+  const source = context.createBufferSource(); source.buffer = buffer;
+  const gain = context.createGain(); source.connect(gain); gain.connect(context.destination);
+  fadeLoopOut(gain.gain, 0, .05, .008);
+  fadeLoopIn(gain.gain, .06, .008, sampleRate);
+  source.start();
+  const rendered = (await context.startRendering()).getChannelData(0);
+  let largestStep = 0;
+  for (let i = 1; i < rendered.length; i++) largestStep = Math.max(largestStep, Math.abs(rendered[i] - rendered[i - 1]));
+  const pass = largestStep < .002 && Math.abs(rendered[sampleRate * .05]) < 1e-6;
+  document.querySelector('#result').textContent = JSON.stringify({ pass, rawSeamStep: 1, smoothedLargestStep: largestStep, seamSample: rendered[sampleRate * .05] }, null, 2);
+  if (!pass) throw new Error('Loop envelope has a discontinuity');
+</script>

@@ -615,7 +615,7 @@ h2 {
 
 .brand-foreign {
   display: inline-block;
-  transform: rotate(-2.6deg);
+  transform: translateY(5px) rotate(-2.6deg);
   transform-origin: left center;
 }
 
@@ -2314,3 +2314,22 @@ input[type="text"]::placeholder {
   color: var(--muted);
   font-size: 0.6rem;
 }
+
+/* The media workspace lives inside the shared app chrome. */
+.wait-view { min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 8px 4px; }
+.wait-active .viewport { align-items: stretch; }
+@media (max-width: 760px) { .wait-view { padding: 8px 0 28px; } }
+
+/* Start groups keep related tools together without adding a menu level. */
+#picker-view { align-content: start; gap: 24px; padding: 24px 12px 28px; overflow-y: auto; overscroll-behavior: contain; }
+#alphabet-picker:not(.loading) { width: min(920px, 100%); grid-template-columns: minmax(0, 1fr); gap: 28px; }
+.start-group { min-width: 0; }
+.start-group h3 { margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--soft-line); color: var(--muted); font: .75rem "IBM Plex Mono", monospace; font-weight: 400; }
+.start-group-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.start-group .alphabet-button { min-width: 0; min-height: 82px; }
+@media (max-width: 760px) {
+  #picker-view { padding: 16px 0 28px; overflow: visible; }
+  .start-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .start-group .alphabet-button { min-height: 94px; }
+}
+@media (max-width: 360px) { .start-group-grid { grid-template-columns: minmax(0, 1fr); } }
