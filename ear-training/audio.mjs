@@ -6,6 +6,22 @@ const SAMPLE_BASE = new URL('../audio/samples/', import.meta.url);
 export const SAMPLE_CACHE = 'velhoksi-instruments-v1';
 const MAX_BUFFER_BYTES = 96 * 1024 * 1024;
 const NOTE_LEAD = 0.025;
+// Reserve output headroom after compression, where loud transients cannot
+// recover it through the compressor's automatic makeup gain.
+const OUTPUT_GAIN = .75;
+// Fixed bank trims, in dB: measured from 0.8-second notes at C3–C6,
+// touch 68 and 127. Aim for -24 dBFS median RMS at normal touch, with
+// at most 12 dB boost and +3 dBFS peak before the output compressor.
+// Keep the source velocity curves and relative levels within each bank.
+const INSTRUMENT_TRIM_DB = {
+  salamander: 2, wurlitzer: 0,
+  'guitar-electric': 8.5, 'guitar-acoustic': 11,
+  vibraphone: 9.5, 'vibraphone-hard': 8, 'bowed-vibraphone': 12,
+  marimba: 9.5, 'renaissance-organ': 0, 'renaissance-organ-full': 0,
+  'pipe-organ': 0, 'pipe-organ-full': .5,
+  tx81z: 12, 'tx81z-clavi': 12, 'tx81z-piano': 12,
+  'concert-harp': 10, kalimba: 10.5, 'kalimba-tanzania': 4.5, rhodes: 0,
+};
 const SUSTAIN_INSTRUMENTS = new Set(['pipe-organ', 'pipe-organ-full']);
 const onsetOffsets = new WeakMap();
 let manifestPromise;
@@ -101,7 +117,7 @@ export class SampleEngine {
       this.context = new Context({ latencyHint: 'interactive' });
       const ctx = this.context;
       this.master = ctx.createGain();
-      this.master.gain.value = this.settings.volume * 0.7;
+      this.master.gain.value = this.settings.volume;
       this.compressor = ctx.createDynamicsCompressor();
       this.compressor.threshold.value = -6;
       this.compressor.knee.value = 6;
@@ -148,7 +164,7 @@ export class SampleEngine {
       this.output.gain.cancelScheduledValues(now);
       this.output.gain.setValueAtTime(0, now);
       this.output.gain.setValueAtTime(0, now + 0.02);
-      this.output.gain.linearRampToValueAtTime(1, this.readyAt);
+      this.output.gain.linearRampToValueAtTime(OUTPUT_GAIN, this.readyAt);
       this.outputArmed = true;
     }
   }
@@ -181,7 +197,7 @@ export class SampleEngine {
     this.settings = { ...this.settings, ...settings, volume: masterVolume() };
     if (!this.context) return;
     const t = this.context.currentTime;
-    this.target(this.master.gain, this.settings.volume * 0.7, t, 0.025);
+    this.target(this.master.gain, this.settings.volume, t, 0.025);
     this.target(this.send.gain, this.settings.room === 'dry' ? 0 : this.settings.ambience, t, 0.04);
     this.target(this.return.gain, 0.8, t, 0.04);
     if (this.reverb) {
@@ -330,7 +346,8 @@ export class SampleEngine {
       const loop = sustain && SUSTAIN_INSTRUMENTS.has(settings.instrument) && instrument.sustainLoop === 'crossfade' && Number.isFinite(region.loopEnd);
       const buffer = loop ? this.sustainedBuffer(file, original, region) : original;
       const velocityGain = region.velocityTracking === undefined ? 1 : (settings.velocity / 127) ** (region.velocityTracking / 50);
-      return { midi, region, buffer, instrument, loop, weight, velocityGain, offset: settings.instrument === 'salamander' ? pianoOnset(buffer, region.offset) : region.offset };
+      const levelGain = 10 ** ((INSTRUMENT_TRIM_DB[settings.instrument] ?? 0) / 20);
+      return { midi, region, buffer, instrument, loop, weight, velocityGain, levelGain, offset: settings.instrument === 'salamander' ? pianoOnset(buffer, region.offset) : region.offset };
     };
     return Promise.all(notes.map(async midi => {
       const selected = selectRegions(instrument, midi, settings.velocity, { allowOutside, choose: choose('attack') });
@@ -346,7 +363,7 @@ export class SampleEngine {
     if (prepared.layers) {
       const voices = prepared.layers.map(layer => this.voice(layer, time, duration, options));
       if (Number.isFinite(duration)) {
-        const strength = (options.strength ?? .6) * (prepared.instrument.releaseNoiseGain || 0) * 10 ** (-7 * duration / 20);
+        const strength = (options.strength ?? 1) * (prepared.instrument.releaseNoiseGain || 0) * 10 ** (-7 * duration / 20);
         for (const release of prepared.releases) {
           voices.push(this.voice(release, time + duration, .2, { strength, releaseNoise: true }));
         }
@@ -360,7 +377,7 @@ export class SampleEngine {
     source.playbackRate.value = 2 ** ((midi - region.root + (region.tune || 0) / 100) / 12);
     const gain = ctx.createGain();
     gain.gain.value = 0;
-    const strength = (options.strength ?? 0.6) * (prepared.weight ?? 1) * (prepared.velocityGain ?? 1) * instrument.gain * 10 ** ((region.volume || 0) / 20);
+    const strength = (options.strength ?? 1) * (prepared.weight ?? 1) * (prepared.velocityGain ?? 1) * (prepared.levelGain ?? 1) * instrument.gain * 10 ** ((region.volume || 0) / 20);
     gain.gain.setValueAtTime(0, time);
     const attack = region.attack ?? 0;
     if (attack > 0) gain.gain.linearRampToValueAtTime(strength, time + attack);
@@ -450,7 +467,9 @@ export class SampleEngine {
     if (epoch !== this.epoch) return null;
     const start = Math.max(this.context.currentTime + 0.14, this.readyAt || 0);
     const together = direction === 'harmonic';
-    const strength = (0.4 + snapshot.velocity / 127 * 0.3) / Math.sqrt(together ? notes.length : 1);
+    // Dynamics already come from recorded velocity layers and SFZ tracking.
+    // Only reserve additional headroom when notes start together.
+    const strength = 1 / Math.sqrt(together ? notes.length : 1);
     prepared.forEach((note, index) => this.voice(note, start + (together ? 0 : index * spacing), duration, { strength }));
     const end = start + (together ? 0 : (notes.length - 1) * spacing) + duration;
     this.onStatus('Playing', 'playing');

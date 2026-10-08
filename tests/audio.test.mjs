@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import vm from 'node:vm';
 import { SampleEngine, selectRegions, pianoOnset } from '../ear-training/audio.mjs';
 import { INSTRUMENTS } from '../ear-training/instruments.mjs';
+import { masterVolume } from '../preferences.mjs';
 
 const manifest = JSON.parse(fs.readFileSync(new URL('../audio/samples/manifest.json', import.meta.url)));
 
@@ -29,6 +30,40 @@ test('guitar rotates recorded takes; marimba blends dynamics; out-of-range answe
   assert.ok(Math.abs(marimba.reduce((sum, layer) => sum + layer.weight ** 2, 0) - 1) < 1e-6);
   assert.throws(() => selectRegions(manifest.instruments.vibraphone, 40, 68), /range/);
   assert.ok(selectRegions(manifest.instruments.vibraphone, 40, 68, { allowOutside: true }).length);
+});
+
+test('audition and quiz share note levels, with headroom for simultaneous notes', async () => {
+  const engine = new SampleEngine();
+  const amplitudes = [];
+  engine.context = {
+    currentTime: 10,
+    createBufferSource: () => ({ playbackRate: {}, connect() {}, start() {}, stop() {} }),
+    createGain: () => ({ connect() {}, gain: {
+      setValueAtTime: value => { if (value > 0) amplitudes.push(value); },
+      linearRampToValueAtTime: value => amplitudes.push(value),
+      exponentialRampToValueAtTime() {},
+    } }),
+  };
+  engine.unlock = async () => {};
+  engine.configure = settings => { engine.settings = { ...engine.settings, ...settings }; };
+  engine.manifest = async () => manifest;
+  engine.buffer = async () => ({});
+  const settings = { instrument: 'guitar-electric', velocity: 68, quality: 'original' };
+  await engine.preview(60, settings);
+  const audition = amplitudes[0];
+  assert.ok(audition > .5, 'normal guitar touch must not be buried by stacked attenuation');
+  engine.voices.clear(); amplitudes.length = 0;
+  await engine.play([60], settings);
+  assert.equal(amplitudes[0], audition, 'quiz and audition use the same gain');
+  engine.voices.clear(); amplitudes.length = 0;
+  await engine.play([60, 64, 67, 72], { ...settings, direction: 'harmonic' });
+  assert.equal(amplitudes[0], audition / 2, 'four-note chord retains square-root headroom');
+
+  const [soft] = await engine.prepare([60], { ...settings, velocity: 34 });
+  const [normal] = await engine.prepare([60], settings);
+  assert.equal(soft.layers[0].levelGain, normal.layers[0].levelGain, 'trim does not normalize individual dynamics');
+  assert.equal(soft.layers[0].velocityGain / normal.layers[0].velocityGain, .25, 'original velocity curve is preserved');
+  assert.equal(normal.releases[0].levelGain, normal.layers[0].levelGain, 'release noises follow the same bank trim');
 });
 
 test('replay replaces notes without clearing the reverb; explicit stop still clears it', async () => {
@@ -222,13 +257,14 @@ test('cold audio starts muted with the selected room, and replay leaves the outp
     engine.configure({ room: 'hall', ambience: .25 });
     await engine.unlock();
     assert.equal(engine.output.gain.value, 0);
+    assert.equal(engine.master.gain.value, masterVolume(), 'master volume has no hidden attenuation');
     assert.equal(engine.send.gain.value, .25);
     assert.equal(engine.return.gain.value, .8);
     assert.equal(initialRoom.preDelay, .038 * 48000);
     assert.equal(initialRoom.decay, .78);
     assert.equal(initialRoom.damping, .25);
     assert.equal(engine.readyAt, 2.06);
-    assert.deepEqual(engine.output.gain.events.at(-1), ['ramp', 1, 2.06]);
+    assert.deepEqual(engine.output.gain.events.at(-1), ['ramp', .75, 2.06]);
     const startupEvents = [...engine.output.gain.events];
     const starts = [];
     engine.prepare = async () => [{}];
@@ -257,7 +293,7 @@ test('zero-attack regions preserve their transient and ended voices release thei
   engine.voice({ midi: 60, region: { root: 60, attack: 0, offset: .25 }, buffer: {}, instrument: { gain: 1, release: .1 } }, 1, .8);
   assert.equal(gain.value, 0);
   assert.deepEqual(events[0], ['set', 0, 1]);
-  assert.deepEqual(events[1], ['set', .6, 1]);
+  assert.deepEqual(events[1], ['set', 1, 1]);
   source.onended();
   assert.equal(source.buffer, null);
   assert.equal(source.onended, null);
