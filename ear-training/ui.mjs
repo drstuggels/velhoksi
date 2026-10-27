@@ -5,6 +5,7 @@ import { describeInterval, analyseNotes, harmonicModel, nearbyHarmonics, uniqueP
 import { PIANO_KEYS, INTERVAL_CODES, intervalShortcut } from './shortcuts.mjs';
 import { INSTRUMENTS, instrumentById } from './instruments.mjs';
 import { audioQuality } from '../preferences.mjs';
+import { createChordTraining } from './chord-ui.mjs';
 
 const SETTINGS_KEY = 'velhoksi.ear.settings.v1';
 const STATS_KEY = 'velhoksi.ear.stats.v1';
@@ -69,6 +70,8 @@ export function createEarTraining(root, { onExit }) {
   if (!stats.buckets || !stats.skills) stats = { buckets: {}, skills: {} };
   let active = false;
   let view = 'menu';
+  let chordMode = null;
+  let chordResume = null;
   let question = null;
   let answer = [];
   let result = null;
@@ -89,6 +92,7 @@ export function createEarTraining(root, { onExit }) {
   let loopTimer = null;
   const engine = new SampleEngine((message, state) => {
     if (!active) return;
+    if (view === 'chords') { chordMode?.status(message, state); return; }
     setStatus(message, state);
     if (state === 'paused') {
       discardUpcoming();
@@ -117,9 +121,11 @@ export function createEarTraining(root, { onExit }) {
       <div class="intro-copy"><nav class="ear-breadcrumbs" aria-label="practice navigation"><button type="button" class="text-button" data-action="home">practice sets</button><span>/</span><span aria-current="page">ear training</span></nav><h2>pick a practice set</h2></div>
       <div class="alphabet-picker ear-picker" aria-label="ear training submode">
         <button type="button" class="alphabet-button" data-action="practice"><span class="alphabet-button-label">intervals</span><span class="alphabet-button-preview interval-name-carousel" aria-hidden="true"><span class="alphabet-button-preview-track">${Array.from({ length: 2 }, () => `<span>${INTERVALS.map(interval => interval.name).join(" · ")} · </span>`).join('')}</span></span></button>
+        <button type="button" class="alphabet-button" data-action="chords"><span class="alphabet-button-label">chords</span><span class="alphabet-button-preview">triads · colours · extensions</span></button>
       </div>
       <div class="ear-menu-tools"><button type="button" class="text-button" data-action="cheat">cheat sheet</button></div>
     </div>
+    <div id="ear-chord-mode" class="chord-mode hidden"></div>
     <div id="ear-challenges" class="view view-picker ear-challenges hidden">
       <div class="intro-copy">${breadcrumbs()}<h2>pick a challenge</h2></div>
       <div class="alphabet-picker ear-challenge-picker" aria-label="interval challenges">
@@ -176,11 +182,13 @@ export function createEarTraining(root, { onExit }) {
     <dialog id="ear-cheat" class="ear-dialog" aria-labelledby="ear-cheat-title"><div class="ear-dialog-header"><h2 id="ear-cheat-title">interval cheat sheet</h2><button type="button" class="text-button" data-close="ear-cheat">close</button></div><div id="ear-lab-dialog"></div></dialog>
     <dialog id="ear-shortcuts" class="ear-dialog" aria-labelledby="ear-shortcuts-title"><div class="ear-dialog-header"><h2 id="ear-shortcuts-title">shortcuts</h2><button type="button" class="text-button" data-close="ear-shortcuts">close</button></div><dl class="ear-shortcut-list"><dt>space</dt><dd>replay</dd><dt>enter</dt><dd>check / next question</dd><dt>escape</dt><dd>stop sound / close dialog</dd><dt>alt + c</dt><dd>cheat sheet</dd><dt>alt + s</dt><dd>edit challenge</dd><dt>a w s e d f t g y h u j k o l p</dt><dd>piano: chromatic notes from C; the matching keys are labelled</dd><dt>z / x</dt><dd>piano: octave down / up</dd><dt>1–9, 0, q, r</dt><dd>intervals: 1–12 semitones; hold shift for 13–24</dd></dl></dialog>
   `;
-  const $ = selector => root.querySelector(selector);
-  const $$ = selector => [...root.querySelectorAll(selector)];
+  // Chords share the audio engine, but keep their controls and lifecycle scoped.
+  const $$ = selector => [...root.querySelectorAll(selector)].filter(el => !el.parentElement?.closest('#ear-chord-mode'));
+  const $ = selector => $$(selector)[0] || null;
+  chordMode = createChordTraining($('#ear-chord-mode'), { engine, preferences: settings, onBack: () => show('menu'), onHome: onExit });
 
   function noteScope() {
-    return root.querySelector('dialog[open]') || $({ menu: '#ear-menu', challenges: '#ear-challenges', setup: '#ear-setup', practice: '#ear-workspace' }[view]);
+    return root.querySelector('dialog[open]') || $({ menu: '#ear-menu', chords: '#ear-chord-mode', challenges: '#ear-challenges', setup: '#ear-setup', practice: '#ear-workspace' }[view]);
   }
   function noteTarget(target) {
     const note = target?.closest?.('[data-note-midi], [data-note-midis]');
@@ -266,6 +274,7 @@ export function createEarTraining(root, { onExit }) {
     loopTimer = null;
   }
   function stopAll(preserveTail = false) {
+    if (view === 'chords') chordMode?.stop(preserveTail);
     operation++;
     stopExploration();
     cancelAnimationFrame(previewAnimation);
@@ -290,14 +299,16 @@ export function createEarTraining(root, { onExit }) {
   }
 
   function show(next) {
+    if (view === 'chords' && next !== 'chords') chordMode.deactivate();
     discardUpcoming();
     stopAll();
     hoveredNote = focusedNote = null;
     view = next;
     syncNoteHighlights();
-    for (const [name, id] of [['menu', 'ear-menu'], ['challenges', 'ear-challenges'], ['setup', 'ear-setup'], ['practice', 'ear-workspace']]) {
+    for (const [name, id] of [['menu', 'ear-menu'], ['chords', 'ear-chord-mode'], ['challenges', 'ear-challenges'], ['setup', 'ear-setup'], ['practice', 'ear-workspace']]) {
       $('#' + id).classList.toggle('hidden', next !== name);
     }
+    if (next === 'chords') { chordMode.activate(chordResume); chordResume = null; return; }
     if (next === 'challenges') { syncChallengeCards(); renderSavedExercises(); }
     if (next === 'setup') {
       $('#ear-setup-title').textContent = quizBeforeSettings ? 'settings' : 'custom challenge';
@@ -1411,6 +1422,7 @@ export function createEarTraining(root, { onExit }) {
   }
 
   root.addEventListener('click', event => {
+    if (event.target.closest('#ear-chord-mode')) return;
     const button = event.target.closest('button');
     if (!button || button.disabled) return;
     if (button.dataset.resultBasis && result) {
@@ -1510,6 +1522,7 @@ export function createEarTraining(root, { onExit }) {
       if (action === 'home') { save(ACTIVE_QUIZ_KEY, null); onExit(); }
       if (action === 'menu') show('menu');
       if (action === 'practice') show('challenges');
+      if (action === 'chords') show('chords');
       if (action === 'custom') openCustom();
       if (action === 'save-now') saveExercise($('#ear-save-as-new').checked, true);
       if (action === 'play' || action === 'target') await playQuestion();
@@ -1586,6 +1599,7 @@ export function createEarTraining(root, { onExit }) {
   }, true);
 
   root.addEventListener('submit', event => {
+    if (event.target.closest('#ear-chord-mode')) return;
     if (event.target.id === 'ear-save-exercise') { event.preventDefault(); safely(startCustomQuiz); return; }
     if (event.target.id !== 'ear-typed-form') return;
     event.preventDefault();
@@ -1607,6 +1621,7 @@ export function createEarTraining(root, { onExit }) {
   });
 
   root.addEventListener('change', event => {
+    if (event.target.closest('#ear-chord-mode')) return;
     const el = event.target;
     if (el.id === 'ear-save-on-start') {
       syncSaveControls();
@@ -1664,6 +1679,7 @@ export function createEarTraining(root, { onExit }) {
   });
   window.addEventListener('pagehide', () => { if (active) { discardUpcoming(); stopAll(); engine.suspend(); } });
   document.addEventListener('keydown', event => {
+    if (view === 'chords') return;
     if (document.querySelector('.global-dialog[open]')) return;
     if (!active || event.ctrlKey || event.metaKey || event.repeat) return;
     if (event.key === 'Escape') { stopAll(); return; }
@@ -1695,7 +1711,10 @@ export function createEarTraining(root, { onExit }) {
   // Restore the exercise, with a fresh unanswered question and no autoplay.
   // Keep custom defaults separate from the effective settings of a preset level.
   const savedQuiz = read(ACTIVE_QUIZ_KEY, null);
-  if (savedQuiz?.settings && typeof savedQuiz.settings === 'object' && !Array.isArray(savedQuiz.settings)) {
+  if (savedQuiz?.kind === 'chords' && savedQuiz.settings && typeof savedQuiz.settings === 'object' && !Array.isArray(savedQuiz.settings)) {
+    chordResume = savedQuiz;
+    view = 'chords';
+  } else if (savedQuiz?.settings && typeof savedQuiz.settings === 'object' && !Array.isArray(savedQuiz.settings)) {
     try {
       const restored = sanitizeSettings(savedQuiz.settings);
       generateQuestion(restored.input === 'fretboard' ? { ...restored, low: Math.max(40, restored.low) } : restored);
@@ -1708,6 +1727,6 @@ export function createEarTraining(root, { onExit }) {
 
   return {
     activate() { if (!active) { active = true; show(view); } },
-    deactivate() { if (active) { active = false; discardUpcoming(); stopAll(); engine.suspend(); for (const dialog of $$('.ear-dialog')) if (dialog.open) dialog.close(); } },
+    deactivate() { if (active) { active = false; if (view === 'chords') chordMode.deactivate(); discardUpcoming(); stopAll(); engine.suspend(); for (const dialog of $$('.ear-dialog')) if (dialog.open) dialog.close(); } },
   };
 }

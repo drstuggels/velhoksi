@@ -23,7 +23,7 @@ Source: `wait-player/`. Run `pnpm build` after changes there; `pnpm dev` builds 
 
 Choose **ear training** in the main picker, or open `/?mode=ear-training`. Breadcrumbs navigate back through the practice menus. Piano is the default answer method; saved choices remain available after the one-time default migration.
 Refreshing an active interval quiz restores its level or saved exercise and settings with a fresh question, without autoplay. Scores are preserved. Leaving the quiz through the menus clears this automatic resume.
-The secondary menu offers **intervals**, followed by four challenge levels and **custom**. Select a card to reveal its answer methods and clickable interval set. Each card keeps its own choices while comparing challenges; compound intervals are available under “extend beyond an octave.” Use **start** on that card to begin, or **more settings** to bring those choices into custom setup. Open the **cheat sheet** to explore intervals and play a reference drone.
+The secondary menu offers **intervals** and **chords**. Intervals has four challenge levels and **custom**. Select a card to reveal its answer methods and clickable interval set. Each card keeps its own choices while comparing challenges; compound intervals are available under “extend beyond an octave.” Use **start** on that card to begin, or **more settings** to bring those choices into custom setup. Open the **cheat sheet** to explore intervals and play a reference drone.
 
 Check **save exercise** beside **start quiz** to keep a custom setup in **saved exercises**. A name field appears; leave it blank for an automatic name. Choose **save now** to save and keep editing, or **save and start quiz** to save and begin. Both save the full exercise and sound settings. When editing a saved exercise, checking save updates it; **save as new** keeps a variation. Leaving save unchecked starts the quiz without overwriting the saved version. Removed exercises can be restored with **undo**.
 
@@ -46,6 +46,22 @@ Check **save exercise** beside **start quiz** to keep a custom setup in **saved 
 - Piano shortcuts: `A W S E D F T G Y H U J K O L P` play/select chromatic notes starting at the labelled C; `Z`/`X` shift the keyboard octave and piano view; controls stop at the playable range. Shortcuts use letters and number-row positions without punctuation dependencies. Interval shortcuts: `1`–`9`, `0`, `Q`, `R` select 1–12 semitones; hold Shift for 13–24. Shortcuts appear on keys/buttons and in the shortcuts dialog. They are ignored while editing text or form controls.
 
 Harmonic-stack feedback has **from bass / between notes** views. Grading remains relative to the given bass; the second view explores adjacent sounding pitches, retaining inversions, octave spacing and compound intervals. For example, G4–E5–F5 shows M6/m7 from the bass or M6/m2 between neighbors. Only one view is shown at a time; neighboring pairs have their own playback controls and note highlights, without extra grading counts. Incorrect submissions can be explored separately in the same view. Melodic exercises keep their successive-interval interpretation.
+
+### Single-chord practice
+
+**Chords** has seven accessible challenge cards: first chords, four triad qualities, same chord/new shape, seventh chords, added colours, extensions, and alterations. Each card retains its chord selection and listening task; **more settings** opens the full setup. This mode plays one isolated chord per question. Progressions, cadences and harmonic-function questions are outside its scope.
+
+- The 38 explicit formulas cover triads, seventh qualities, sus2/sus4/7sus4, sixths, add9 and 6/9, ninths/elevenths/thirteenths, altered fifths, ♭9/♯9, ♯11, ♭13 and combined alterations. Formulas appear in setup and feedback. Major/dominant 13ths omit 11; minor 13ths include it. Other extension formulas include their listed lower members. These are defined exercise voicings, not claims that every performance of a chord symbol includes every tone; `alt` is deliberately not treated as one unique sound.
+- Choose **name the chord**, **quality + bass position**, **reconstruct chord tones** (pitch classes; octave doublings ignored), or **reproduce exact voicing** (all sounding pitches and octaves). Reconstruction supports piano, standard guitar fretboard, or typed note names. Pitch-class entry accepts names without octaves; exact-voicing entry requires octaves. All tasks accept enharmonic pitches. Feedback spells chord members according to their role, such as ♯9 versus ♭3.
+- Bass position and close/open spacing are independent. Custom settings include register, fixed/random root pitch class, octave doubling of the bass, and omission of the perfect fifth or root. Altered fifths are retained. Spacing describes the chord before doubling. Extended/suspended members can be selected as bass notes without assigning them misleading triadic inversion numbers.
+- With **root given**, grading uses that root. With **root unspecified**, it accepts any catalog interpretation matching the pitch classes, including C6 / Am7 and Cm6 / Aø7. Bass-position grading follows the submitted interpretation; symmetric augmented/diminished chords do not require guessing a hidden root. Rootless and note-reconstruction tasks supply a root; exact voicing additionally supplies the bass. Omission equivalences use the chosen omission rule. Equivalent answer options are derived from the whole exercise, not the hidden question.
+- Instrument, dynamics, per-note instrument assignment, and recording quality stay fixed for replays and hints. Separate-note hints, pre-answer audition, opening the explorer before grading, and reveals are marked assisted. Root/reference playback is part of the task. Feedback supports target/answer comparison, both arpeggio directions, individual voices, an explicitly transformed root-position reduction, and the existing bass/adjacent interval views. Quality/bass and individual pitch matches receive separate feedback and partial credit.
+- Missed qualities receive additional practice; recurring wrong-quality pairs are recorded with a **practice these** shortcut. Scores, assisted answers and replay counts are local and separate from interval practice. Saved chord exercises support editing, save-as-new, removal and undo. Reload restores an active exercise with a fresh question and no autoplay; leaving through its menus clears automatic resume.
+- The **chord explorer** builds a chord from its root, formula, bass position and spacing; piano entry and semitone/octave controls edit individual voices. It lists matching complete catalog interpretations and can arpeggiate or hold the notes using the existing organ drone. After grading, **explore this chord** copies the actual voicing without changing the submitted answer or score. Manual edits can create sets with no complete catalog match.
+
+`ear-training/chords.mjs` keeps sounding pitches, roots, theoretical chord-tone roles, and accepted interpretations separate. Generation enumerates feasible voicing templates and root bounds; impossible selections report an error rather than retrying indefinitely or silently omitting a selected quality. The chord UI shares the existing sample engine and global preferences while keeping its controls, saved exercises and practice state separate.
+
+Theory references: [Open Music Theory: chord symbols](https://viva.pressbooks.pub/openmusictheory/chapter/chord-symbols/), [altered dominant seventh chords](https://musictheory.pugetsound.edu/mt21c/AlteredDominantSeventhChords.html), and [jazz voicings](https://viva.pressbooks.pub/openmusictheory/chapter/jazz-voicings/).
 
 ### Sound and provenance
 
@@ -133,6 +149,7 @@ python3 scripts/generate_word_lists.py
 - [x] responsiveness (stats overflow, / separated menu, don't display shortcuts on mobile)
 - [x] hangul grapheme->syllable->word mode
 - [ ] morse
+- [ ] what language is this? -quiz. of random audio
 - [ ] "mastery mode"
     - demand consistent time sub few seconds
     - demand streak of 2-3 rounds
@@ -140,10 +157,11 @@ python3 scripts/generate_word_lists.py
 - [ ] finish ear training
     - [x] try mobile
     - [ ] harmonics view finetune
-    - [ ] chords
+    - [x] chords
     - [ ] progressions
     - [ ] key changes
     - [ ] scale degree
+    - [ ] pocket mode (use prerendered ai spoken audio)
     - [ ] real world scenarios? for example, what is bass doing what is piano doing... is there some db that isn't too difficult...?
 
 for more fonts:

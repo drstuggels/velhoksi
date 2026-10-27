@@ -1,6 +1,62 @@
 /* Use the same picker, floating prompt and stats layout as the other practice sets. */
 .ear-view { min-width: 0; min-height: 0; overflow: visible; }
 .ear-view [hidden] { display: none !important; }
+.chord-mode { height: 100%; min-height: 0; min-width: 0; }
+.chord-workspace { height: 100%; max-height: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; padding-bottom: 28px; }
+.chord-select-label { display: grid; gap: 8px; color: var(--muted); font: .75rem "IBM Plex Mono", monospace; }
+.chord-select-label select, .chord-mode [data-chord-explorer] select { background: var(--surface-strong); border: 1px solid var(--soft-line); color: var(--text); padding: 10px; min-width: 0; max-width: 100%; }
+.chord-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.chord-chips button { padding-inline: 9px; }
+.chord-catalog { min-width: 0; border: 1px solid var(--soft-line); padding: 14px; margin: 18px 0; }
+.chord-catalog legend { color: var(--muted); font: .8rem "IBM Plex Mono", monospace; padding: 0 8px; }
+.chord-catalog legend button { margin-left: 16px; font-size: .7rem; }
+.chord-catalog small { display: block; margin-top: 5px; color: var(--muted); font: .7rem "IBM Plex Mono", monospace; }
+.chord-bass-choices { border: 0; padding: 0; margin: 0 0 20px; }
+.chord-bass-choices legend, .chord-answer-group legend { font: .75rem "IBM Plex Mono", monospace; color: var(--muted); margin-bottom: 10px; }
+.chord-answer-group { padding: 0; border: 0; margin: 0 0 18px; min-width: 0; }
+.chord-quality-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 8px; }
+.chord-quality-buttons button, .chord-bass-buttons button { min-width: 0; min-height: 44px; background: var(--surface-strong); color: var(--text); border: 1px solid var(--soft-line); padding: 12px; text-align: left; }
+.chord-quality-buttons button { display: grid; gap: 6px; align-content: start; }
+.chord-quality-buttons strong { font: 1.05rem "IBM Plex Mono", monospace; }
+.chord-quality-buttons span { font-size: .72rem; color: var(--muted); line-height: 1.4; }
+.chord-quality-buttons button[aria-pressed="true"], .chord-bass-buttons button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -3px var(--accent); }
+.chord-quality-buttons button:disabled { opacity: .65; cursor: default; }
+.chord-quality-buttons button:disabled[aria-pressed="true"] { opacity: 1; }
+.chord-quality-buttons button.answer-correct { border-color: var(--success); box-shadow: inset 0 -3px var(--success); opacity: 1; }
+.chord-quality-buttons button.answer-wrong { border-color: var(--danger); box-shadow: inset 0 -3px var(--danger); }
+.chord-bass-buttons, .chord-result-actions, .chord-tone-list, .chord-pairs { display: flex; flex-wrap: wrap; gap: 8px 12px; margin: 14px 0; }
+.chord-bass-buttons button { font-size: .75rem; }
+.chord-result-name { font-size: 1rem; margin: 14px 0 8px; }
+.chord-tone-list button { display: grid; gap: 4px; min-width: 56px; text-align: center; }
+.chord-tone-list button span { color: var(--muted); font-size: .75rem; }
+.chord-equivalents { margin: 16px 0; font-size: .8rem; line-height: 1.6; }
+.chord-equivalents summary { cursor: pointer; }
+.chord-pairs button { font-size: .72rem; }
+.chord-stats-detail { font: .65rem/1.6 "IBM Plex Mono", monospace; color: var(--muted); margin: 12px 0; }
+.chord-stats-detail button { font-size: inherit; }
+.chord-voice-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 8px; margin-block: 16px; }
+.chord-voice-editor > div { display: flex; gap: 10px; align-items: center; padding: 6px; border: 1px solid var(--soft-line); }
+.chord-voice-editor .text-button { font-size: .72rem; min-height: 36px; }
+.chord-lab-names { font: .85rem/1.7 "IBM Plex Mono", monospace; margin: 14px 0; }
+.chord-pool { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.chord-saved-list { display: grid; gap: 10px; }
+.chord-mode .ear-sound-status[data-state="error"] { color: var(--danger); }
+.chord-mode .ear-answer-heading .text-button { margin-inline: 8px; }
+.chord-mode .prompt-tools > span { color: var(--muted); }
+.chord-workspace .ear-stats { max-width: 100%; }
+.chord-mode [data-chord-explorer] .ear-settings-grid { margin-top: 18px; }
+.chord-mode [data-chord-explorer] .ear-piano { margin-top: 10px; }
+@media (max-width: 1100px) {
+  .chord-mode { height: auto; }
+  .chord-workspace { height: auto; max-height: none; overflow: visible; scrollbar-gutter: auto; }
+  .chord-workspace .prompt-tools > span { display: none; }
+  .chord-workspace .ear-stats { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+  .chord-pool { grid-template-columns: 1fr; }
+  .chord-quality-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chord-voice-editor { grid-template-columns: 1fr; }
+}
 .ear-picker { width: min(360px, 100%); }
 .ear-breadcrumbs { display: flex; align-items: center; justify-content: inherit; flex-wrap: wrap; gap: 10px; color: var(--muted); font: .8rem "IBM Plex Mono", monospace; }
 .intro-copy .ear-breadcrumbs { justify-content: center; }
@@ -501,3 +557,119 @@
 
 .ear-analysis-notes .is-playing-note { box-shadow: 0 2px var(--accent); }
 .ear-harmonic-row.is-playing-note text { font-weight: 600; }
+
+/* Chord details inherit Velhoksi's floating layout, square edges and offset shadows. */
+.chord-icon { display: inline-block; width: 18px; height: 18px; flex: 0 0 auto; vertical-align: middle; }
+.chord-play-symbol { line-height: 1; color: var(--text); transition: color 140ms ease; }
+.chord-play-symbol .chord-icon { display: block; width: clamp(2.5rem, 5vh, 4rem); height: clamp(2.5rem, 5vh, 4rem); }
+.chord-play:hover .chord-play-symbol, .chord-play.is-playing .chord-play-symbol { color: var(--accent); }
+.chord-play.is-loading .chord-play-symbol { animation: ear-loading-pulse 800ms ease-in-out infinite alternate; }
+.chord-play-copy { display: grid; gap: 4px; text-align: center; }
+.chord-play-copy strong { color: var(--muted); font: .8rem "IBM Plex Mono", monospace; text-transform: lowercase; }
+.chord-play-copy > span { color: var(--muted); font-size: .7rem; }
+.chord-mode .chord-quiet, .chord-mode .ear-primary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.chord-mode .chord-quiet { min-height: 36px; padding: 6px 0; border: 0; background: none; color: var(--muted); font: .75rem/1.4 "IBM Plex Mono", monospace; text-transform: lowercase; cursor: pointer; }
+.chord-mode .chord-quiet:not(:disabled):hover { color: var(--accent); }
+.chord-mode .ear-primary { min-height: 44px; text-transform: lowercase; }
+.chord-workspace .chord-references { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px; }
+.chord-workspace .chord-reference { display: inline-flex; align-items: center; gap: 14px; }
+.chord-workspace .chord-reference > span { line-height: 1.4; white-space: nowrap; }
+.chord-workspace .chord-quality-buttons button { position: relative; padding-right: 36px; transition: border-color 140ms ease, background 140ms ease; }
+.chord-workspace .chord-quality-buttons button:not(:disabled):hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--surface-strong)); }
+.chord-choice-mark { position: absolute; top: 13px; right: 12px; opacity: 0; }
+.chord-quality-buttons [aria-pressed="true"] .chord-choice-mark { opacity: 1; color: var(--accent); }
+.chord-quality-buttons .answer-correct .chord-choice-mark { opacity: 1; color: var(--success); }
+.chord-quality-buttons .answer-wrong .chord-choice-mark { opacity: 0; }
+.chord-workspace .chord-quality-buttons button.answer-correct { opacity: 1; }
+.chord-result-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; }
+.chord-result .ear-result-heading strong { display: inline-flex; align-items: center; gap: 6px; text-transform: lowercase; }
+.chord-result.incorrect .ear-result-heading strong { color: var(--danger); }
+.chord-result-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.chord-result-name strong { font-family: "IBM Plex Mono", monospace; }
+.chord-result-formula { color: var(--muted); font-size: .85rem; line-height: 1.5; margin: 0; }
+.chord-correction { margin-block: 12px; font-size: .85rem; }
+.chord-correction p { margin: 4px 0; }
+.chord-note-row { margin-block: 16px; }
+.chord-voicing-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 8px; font: .75rem/1.5 "IBM Plex Mono", monospace; }
+.chord-voicing-heading strong { color: var(--accent); font-weight: 500; }
+.chord-voicing-heading > span { color: var(--muted); font-size: .65rem; }
+.chord-voicing-explanation { margin: 4px 0 0; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+.chord-result .chord-tone-list button { grid-template-columns: 12px auto; column-gap: 6px; }
+.chord-tone-list .chord-icon { width: 12px; height: 12px; color: var(--muted); }
+.chord-result .chord-tone-list button > span { grid-column: 2; }
+.chord-mode .ear-audio-button.sounding { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-strong)); }
+.chord-voicing-caption { color: var(--muted); font-size: .8rem; line-height: 1.6; }
+.chord-listen-details { margin-top: 16px; border-top: 1px solid var(--soft-line); }
+.chord-listen-details > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; list-style: none; font: .75rem "IBM Plex Mono", monospace; text-transform: lowercase; }
+.chord-listen-details > summary::-webkit-details-marker { display: none; }
+.chord-listen-details > summary::after { content: '+'; margin-left: auto; color: var(--muted); }
+.chord-listen-details[open] > summary::after { content: '−'; }
+.chord-listen-details > summary:hover { color: var(--accent); }
+.chord-details-caption { color: var(--muted); font-size: .65rem; }
+.chord-listening-tools { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 8px 0 18px; }
+.chord-interval-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; color: var(--muted); font: .75rem "IBM Plex Mono", monospace; text-transform: lowercase; }
+.chord-result .ear-result-basis { margin: 0; }
+.chord-pairs button > strong { font-weight: 500; }
+.chord-workspace .chord-result-actions { align-items: center; gap: 10px 20px; }
+.chord-key-hint { margin-left: auto; color: var(--muted); font: .65rem "IBM Plex Mono", monospace; }
+.chord-key-hint kbd { font: inherit; }
+@media (max-width: 700px) {
+  .chord-key-hint, .chord-details-caption { display: none; }
+  .chord-workspace .ear-transport { gap: 16px; }
+  .chord-result-top > .chord-quiet { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chord-play-symbol, .chord-workspace .chord-quality-buttons button { transition: none; }
+  .chord-play.is-loading .chord-play-symbol { animation: none; }
+}
+
+/* Compact feedback and explicit controls, using the existing square button styles. */
+.chord-workspace .chord-quality-buttons button:disabled { opacity: 1; color: var(--muted); cursor: default; }
+.chord-workspace .chord-quality-buttons button:is(.answer-correct, .answer-wrong) { color: var(--text); }
+.chord-result .chord-result-name { margin: 8px 0 4px; }
+.chord-result .chord-note-row { margin: 12px 0; }
+.chord-result .chord-tone-list { margin: 0; }
+.chord-result .chord-voicing-caption { margin: 8px 0 0; }
+.chord-result .chord-result-actions { margin: 12px 0 0; }
+.chord-result .chord-listen-details { margin-top: 12px; }
+.chord-mode :is(.ear-audio-button, .chord-quiet, .ear-primary).sounding { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface-strong)); }
+.chord-mode .chord-quiet.sounding { box-shadow: inset 0 -2px var(--accent); }
+.chord-mode [data-chord-explorer] .chord-explorer-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.chord-mode [data-chord-explorer] select { padding-right: 36px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: right 17px center, right 12px center; background-size: 5px 5px; background-repeat: no-repeat; }
+.chord-explorer-transport { align-items: center; gap: 10px 18px; }
+.chord-sustain-control { display: inline-flex; align-items: center; gap: 8px; }
+.chord-sustain-control > .ear-muted { font: .65rem "IBM Plex Mono", monospace; }
+.chord-sustain-state { color: var(--muted); font-size: .65rem; }
+.chord-sustain-control [aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 -2px var(--accent); }
+.chord-sustain-control [aria-pressed="true"] .chord-sustain-state { color: var(--accent); }
+.chord-mode .chord-voice-editor { display: flex; flex-wrap: wrap; gap: 8px; }
+.chord-mode .chord-voice-editor > .chord-voice { display: grid; grid-template-columns: auto 64px 64px; align-items: end; gap: 8px; padding: 8px; min-width: 0; }
+.chord-voice > .ear-audio-button { min-width: 64px; min-height: 36px; padding: 4px 6px; gap: 5px; }
+.chord-voice > .ear-audio-button .chord-icon { width: 14px; height: 14px; }
+.chord-voice-step { min-width: 0; color: var(--muted); font: .65rem "IBM Plex Mono", monospace; text-align: center; }
+.chord-voice-step > span { display: block; margin-bottom: 4px; }
+.chord-voice-step > div { display: flex; }
+.chord-voice-step button { flex: 1; min-width: 0; min-height: 36px; padding: 0; border: 1px solid var(--soft-line); background: var(--surface-strong); color: var(--text); font: .8rem "IBM Plex Mono", monospace; cursor: pointer; }
+.chord-voice-step button + button { border-left: 0; }
+.chord-voice-step button:hover { background: var(--panel-tone); color: var(--accent); }
+@media (max-width: 500px) {
+  .chord-mode [data-chord-explorer] .chord-explorer-settings { gap: 14px 10px; }
+  .chord-mode [data-chord-explorer] select { padding-left: 8px; font-size: .75rem; }
+  .chord-explorer-transport { gap: 8px 14px; }
+  .chord-mode .chord-voice-editor > .chord-voice { gap: 8px; padding: 8px; }
+}
+@media (forced-colors: active) {
+  .chord-mode [data-chord-explorer] select { appearance: auto; -webkit-appearance: auto; background-image: none; }
+}
+
+/* Keep scrolling available without a permanently painted bar or white track. */
+.chord-mode :is(.chord-workspace, .chord-challenges, .chord-setup, .ear-dialog, .ear-instrument-scroll) {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.chord-mode :is(.chord-workspace, .chord-challenges, .chord-setup, .ear-dialog, .ear-instrument-scroll):is(.is-scrolling, :focus-visible) {
+  scrollbar-color: var(--soft-line) transparent;
+}
+@media (forced-colors: active) {
+  .chord-mode :is(.chord-workspace, .chord-challenges, .chord-setup, .ear-dialog, .ear-instrument-scroll) { scrollbar-color: auto; }
+}

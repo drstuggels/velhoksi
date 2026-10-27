@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v98";
+const CACHE_NAME = "velhoksi-v108";
 const ASSETS = [
   "/index.html",
   "/styles.css",
@@ -7,6 +7,8 @@ const ASSETS = [
   "/preferences.mjs",
   "/ear-training/ear.css",
   "/ear-training/ui.mjs",
+  "/ear-training/chord-ui.mjs",
+  "/ear-training/chords.mjs",
   "/ear-training/analysis.mjs",
   "/ear-training/audio.mjs",
   "/ear-training/quality.mjs",
