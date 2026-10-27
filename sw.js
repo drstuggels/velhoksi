@@ -1,4 +1,4 @@
-const CACHE_NAME = "velhoksi-v108";
+const CACHE_NAME = "velhoksi-v110";
 const ASSETS = [
   "/index.html",
   "/styles.css",
@@ -92,6 +92,8 @@ self.addEventListener("fetch", (event) => {
   }
 
   const url = new URL(event.request.url);
+  // Job status and temporary media must never enter the app-shell cache.
+  if (url.pathname === '/api/imports' || url.pathname.startsWith('/api/imports/')) return;
   if (url.origin !== self.location.origin) {
     return;
   }

@@ -3,20 +3,26 @@
   "private": true,
   "scripts": {
     "deploy": "pnpm build && wrangler deploy",
-    "dev": "pnpm build && python3 -m http.server 8087 --bind 127.0.0.1",
+    "dev": "pnpm build && node scripts/dev.mjs",
+    "test:imports": "python3 -m unittest discover -s media-import/tests",
+    "test:imports:live": "node scripts/acceptance-imports.mjs",
+    "types:worker": "wrangler types --include-runtime false --env-interface CloudflareBindings worker/bindings.d.ts",
+    "dev:cloudflare": "pnpm build && wrangler dev",
     "test": "pnpm build && node --test tests/*.test.mjs && node --experimental-strip-types --test wait-player/tests/*.test.ts",
-    "check": "node --check app.js && node --check preferences.mjs && node --check global-panels.mjs && node --check ear-training/analysis.mjs && node --check ear-training/ui.mjs && node --check ear-training/chord-ui.mjs && node --check ear-training/chords.mjs && node --check ear-training/audio.mjs && node --check ear-training/quality.mjs && node --check ear-training/theory.mjs && node --check ear-training/instruments.mjs && node --check ear-training/challenges.mjs && node --check ear-training/shortcuts.mjs && node --check ear-training/drone.mjs && node --check sw.js && tsc --noEmit -p wait-player/tsconfig.json",
+    "check": "node --check app.js && node --check preferences.mjs && node --check global-panels.mjs && node --check ear-training/analysis.mjs && node --check ear-training/ui.mjs && node --check ear-training/chord-ui.mjs && node --check ear-training/chords.mjs && node --check ear-training/audio.mjs && node --check ear-training/quality.mjs && node --check ear-training/theory.mjs && node --check ear-training/instruments.mjs && node --check ear-training/challenges.mjs && node --check ear-training/shortcuts.mjs && node --check ear-training/drone.mjs && node --check sw.js && node --check worker/index.mjs && node --check worker/import-gateway.mjs && node --check scripts/dev.mjs && tsc --noEmit -p wait-player/tsconfig.json",
     "build": "tsc --noEmit -p wait-player/tsconfig.json && vite build",
     "build:watch": "vite build --watch"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.2.5",
     "jsdom": "30.1.1",
+    "playwright": "^1.64.1",
     "typescript": "~5.9.3",
     "vite": "^7.3.7",
     "wrangler": "^4.145.0"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.7",
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "mediabunny": "^1.61.3"

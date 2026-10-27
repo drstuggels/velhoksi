@@ -46,3 +46,13 @@ test('a failed media write preserves the last committed workspace', async () => 
   const after = await new WorkspaceStorage('test', factory).load();
   assert.equal(await after.tabs[0].file.text(), 'original data'); assert.equal(after.tabs[0].position, 1.25);
 });
+
+test('import provenance and id survive reload alongside existing local-file tabs', async () => {
+  const factory = new IDBFactory(), storage = new WorkspaceStorage('imports', factory), state = workspace();
+  state.tabs[0].importId = 'import-id';
+  state.tabs[0].provenance = { inputUrl: 'https://open.spotify.com/track/example', sourceUrl: 'https://youtube.com/watch?v=example', sourceId: 'example', provider: 'spotify', title: 'Remember', artist: 'Hank Mobley', matchedTitle: 'Remember', importedAt: '2026-10-27T00:00:00Z' };
+  await storage.load(); await storage.save(state);
+  const restored = await new WorkspaceStorage('imports', factory).load();
+  assert.deepEqual(restored.tabs[0].provenance, state.tabs[0].provenance);
+  assert.equal(restored.tabs[0].importId, 'import-id');
+});

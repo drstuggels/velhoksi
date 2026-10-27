@@ -1,0 +1,3 @@
+# Matching only: Wait owns downloading, formats, job lifecycle and UI.
+spotdl==4.6.0
+yt-dlp[default]==2026.10.26

@@ -7,8 +7,11 @@ import { VideoView } from './video-view';
 import type { VideoViewState } from './video-geometry';
 import { clamp, time } from './marks';
 import { MarkerEditor, type MarkerState } from './markers';
+import { createImporter } from './import-view';
+import { clearPendingImport, type Provenance } from './import-client';
 
 export async function clearSavedWait() {
+  await clearPendingImport();
   if (globalThis.indexedDB) await new WorkspaceStorage().clear();
 }
 
@@ -21,7 +24,7 @@ const $ = <T extends HTMLElement>(id: string) => root.getElementById(id) as T;
 const media = $<HTMLVideoElement>('media'), fileInput = $<HTMLInputElement>('file-input');
 const seek = $<HTMLInputElement>('seek'), speed = $<HTMLInputElement>('speed'), speedNumber = $<HTMLInputElement>('speed-number'), volume = $<HTMLInputElement>('volume');
 const canvas = $<HTMLCanvasElement>('wave-canvas');
-type Session = MarkerState & { view: VideoViewState; id: string; file: File; playbackFile: File; url: string; position: number; speed: number; volume: number; muted: boolean; peaks: number[]; decoded: boolean };
+type Session = MarkerState & { view: VideoViewState; id: string; file: File; playbackFile: File; url: string; position: number; speed: number; pitchLocked: boolean; volume: number; muted: boolean; peaks: number[]; decoded: boolean; provenance?: Provenance; importId?: string };
 const sessions: Session[] = [];
 const storage = new WorkspaceStorage();
 let restoring = true, storageUnavailable = false, storageFailed = false, saveTimer = 0, saveRevision = 0;
@@ -52,6 +55,16 @@ async function flushSave() {
 }
 
 let active: Session | null = null, generation = 0, ready = false, frame = 0, dragging = 0;
+let workspaceRevision = 0, importFocus: string | null | undefined;
+const importer = createImporter(root, async (file, provenance, importId, signal) => {
+  const revision = workspaceRevision;
+  await restored;
+  signal.throwIfAborted();
+  if (revision !== workspaceRevision || sessions.some(s => s.importId === importId)) return;
+  const focus = enabled && media.paused && !document.hidden && active?.id === importFocus;
+  addFiles([file], { provenance, importId, focus });
+  await flushSave();
+}, () => { importFocus = active?.id; });
 let peaks: number[] = [], decodeContext: AudioContext | null = null, conversion: AbortController | null = null;
 const videoView = new VideoView(root, media, () => void togglePlay(), () => scheduleSave());
 const markers = new MarkerEditor($('marker-lanes'), $('marks-list'), syncRange, seekTo, message);
@@ -68,13 +81,22 @@ function setReady(value: boolean) {
   for (const id of ['play', 'back', 'forward', 'add-checkpoint', 'add-range', 'seek']) $<HTMLButtonElement>(id).disabled = !value;
   for (const id of ['frame-back', 'frame-forward']) $<HTMLButtonElement>(id).disabled = !value || !media.videoWidth;
 }
+function setPitchLocked(locked: boolean) {
+  media.preservesPitch = locked;
+  const legacy = media as HTMLVideoElement & { webkitPreservesPitch?: boolean; mozPreservesPitch?: boolean };
+  if ('webkitPreservesPitch' in media) legacy.webkitPreservesPitch = locked;
+  if ('mozPreservesPitch' in media) legacy.mozPreservesPitch = locked;
+  const toggle = $('pitch-lock');
+  toggle.setAttribute('aria-pressed', String(locked));
+  toggle.textContent = locked ? 'pitch locked' : 'pitch follows speed';
+  toggle.title = locked ? 'Keep the original pitch when changing speed' : 'Slowing down lowers pitch; speeding up raises it';
+  if (active) active.pitchLocked = locked;
+  save('pitchLocked', String(locked)); scheduleSave();
+}
 function setSpeed(value: number) {
   const percent = Math.round(clamp(Number.isFinite(value) ? value : 100, 25, 200));
   speed.value = speedNumber.value = String(percent);
-  media.preservesPitch = true;
-  const legacy = media as HTMLVideoElement & { webkitPreservesPitch?: boolean; mozPreservesPitch?: boolean };
-  if ('webkitPreservesPitch' in media) legacy.webkitPreservesPitch = true;
-  if ('mozPreservesPitch' in media) legacy.mozPreservesPitch = true;
+  setPitchLocked(active?.pitchLocked ?? media.preservesPitch);
   media.defaultPlaybackRate = media.playbackRate = percent / 100;
   if (active) active.speed = percent;
   root.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.speed) === percent)));
@@ -165,15 +187,16 @@ function closeSession(session: Session) {
   if (active === session) activate(sessions[Math.min(index, sessions.length - 1)] ?? null);
   URL.revokeObjectURL(session.url); renderTabs(); void flushSave();
 }
-function addFiles(files: File[]) {
+function addFiles(files: File[], imported?: { provenance: Provenance; importId: string; focus: boolean }) {
   const added: Session[] = [];
   let rejected = 0;
   for (const file of files) {
     if (!file.size || (!/^(audio|video)\//.test(file.type) && !/\.(mp3|mp4|m4a|m4v|wav|wave|ogg|ogv|oga|opus|webm|flac|aac|mov|mkv|avi|aif|aiff|wma|wmv|mpeg|mpg|3gp|ts)$/i.test(file.name))) { rejected++; continue; }
-    const session: Session = { view: { zoom: 1, x: 0, y: 0 }, id: crypto.randomUUID(), file, playbackFile: file, url: URL.createObjectURL(file), position: 0, speed: Number(speed.value), volume: media.volume, muted: media.muted, duration: 0, marks: [], selected: null, loop: null, peaks: [], decoded: false };
+    const session: Session = { view: { zoom: 1, x: 0, y: 0 }, id: crypto.randomUUID(), file, playbackFile: file, url: URL.createObjectURL(file), position: 0, speed: Number(speed.value), pitchLocked: media.preservesPitch, volume: media.volume, muted: media.muted, duration: 0, marks: [], selected: null, loop: null, peaks: [], decoded: false };
+    if (imported) { session.provenance = imported.provenance; session.importId = imported.importId; }
     sessions.push(session); added.push(session);
   }
-  if (added.length) { activate(added[0]); if (innerWidth > 760) setSidebar(true); void flushSave(); }
+  if (added.length) { if (!imported || imported.focus) activate(added[0]); else renderTabs(); if (innerWidth > 760 && enabled) setSidebar(true); void flushSave(); }
   if (rejected) message(`${rejected} empty or unsupported ${rejected === 1 ? 'file' : 'files'} skipped`);
 }
 function activate(session: Session | null) {
@@ -190,6 +213,14 @@ function activate(session: Session | null) {
   peaks = session?.peaks ?? []; drawWave(); markers.bind(null); syncRange();
   media.hidden = true; $('audio-face').hidden = true; $('fullscreen').hidden = true; $('drop-target').hidden = !!session;
   $('filename').textContent = session?.file.name ?? 'no file loaded'; $('filetype').textContent = session?.file.name.split('.').pop()?.toLowerCase() ?? 'audio / video';
+  const sourceInfo = $('source-info'); sourceInfo.replaceChildren(); sourceInfo.hidden = !session?.provenance;
+  if (session?.provenance) {
+    const source = session.provenance;
+    for (const [label, url] of [['original link', source.inputUrl], ['recording source ↗', source.sourceUrl]]) {
+      if (!/^https?:\/\//.test(url)) continue;
+      const link = document.createElement('a'); link.textContent = label; link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; sourceInfo.append(link);
+    }
+  }
   $('current').textContent = $('duration').textContent = '0:00'; seek.value = '0'; $('playhead').style.left = '0%'; $('wave-status').textContent = '';
   message(session ? 'opening file' : ''); renderTabs(); scheduleSave();
   if (!session) return;
@@ -286,6 +317,7 @@ media.addEventListener('timeupdate', updatePosition);
 $('frame-back').addEventListener('click', () => nudgeFrame(-1)); $('frame-forward').addEventListener('click', () => nudgeFrame(1));
 $('back').addEventListener('click', () => seekTo(media.currentTime - 5)); $('forward').addEventListener('click', () => seekTo(media.currentTime + 5));
 seek.addEventListener('input', () => seekTo(Number(seek.value)));
+$('pitch-lock').addEventListener('click', () => setPitchLocked(!media.preservesPitch));
 speed.addEventListener('input', () => setSpeed(Number(speed.value))); speedNumber.addEventListener('change', () => setSpeed(Number(speedNumber.value)));
 $('slower').addEventListener('click', () => setSpeed(Number(speed.value) - 5)); $('faster').addEventListener('click', () => setSpeed(Number(speed.value) + 5));
 root.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach(b => b.addEventListener('click', () => setSpeed(Number(b.dataset.speed))));
@@ -311,9 +343,17 @@ scope.addEventListener('keydown', event => {
 });
 const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes('Files');
 document.addEventListener('dragenter', event => { if (!enabled) return; if (hasFiles(event)) { event.preventDefault(); dragging++; $('drag-overlay').hidden = false; } });
-document.addEventListener('dragover', event => { if (!enabled) return; if (hasFiles(event)) { event.preventDefault(); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; } });
+document.addEventListener('dragover', event => { if (!enabled) return; if (hasFiles(event) || event.dataTransfer?.types.includes('text/uri-list')) { event.preventDefault(); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; } });
 document.addEventListener('dragleave', event => { if (!enabled) return; if (hasFiles(event) && --dragging <= 0) { dragging = 0; $('drag-overlay').hidden = true; } });
-document.addEventListener('drop', event => { if (!enabled) return; event.preventDefault(); dragging = 0; $('drag-overlay').hidden = true; addFiles(Array.from(event.dataTransfer?.files ?? [])); });
+document.addEventListener('drop', event => {
+  if (!enabled) return; event.preventDefault(); dragging = 0; $('drag-overlay').hidden = true;
+  const files = Array.from(event.dataTransfer?.files ?? []);
+  if (files.length) addFiles(files);
+  else {
+    const link = event.dataTransfer?.getData('text/uri-list')?.split('\n').find(line => line && !line.startsWith('#')) || event.dataTransfer?.getData('text/plain');
+    if (link && /^https?:\/\//.test(link.trim())) importer.open(link.trim());
+  }
+});
 window.addEventListener('blur', () => { dragging = 0; $('drag-overlay').hidden = true; });
 new ResizeObserver(drawWave).observe(canvas);
 window.addEventListener('pagehide', () => { conversion?.abort(); media.pause(); void flushSave(); });
@@ -321,13 +361,14 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) { ++p
 $('exit-mode').addEventListener('click', options.onExit);
 window.addEventListener('velhoksi:volume', () => { media.volume = options.volume(); });
 new MutationObserver(drawWave).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+setPitchLocked(read('pitchLocked') !== 'false');
 setSpeed(Number(read('speed') || 100));
 media.volume = options.volume(); volume.value = String(media.volume);
 setSidebar(innerWidth > 760 && read('sidebar') !== 'false'); renderTabs();
 $('storage-status').textContent = 'restoring files';
 const restored = storage.load().then(saved => {
   // Files dropped during restoration remain active; restored files are prepended.
-  const tabs: Session[] = saved.tabs.map(tab => ({ ...tab, url: URL.createObjectURL(tab.playbackFile), peaks: [], decoded: false }));
+  const tabs: Session[] = saved.tabs.map(tab => ({ ...tab, pitchLocked: tab.pitchLocked ?? true, url: URL.createObjectURL(tab.playbackFile), peaks: [], decoded: false }));
   sessions.unshift(...tabs);
   if (!active) activate(tabs.find(tab => tab.id === saved.active) ?? tabs[0] ?? null);
   else renderTabs();
@@ -357,12 +398,14 @@ if (context?.registerTool) {
 return {
   activate() { enabled = true; media.volume = options.volume(); drawWave(); window.dispatchEvent(new Event('resize')); },
   deactivate() {
+    importFocus = null;
     enabled = false; ++playbackRequest; ++nudgeRevision; media.pause(); loopAudio.reset(); void flushSave();
     dragging = 0; $('drag-overlay').hidden = true;
     root.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(dialog => dialog.close());
     if (root.fullscreenElement) void document.exitFullscreen().catch(() => {});
   },
   async resetSaved() {
+    ++workspaceRevision; void importer.cancel();
     await restored; enabled = false; ++playbackRequest;
     activate(null);
     for (const session of sessions) URL.revokeObjectURL(session.url);

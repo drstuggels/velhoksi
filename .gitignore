@@ -4,3 +4,7 @@ node_modules/
 .cache/
 .wrangler/
 wait/
+.venv/
+.dev.vars*
+.env*
+media-import/.data/
