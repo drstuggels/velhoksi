@@ -11,11 +11,17 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from network import public_ip, validate_url, install_guard
-from server import Jobs, ApiError, TTL
+from server import Jobs, ApiError, TTL, ImportHTTPServer, handler
 from worker import spotify_id, check_info
 
 
 class NetworkTests(unittest.TestCase):
+    def test_server_binds_without_resolving_the_container_hostname(self):
+        with patch('socket.getfqdn', side_effect=UnicodeError('label too long')):
+            with ImportHTTPServer(('127.0.0.1', 0), handler(None)) as server:
+                self.assertGreater(server.server_port, 0)
+                self.assertEqual(server.server_name, 'media-import')
+
     def test_reject_private_protocols_credentials_and_ports(self):
         for url in ['file:///etc/passwd', 'ftp://example.org/a', 'http://localhost/a',
                     'http://127.0.0.1/a', 'http://169.254.169.254/latest', 'http://10.0.0.1/a',

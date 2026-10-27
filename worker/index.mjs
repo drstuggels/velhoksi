@@ -1,9 +1,10 @@
-import { Container } from '@cloudflare/containers';
+import { DurableObject } from 'cloudflare:workers';
+import { ImportContainer } from './container-runtime.mjs';
 import { importGateway } from './import-gateway.mjs';
 
-export class MediaImporter extends Container {
-  defaultPort = 8091;
-  sleepAfter = '35m';
+export class MediaImporter extends DurableObject {
+  runtime = new ImportContainer(this.ctx.container);
+  fetch(request) { return this.runtime.fetch(request); }
 }
 
 export default {

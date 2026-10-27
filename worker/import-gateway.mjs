@@ -64,7 +64,8 @@ export async function importGateway(request, env) {
     output.set('Cache-Control', 'private, no-store');
     output.set('X-Content-Type-Options', 'nosniff');
     return new Response(response.body, { status: response.status, headers: output });
-  } catch {
+  } catch (error) {
+    console.error('Media importer unavailable:', error instanceof Error ? error.message : String(error));
     return json(503, 'The importer is temporarily unavailable. Please retry or open a local file.');
   }
 }

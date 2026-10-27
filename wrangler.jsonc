@@ -6,14 +6,54 @@
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/imports", "/api/imports/*"]
+    "run_worker_first": [
+      "/api/imports",
+      "/api/imports/*"
+    ]
   },
-  "containers": [{ "class_name": "MediaImporter", "image": "./media-import/Dockerfile", "image_build_context": "./media-import", "instance_type": "basic", "max_instances": 2 }],
-  "durable_objects": { "bindings": [{ "name": "MEDIA_IMPORT", "class_name": "MediaImporter" }] },
-  "migrations": [{ "tag": "media-import-v1", "new_sqlite_classes": ["MediaImporter"] }],
-  "ratelimits": [{ "name": "IMPORT_RATE_LIMIT", "namespace_id": "1001", "simple": { "limit": 6, "period": 60 } }],
+  "containers": [
+    {
+      "class_name": "MediaImporter",
+      "scheduling_policy": "durable_object",
+      "images": {
+        "importer": {
+          "dockerfile": "./media-import/Dockerfile",
+          "build_context": "./media-import"
+        }
+      }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MEDIA_IMPORT",
+        "class_name": "MediaImporter"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "media-import-v1",
+      "new_sqlite_classes": [
+        "MediaImporter"
+      ]
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "IMPORT_RATE_LIMIT",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    }
+  ],
   "observability": {
     "enabled": true,
-    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 0.01
+    }
   }
 }

@@ -6,6 +6,7 @@ are accepted. Each operation runs in its own killable process group.
 from collections import deque
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from socketserver import TCPServer
 import json
 import os
 from pathlib import Path
@@ -28,6 +29,15 @@ DEADLINE = 10 * 60
 MAX_DISK = 768 * 1024 * 1024
 ID = re.compile(r'^[a-f0-9]{32}$')
 TOKEN = re.compile(r'^[a-f0-9]{64}$')
+
+
+class ImportHTTPServer(ThreadingHTTPServer):
+    def server_bind(self):
+        # Cloudflare instance hostnames can exceed DNS label limits. HTTPServer's
+        # reverse-DNS lookup is unnecessary for this private API and can crash startup.
+        TCPServer.server_bind(self)
+        self.server_name = 'media-import'
+        self.server_port = self.server_address[1]
 
 
 class ApiError(Exception):
@@ -302,7 +312,7 @@ if __name__ == '__main__':
             time.sleep(3)
             jobs.cleanup()
     threading.Thread(target=cleanup, daemon=True).start()
-    server = ThreadingHTTPServer((os.environ.get('IMPORT_BIND', '127.0.0.1'), int(os.environ.get('PORT', '8091'))), handler(jobs))
+    server = ImportHTTPServer((os.environ.get('IMPORT_BIND', '127.0.0.1'), int(os.environ.get('PORT', '8091'))), handler(jobs))
     def shutdown(*_):
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)

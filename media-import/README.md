@@ -48,7 +48,7 @@ spotDL ranks YouTube Music song/video results by its existing metadata matcher. 
 ## Limits and isolation
 
 - One recording per import, at most one hour and 128 MiB final media. Video selection prefers H.264 at ≤720p; a single-file direct source can retain its original dimensions.
-- Two fixed container shards, two extraction processes and six retained jobs per shard. Busy requests return 429 rather than creating an unbounded queue.
+- Two fixed container shards selected by the gateway, two extraction processes and six retained jobs per shard. The account requires `durable_object` scheduling, so the gateway enforces the two-instance topology rather than an application-level `max_instances` setting. Busy requests return 429 rather than creating an unbounded queue.
 - Six POST requests per IP/minute at the Worker, and twelve new jobs per IP/hour/shard in the service. These are abuse controls, not billing guarantees or account quotas.
 - Ten-minute process deadline per resolve/download operation, 768 MiB temporary-disk ceiling per job, thirty-minute job lifetime, thirty-five-minute idle container sleep. Cleanup runs every three seconds. No R2 or persistent server library.
 - Each operation runs as a separate killable process group under a nonroot container user. Fixed argument arrays are used; callers cannot supply commands, extractor options, cookies, credentials, proxy URLs, or local file paths. Failed/cancelled jobs remove partial media.
@@ -57,11 +57,13 @@ spotDL ranks YouTube Music song/video results by its existing metadata matcher. 
 
 ## Deployment
 
-`pnpm deploy` builds the browser assets and deploys the Worker, Durable Object binding/migration, and Docker image from `wrangler.jsonc`. The account must have Cloudflare Containers enabled, an appropriate plan, and credentials authorized for Containers. The build environment must support Docker. Keep the existing SQLite Durable Object migration after initial deployment.
+`pnpm deploy` builds the browser assets and deploys the Worker, Durable Object binding/migration, and Docker image from `wrangler.jsonc`. The native Durable Object Container API starts the named, digest-pinned image on a `standard-1` instance (0.5 vCPU, 4 GiB RAM, 8 GB disk); this scheduling mode does not support the older `basic` size. Startup readiness is shared across concurrent requests, stopped containers restart on demand, and new Worker versions replace instances using an older image. The account must have Cloudflare Containers enabled, an appropriate plan, and credentials authorized for Containers. The build environment must support Docker. Keep the existing SQLite Durable Object migration after initial deployment.
 
 Run `pnpm exec wrangler deploy --dry-run` before release, then run browser acceptance against a separate deployment. YouTube can treat datacenter egress differently from a home network; successful local downloading does not prove that Cloudflare's IPs can download the same recording. A blocked source produces a retry/local-file error; no proxy, cookie sharing, or circumvention fallback is configured.
 
-On 2026-10-27, the Docker build and Wrangler deployment dry run passed. A separate staging Worker uploaded, but container registration returned **HTTP 401 from `/containers/me`**. A subsequent `wrangler containers list` identified the cause explicitly: this account needs the **Workers Paid plan** to access Containers. The temporary Worker was deleted. Production was not changed, and hosted egress acceptance remains outstanding. Enable the required account plan and repeat staging acceptance before production deployment. Local Wrangler emulation also hit an `esbuild spawn EBADF` error on the development host; the packaged container and Node gateway are tested independently.
+On 2026-10-27, the account was upgraded to Workers Paid. Its budget alert was changed to **$5 of account-wide usage**, in addition to the **$5 monthly plan fee**, for a **$10 target before tax**. The alert emails the existing billing recipient; it is informational and does not cap spending.
+
+On 2026-10-27, both Spotify acceptance tracks passed matching, complete download, and full FFmpeg decoding through the separate Cloudflare staging deployment: Remember (342.379s, 5,537,897 bytes) and Confirmation (178.028s, 2,879,948 bytes). Hosted startup required bypassing Python HTTPServer's unnecessary reverse-DNS lookup because Cloudflare instance hostnames can exceed DNS label limits. Cold-start control operations allow up to 90 seconds. A regression test covers the hostname failure. Local Wrangler emulation hit an `esbuild spawn EBADF` error on the development host; real staging validation covers the hosted runtime.
 
 ## Validation
 

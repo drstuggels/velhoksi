@@ -11,7 +11,7 @@ HTML/CSS/JS site deployed through Cloudflare Workers Builds. The wait player is 
 
 `wrangler.jsonc` serves static assets from the project root. `.assetsignore` allows only public site files, including recordings and credits, and excludes dependencies, tests, and development tooling. `pnpm build` generates the local wait player and converter assets in `wait/`. Do not deploy with raw `wrangler deploy` before building.
 
-Media imports require Cloudflare Containers access and Docker for image builds. The configuration limits the importer to two container instances. See [importer setup, limits, and acceptance checks](media-import/README.md) before deploying; static-only hosting cannot serve `/api/imports`.
+Media imports require Cloudflare Containers access and Docker for image builds. The Worker routes imports to two fixed container shards. See [importer setup, limits, and acceptance checks](media-import/README.md) before deploying; static-only hosting cannot serve `/api/imports`.
 
 ## Wait
 

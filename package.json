@@ -22,7 +22,6 @@
     "wrangler": "^4.145.0"
   },
   "dependencies": {
-    "@cloudflare/containers": "^0.3.7",
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "mediabunny": "^1.61.3"
