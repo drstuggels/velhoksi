@@ -70,6 +70,116 @@ test('leaving wait while the audio device resumes cannot start hidden playback',
   } finally { app.deactivate(); dom.window.close(); }
 });
 
+test('pause pins the live position when the decoder falls back to an older seek, and respects a manual seek', async () => {
+  const { dom, root, app, media } = setup();
+  let position = 0, bufferedFrom = 0;
+  Object.defineProperty(media, 'currentTime', {
+    get: () => position,
+    set(value) { position = value; bufferedFrom = value; },
+  });
+  const pause = media.pause.bind(media);
+  media.pause = () => {
+    pause();
+    // Model the delayed paused clock update observed with AAC in WebKit.
+    queueMicrotask(() => { position = bufferedFrom; });
+  };
+  const play = async () => { root.querySelector('#play').click(); await Promise.resolve(); await Promise.resolve(); };
+  try {
+    app.activate(); await play();
+    position = 6.375; bufferedFrom = 6.1;
+    await play();
+    assert.equal(media.paused, true);
+    assert.equal(media.currentTime, 6.375, 'pausing must not fall back to the older decoder position');
+    await play();
+    assert.equal(media.paused, false);
+    assert.equal(media.currentTime, 6.375);
+    assert.equal(bufferedFrom, 6.375, 'resume must flush audio retained before the pause position');
+    await play();
+    root.querySelector('#forward').click();
+    await play();
+    assert.equal(media.currentTime, 11.375, 'a paused seek must replace the resume position');
+  } finally { app.deactivate(); dom.window.close(); }
+});
+
+test('loop boundary buttons and shortcuts navigate ranges without starting playback', async () => {
+  const { dom, w, root, app, media } = setup();
+  const seek = seconds => {
+    root.querySelector('#seek').value = String(seconds);
+    root.querySelector('#seek').dispatchEvent(new w.Event('input'));
+  };
+  try {
+    app.activate();
+    assert.equal(root.querySelector('#loop-back').disabled, true);
+    assert.equal(root.querySelector('#loop-forward').disabled, true);
+    seek(2); root.querySelector('#add-range').click(); // 2–6
+    seek(10); root.querySelector('#add-range').click(); // 10–14
+    seek(4); root.querySelector('#loop-back').click(); assert.equal(media.currentTime, 2);
+    root.querySelector('#loop-forward').click(); assert.equal(media.currentTime, 6);
+    seek(8); root.querySelector('#loop-back').click(); assert.equal(media.currentTime, 6);
+    seek(8);
+    root.querySelector('.wait-body').dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true }));
+    assert.equal(media.currentTime, 10);
+    seek(0); assert.equal(root.querySelector('#loop-back').disabled, true);
+    seek(16); assert.equal(root.querySelector('#loop-forward').disabled, true);
+    root.querySelector('.mark-loop').click(); // Enable the first range.
+    root.querySelector('#loop-forward').click();
+    assert.equal(media.currentTime, 6);
+    assert.equal(media.paused, true);
+    const tab = app.state().tabs[0];
+    assert.equal(tab.loop, tab.marks[0].id, 'boundary jumps preserve the enabled loop');
+  } finally { app.deactivate(); dom.window.close(); }
+});
+
+test('waveform zoom and pan remap seeking and markers without changing playback', async () => {
+  const { dom, w, root, app, media } = setup();
+  const input = (id, value) => { const field = root.querySelector(id); field.value = String(value); field.dispatchEvent(new w.Event('input')); };
+  try {
+    app.activate(); input('#seek', 8); root.querySelector('#add-range').click();
+    root.querySelector('#wave-zoom-in').click(); root.querySelector('#wave-zoom-in').click();
+    assert.equal(root.querySelector('#wave-zoom-value').textContent, '4×');
+    assert.equal(Number(root.querySelector('#seek').min), 6);
+    assert.equal(Number(root.querySelector('#seek').max), 10);
+    assert.equal(root.querySelector('#playhead').style.left, '50%');
+    assert.equal(root.querySelector('.marker-track').style.left, '50%');
+    input('#wave-pan', 10);
+    assert.equal(media.currentTime, 8, 'panning changes only the view');
+    assert.equal(root.querySelector('#playhead').hidden, true);
+    input('#seek', 12);
+    assert.equal(media.currentTime, 12);
+    assert.equal(root.querySelector('#playhead').style.left, '50%');
+    assert.equal(media.paused, true);
+    root.querySelectorAll('[role=tab]')[1].click(); media.onloadedmetadata();
+    assert.equal(root.querySelector('#wave-zoom-value').textContent, '1×', 'each file has its own waveform view');
+    root.querySelectorAll('[role=tab]')[0].click(); media.onloadedmetadata();
+    assert.equal(root.querySelector('#wave-zoom-value').textContent, '4×');
+    assert.equal(media.currentTime, 12, 'restoring the view does not overwrite the saved playhead');
+    root.querySelector('#wave-zoom-fit').click();
+    assert.equal(Number(root.querySelector('#seek').min), 0);
+    assert.equal(Number(root.querySelector('#seek').max), 16);
+    assert.equal(root.querySelector('#wave-window').hidden, true);
+  } finally { app.deactivate(); dom.window.close(); }
+});
+
+test('waveform zoom and visible range survive a workspace reload', async () => {
+  const factory = new IDBFactory(), first = setup({ factory });
+  try {
+    await first.app.restored; first.app.activate();
+    first.media.currentTime = 8;
+    first.root.querySelector('#wave-zoom-in').click();
+    first.root.querySelector('#wave-zoom-in').click();
+    const pan = first.root.querySelector('#wave-pan'); pan.value = '10'; pan.dispatchEvent(new first.w.Event('input'));
+    first.app.deactivate(); await first.app.saved();
+  } finally { first.dom.window.close(); }
+  const second = setup({ factory, files: [] });
+  try {
+    await second.app.restored; second.media.onloadedmetadata(); second.app.activate();
+    assert.equal(second.root.querySelector('#wave-zoom-value').textContent, '4×');
+    assert.equal(second.root.querySelector('#seek').min, '10');
+    assert.equal(second.root.querySelector('#seek').max, '14');
+    assert.equal(second.media.currentTime, 8);
+  } finally { second.app.deactivate(); await second.app.saved(); second.dom.window.close(); }
+});
+
 test('the deployable player includes an intact codec and resolves its worker under wait', async () => {
   const { readFile, readdir, stat } = await import('node:fs/promises');
   const { createRequire } = await import('node:module');

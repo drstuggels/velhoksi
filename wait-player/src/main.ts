@@ -5,10 +5,11 @@ import markup from './player.html?raw';
 import { SmoothLoop } from './smooth-loop';
 import { VideoView } from './video-view';
 import type { VideoViewState } from './video-geometry';
-import { clamp, time } from './marks';
+import { clamp, loopBoundary, time } from './marks';
 import { MarkerEditor, type MarkerState } from './markers';
 import { createImporter } from './import-view';
 import { clearPendingImport, type Provenance } from './import-client';
+import { constrainWave, maxWaveZoom, visiblePeaks, waveWindow, zoomWave, type WaveView } from './waveform';
 
 export async function clearSavedWait() {
   await clearPendingImport();
@@ -19,12 +20,12 @@ export function createWait(host: HTMLElement, options: { onExit: () => void; vol
 const root = host.attachShadow({ mode: 'open' });
 root.innerHTML = `<style>${styles}</style>${markup}`;
 const scope = root.querySelector<HTMLDivElement>('.wait-body')!;
-let enabled = false, playbackRequest = 0;
+let enabled = false, playbackRequest = 0, refreshOnResume = false;
 const $ = <T extends HTMLElement>(id: string) => root.getElementById(id) as T;
 const media = $<HTMLVideoElement>('media'), fileInput = $<HTMLInputElement>('file-input');
 const seek = $<HTMLInputElement>('seek'), speed = $<HTMLInputElement>('speed'), speedNumber = $<HTMLInputElement>('speed-number'), volume = $<HTMLInputElement>('volume');
 const canvas = $<HTMLCanvasElement>('wave-canvas');
-type Session = MarkerState & { view: VideoViewState; id: string; file: File; playbackFile: File; url: string; position: number; speed: number; pitchLocked: boolean; volume: number; muted: boolean; peaks: number[]; decoded: boolean; provenance?: Provenance; importId?: string };
+type Session = MarkerState & { view: VideoViewState; waveform?: WaveView; id: string; file: File; playbackFile: File; url: string; position: number; speed: number; pitchLocked: boolean; volume: number; muted: boolean; peaks: number[]; decoded: boolean; provenance?: Provenance; importId?: string };
 const sessions: Session[] = [];
 const storage = new WorkspaceStorage();
 let restoring = true, storageUnavailable = false, storageFailed = false, saveTimer = 0, saveRevision = 0;
@@ -45,7 +46,7 @@ async function flushSave() {
   try {
     await storage.save(workspaceSnapshot());
     if (revision !== saveRevision) return;
-    storageFailed = false; $('storage-status').textContent = sessions.length ? 'saved locally' : '';
+    storageFailed = false; $('storage-status').textContent = sessions.length ? (saveTimer ? 'saving locally' : 'saved locally') : '';
   } catch (error) {
     if (revision !== saveRevision) return;
     storageFailed = true;
@@ -67,7 +68,7 @@ const importer = createImporter(root, async (file, provenance, importId, signal)
 }, () => { importFocus = active?.id; });
 let peaks: number[] = [], decodeContext: AudioContext | null = null, conversion: AbortController | null = null;
 const videoView = new VideoView(root, media, () => void togglePlay(), () => scheduleSave());
-const markers = new MarkerEditor($('marker-lanes'), $('marks-list'), syncRange, seekTo, message);
+const markers = new MarkerEditor($('marker-lanes'), $('marks-list'), syncRange, seekTo, message, waveBounds);
 const loopAudio = new SmoothLoop(media, () => ready && !markers.isDragging ? markers.activeRange() : undefined);
 function save(key: string, value: string) { try { localStorage.setItem(`wait:${key}`, value); } catch {} }
 function read(key: string) { try { return localStorage.getItem(`wait:${key}`); } catch { return null; } }
@@ -78,8 +79,11 @@ function syncTransport() {
 }
 function setReady(value: boolean) {
   ready = value;
+  if (!value) refreshOnResume = false;
   for (const id of ['play', 'back', 'forward', 'add-checkpoint', 'add-range', 'seek']) $<HTMLButtonElement>(id).disabled = !value;
   for (const id of ['frame-back', 'frame-forward']) $<HTMLButtonElement>(id).disabled = !value || !media.videoWidth;
+  syncLoopNavigation();
+  renderWaveView();
 }
 function setPitchLocked(locked: boolean) {
   media.preservesPitch = locked;
@@ -107,14 +111,68 @@ function syncRange() {
   loopAudio.check();
   const range = markers.activeRange(), region = $('loop-region');
   region.hidden = !range || !active?.duration;
-  if (range && active?.duration) { region.style.left = `${range.start / active.duration * 100}%`; region.style.width = `${(range.end - range.start) / active.duration * 100}%`; }
+  if (range && active?.duration) {
+    const view = waveBounds(), span = view.end - view.start;
+    region.style.left = `${(range.start - view.start) / span * 100}%`; region.style.width = `${(range.end - range.start) / span * 100}%`;
+  }
+  syncLoopNavigation();
+}
+function waveState() { return constrainWave(active?.waveform); }
+function waveBounds() { return waveWindow(active?.duration ?? 0, waveState()); }
+function renderWaveView() {
+  const view = waveState(), bounds = waveBounds(), span = bounds.end - bounds.start;
+  $('wave-zoom-value').textContent = `${Math.round(view.zoom * 10) / 10}×`;
+  $<HTMLButtonElement>('wave-zoom-in').disabled = !ready || view.zoom >= maxWaveZoom;
+  for (const id of ['wave-zoom-out', 'wave-zoom-fit', 'wave-pan']) $<HTMLButtonElement>(id).disabled = !ready || view.zoom <= 1;
+  $<HTMLButtonElement>('wave-earlier').disabled = !ready || view.start <= 0;
+  $<HTMLButtonElement>('wave-later').disabled = !ready || view.start >= 1 - 1 / view.zoom;
+  const pan = $<HTMLInputElement>('wave-pan');
+  pan.max = String(Math.max(0, (active?.duration ?? 0) - span)); pan.step = String(Math.max(.001, span / 100)); pan.value = String(bounds.start);
+  pan.setAttribute('aria-valuetext', `${time(bounds.start, true)} to ${time(bounds.end, true)}`);
+  $('wave-window').hidden = !ready || view.zoom <= 1;
+  $('wave-start').textContent = time(bounds.start, true); $('wave-end').textContent = time(bounds.end, true);
+  seek.min = String(bounds.start); seek.max = String(bounds.end);
+  markers.refreshViewport(); syncRange(); drawWave(); paintPosition();
+}
+function setWaveView(view: WaveView) {
+  if (!ready || !active || markers.isDragging) return;
+  active.waveform = constrainWave(view); renderWaveView(); scheduleSave();
+}
+function zoomWaveform(zoom: number, anchor?: number) {
+  const bounds = waveBounds(), span = bounds.end - bounds.start;
+  const playhead = span ? (media.currentTime - bounds.start) / span : .5;
+  setWaveView(zoomWave(waveState(), zoom, anchor ?? (playhead >= 0 && playhead <= 1 ? playhead : .5)));
+}
+function panWaveform(fraction: number) { const view = waveState(); setWaveView({ ...view, start: view.start + fraction / view.zoom }); }
+function revealWaveTime(seconds: number) {
+  if (!ready || !active) return;
+  const bounds = waveBounds();
+  if (seconds < bounds.start || seconds > bounds.end) setWaveView({ ...waveState(), start: seconds / active.duration - .5 / waveState().zoom });
+}
+function loopTarget(direction: -1 | 1) {
+  return ready && active ? loopBoundary(active.marks, media.currentTime, direction, active.loop, active.selected) : null;
+}
+function syncLoopNavigation() {
+  $<HTMLButtonElement>('loop-back').disabled = loopTarget(-1) === null;
+  $<HTMLButtonElement>('loop-forward').disabled = loopTarget(1) === null;
+}
+function jumpLoop(direction: -1 | 1) {
+  const target = loopTarget(direction);
+  if (target !== null) seekTo(target);
 }
 function updatePosition() {
   if (!ready || !active) return;
   loopAudio.check();
-  active.position = media.currentTime; scheduleSave(1000); seek.value = String(media.currentTime);
-  seek.setAttribute('aria-valuetext', `${time(media.currentTime)} of ${time(media.duration)}`);
-  $('current').textContent = time(media.currentTime, media.paused && !!media.videoWidth); $('playhead').style.left = `${clamp(media.currentTime / media.duration * 100, 0, 100)}%`;
+  active.position = media.currentTime; scheduleSave(1000); paintPosition();
+  syncLoopNavigation();
+}
+function paintPosition() {
+  if (!ready || !active) return;
+  seek.value = String(media.currentTime);
+  seek.setAttribute('aria-valuetext', `${time(Number(seek.value), waveState().zoom > 1)} of ${time(media.duration)}`);
+  const bounds = waveBounds(), fraction = (media.currentTime - bounds.start) / (bounds.end - bounds.start);
+  $('current').textContent = time(media.currentTime, media.paused && !!media.videoWidth);
+  $('playhead').hidden = fraction < 0 || fraction > 1; $('playhead').style.left = `${clamp(fraction * 100, 0, 100)}%`;
 }
 function tick() { updatePosition(); if (!media.paused) frame = requestAnimationFrame(tick); }
 function seekTo(seconds: number, nudging = false) {
@@ -123,21 +181,38 @@ function seekTo(seconds: number, nudging = false) {
   const range = markers.activeRange();
   // Seeking outside a loop is an intentional way to leave it.
   if (range && (seconds < range.start || seconds > range.end)) { active.loop = null; markers.render(); syncRange(); }
-  loopAudio.cancel(); media.currentTime = clamp(seconds, 0, media.duration); updatePosition(); void flushSave();
+  loopAudio.cancel(); media.currentTime = clamp(seconds, 0, media.duration); refreshOnResume = false; revealWaveTime(media.currentTime); updatePosition(); void flushSave();
 }
 async function togglePlay() {
   ++nudgeRevision;
   if (!ready || !enabled) return;
-  if (!media.paused) { media.pause(); return; }
-  const range = markers.activeRange();
-  if (media.ended) media.currentTime = range?.start ?? 0;
-  if (range && (media.currentTime < range.start || media.currentTime >= range.end)) media.currentTime = range.start;
+  if (!media.paused) { pausePlayback(); return; }
   const token = generation, request = ++playbackRequest;
-  try { await loopAudio.prepare(); if (token !== generation || request !== playbackRequest || !ready || !enabled) return; await media.play(); message(); } catch { message('could not play this file; try another format'); }
+  try {
+    await loopAudio.prepare();
+    if (token !== generation || request !== playbackRequest || !ready || !enabled) return;
+    const range = markers.activeRange();
+    const restart = media.ended || (range && (media.currentTime < range.start || media.currentTime >= range.end));
+    // A precise seek discards retained decoder audio before resuming from a pause.
+    // Read the live position here so a seek during device preparation still wins.
+    if (restart || refreshOnResume) {
+      loopAudio.cancel(); media.currentTime = restart ? range?.start ?? 0 : media.currentTime;
+      refreshOnResume = false;
+    }
+    await media.play(); message();
+  } catch { message('could not play this file; try another format'); }
+}
+function pausePlayback() {
+  ++playbackRequest;
+  const position = media.currentTime, playing = !media.paused;
+  loopAudio.reset(); media.pause();
+  // Pin the live clock before the browser's paused decoder can report an older
+  // seek position (notably for AAC in WebKit).
+  if (ready && playing && !media.ended) media.currentTime = position;
 }
 function nudgeFrame(direction: -1 | 1) {
   if (!ready || !active || !media.videoWidth || !enabled) return;
-  ++playbackRequest; media.pause(); loopAudio.cancel();
+  pausePlayback();
   const token = generation, revision = nudgeRevision, session = active;
   nudgeQueue = nudgeQueue.then(async () => {
     if (token !== generation || revision !== nudgeRevision || !enabled) return;
@@ -210,7 +285,7 @@ function activate(session: Session | null) {
   decodeContext = null;
   active = session; const token = generation;
   media.removeAttribute('src'); media.load(); syncTransport();
-  peaks = session?.peaks ?? []; drawWave(); markers.bind(null); syncRange();
+  peaks = session?.peaks ?? []; markers.bind(null); renderWaveView();
   media.hidden = true; $('audio-face').hidden = true; $('fullscreen').hidden = true; $('drop-target').hidden = !!session;
   $('filename').textContent = session?.file.name ?? 'no file loaded'; $('filetype').textContent = session?.file.name.split('.').pop()?.toLowerCase() ?? 'audio / video';
   const sourceInfo = $('source-info'); sourceInfo.replaceChildren(); sourceInfo.hidden = !session?.provenance;
@@ -232,8 +307,8 @@ function activate(session: Session | null) {
     if (!Number.isFinite(media.duration) || media.duration <= 0) { message('this file has no seekable duration'); return; }
     session.duration = media.duration; setReady(true); syncTransport();
     media.hidden = !media.videoWidth; $('audio-face').hidden = !!media.videoWidth; $('fullscreen').hidden = !media.videoWidth; videoView.bind(media.videoWidth ? session.view : null);
-    $('duration').textContent = time(media.duration); seek.max = String(media.duration); media.currentTime = clamp(session.position, 0, media.duration);
-    setSpeed(session.speed); markers.bind(session); syncRange(); updatePosition(); message();
+    $('duration').textContent = time(media.duration); media.currentTime = clamp(session.position, 0, media.duration);
+    setSpeed(session.speed); markers.bind(session); renderWaveView(); updatePosition(); message();
     if (!session.decoded) void decodeWave(session.playbackFile, token);
   };
   media.onerror = async () => {
@@ -264,8 +339,9 @@ function drawWave() {
   ctx.scale(scale, scale);
   ctx.fillStyle = getComputedStyle(host).getPropertyValue('--muted');
   const count = Math.floor(rect.width / 4);
+  const visible = visiblePeaks(peaks, waveState(), count);
   for (let i = 0; i < count; i++) {
-    const peak = peaks[Math.floor(i / count * peaks.length)] || 0;
+    const peak = visible[i];
     const height = Math.max(2, peak * (rect.height - 8));
     ctx.fillRect(i * 4, (rect.height - height) / 2, 2, height);
   }
@@ -281,7 +357,7 @@ async function decodeWave(file: File, token: number) {
     const buffer = await context.decodeAudioData(await file.arrayBuffer());
     if (token !== generation) return;
     const channel = buffer.getChannelData(0);
-    const bins = 1000;
+    const bins = Math.min(32000, channel.length);
     peaks = Array.from({ length: bins }, (_, i) => {
       const start = Math.floor(i * channel.length / bins);
       const end = Math.floor((i + 1) * channel.length / bins);
@@ -290,7 +366,7 @@ async function decodeWave(file: File, token: number) {
       for (let j = start; j < end; j += step) peak = Math.max(peak, Math.abs(channel[j]));
       return peak;
     });
-    const max = Math.max(...peaks, .01);
+    const max = peaks.reduce((max, peak) => Math.max(max, peak), .01);
     peaks = peaks.map(value => value / max);
     if (active) { active.peaks = peaks; active.decoded = true; }
     drawWave();
@@ -306,17 +382,46 @@ $('cancel-conversion').addEventListener('click', () => {
   media.removeAttribute('src'); media.load(); $('cancel-conversion').hidden = true; $('drop-target').hidden = false; message('conversion cancelled');
 });
 fileInput.addEventListener('change', () => { addFiles(Array.from(fileInput.files ?? [])); fileInput.value = ''; });
-for (const id of ['open-top', 'drop-target', 'add-files']) $(id).addEventListener('click', () => fileInput.click());
+for (const id of ['open-top', 'drop-files', 'open-empty-file', 'open-dialog-file']) $(id).addEventListener('click', () => {
+  const dialog = $<HTMLDialogElement>('link-dialog');
+  if (dialog.open) dialog.close();
+  fileInput.click();
+});
 $('sidebar-toggle').addEventListener('click', () => setSidebar($('sidebar-toggle').getAttribute('aria-expanded') !== 'true'));
 $('sidebar-backdrop').addEventListener('click', () => setSidebar(false));
 $('play').addEventListener('click', () => void togglePlay());
 media.addEventListener('play', () => { syncTransport(); cancelAnimationFrame(frame); tick(); });
-media.addEventListener('pause', () => { syncTransport(); cancelAnimationFrame(frame); updatePosition(); scheduleSave(); });
+media.addEventListener('pause', () => { refreshOnResume = ready && !media.ended; syncTransport(); cancelAnimationFrame(frame); updatePosition(); scheduleSave(); });
 media.addEventListener('timeupdate', updatePosition);
 
 $('frame-back').addEventListener('click', () => nudgeFrame(-1)); $('frame-forward').addEventListener('click', () => nudgeFrame(1));
 $('back').addEventListener('click', () => seekTo(media.currentTime - 5)); $('forward').addEventListener('click', () => seekTo(media.currentTime + 5));
+$('loop-back').addEventListener('click', () => jumpLoop(-1)); $('loop-forward').addEventListener('click', () => jumpLoop(1));
 seek.addEventListener('input', () => seekTo(Number(seek.value)));
+$('wave-zoom-in').addEventListener('click', () => zoomWaveform(waveState().zoom * 2));
+$('wave-zoom-out').addEventListener('click', () => zoomWaveform(waveState().zoom / 2));
+$('wave-zoom-fit').addEventListener('click', () => setWaveView({ zoom: 1, start: 0 }));
+$('wave-earlier').addEventListener('click', () => panWaveform(-.8));
+$('wave-later').addEventListener('click', () => panWaveform(.8));
+$('wave-pan').addEventListener('input', () => setWaveView({ ...waveState(), start: Number($<HTMLInputElement>('wave-pan').value) / (active?.duration || 1) }));
+$('waveform').addEventListener('wheel', event => {
+  if (!ready) return;
+  const box = canvas.getBoundingClientRect();
+  if (!box.width) return;
+  if (event.ctrlKey || event.metaKey) {
+    event.preventDefault(); zoomWaveform(waveState().zoom * Math.exp(-event.deltaY * .008), (event.clientX - box.left) / box.width);
+  } else if (waveState().zoom > 1 && (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))) {
+    event.preventDefault(); panWaveform((event.deltaX || event.deltaY) / box.width);
+  }
+}, { passive: false });
+$('waveform').addEventListener('keydown', event => {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.key === '+' || event.key === '=') zoomWaveform(waveState().zoom * 2);
+  else if (event.key === '-') zoomWaveform(waveState().zoom / 2);
+  else if (event.key === '0') setWaveView({ zoom: 1, start: 0 });
+  else return;
+  event.preventDefault(); event.stopPropagation();
+});
 $('pitch-lock').addEventListener('click', () => setPitchLocked(!media.preservesPitch));
 speed.addEventListener('input', () => setSpeed(Number(speed.value))); speedNumber.addEventListener('change', () => setSpeed(Number(speedNumber.value)));
 $('slower').addEventListener('click', () => setSpeed(Number(speed.value) - 5)); $('faster').addEventListener('click', () => setSpeed(Number(speed.value) + 5));
@@ -338,6 +443,12 @@ $('fullscreen').addEventListener('click', async () => { try { if (root.fullscree
 scope.addEventListener('keydown', event => {
   if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || root.querySelector('dialog[open]') || document.querySelector('dialog[open]') || (event.target as HTMLElement).matches('input, textarea, select, [contenteditable=true]')) return;
   if (event.code === 'Space' && (event.target as HTMLElement).closest('button,a')) return;
+  if (event.shiftKey && event.key.toLowerCase() === 'o') {
+    event.preventDefault(); importer.open(); return;
+  }
+  if (event.shiftKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+    event.preventDefault(); jumpLoop(event.key === 'ArrowLeft' ? -1 : 1); return;
+  }
   const actions: Record<string, () => void> = { ',': () => nudgeFrame(-1), '.': () => nudgeFrame(1), ' ': () => void togglePlay(), ArrowLeft: () => seekTo(media.currentTime - 5), ArrowRight: () => seekTo(media.currentTime + 5), '[': () => setSpeed(Number(speed.value) - 5), ']': () => setSpeed(Number(speed.value) + 5), c: () => { if (ready) markers.add('checkpoint', media.currentTime); }, r: () => { if (ready) markers.add('range', media.currentTime); }, l: () => markers.toggleSelected(), o: () => fileInput.click(), m: () => { media.muted = !media.muted; } };
   const action = actions[event.key.length === 1 ? event.key.toLowerCase() : event.key]; if (action) { event.preventDefault(); action(); }
 });
@@ -356,8 +467,8 @@ document.addEventListener('drop', event => {
 });
 window.addEventListener('blur', () => { dragging = 0; $('drag-overlay').hidden = true; });
 new ResizeObserver(drawWave).observe(canvas);
-window.addEventListener('pagehide', () => { conversion?.abort(); media.pause(); void flushSave(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { ++playbackRequest; media.pause(); void flushSave(); } });
+window.addEventListener('pagehide', () => { conversion?.abort(); pausePlayback(); void flushSave(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { pausePlayback(); void flushSave(); } });
 $('exit-mode').addEventListener('click', options.onExit);
 window.addEventListener('velhoksi:volume', () => { media.volume = options.volume(); });
 new MutationObserver(drawWave).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -399,7 +510,7 @@ return {
   activate() { enabled = true; media.volume = options.volume(); drawWave(); window.dispatchEvent(new Event('resize')); },
   deactivate() {
     importFocus = null;
-    enabled = false; ++playbackRequest; ++nudgeRevision; media.pause(); loopAudio.reset(); void flushSave();
+    enabled = false; ++nudgeRevision; pausePlayback(); void flushSave();
     dragging = 0; $('drag-overlay').hidden = true;
     root.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(dialog => dialog.close());
     if (root.fullscreenElement) void document.exitFullscreen().catch(() => {});

@@ -61,7 +61,7 @@ export function createImporter(root: ShadowRoot, onFile: (file: File, source: Pr
     if (!dialog.open) dialog.showModal();
     if (!input.disabled) input.focus();
   }
-  for (const id of ['open-link', 'import-indicator']) $(id).addEventListener('click', () => open());
+  for (const id of ['open-link', 'open-empty-link', 'add-files', 'import-indicator']) $(id).addEventListener('click', () => open());
   $('close-link').addEventListener('click', () => dialog.close());
   $('link-form').addEventListener('submit', event => {
     event.preventDefault(); onBegin();

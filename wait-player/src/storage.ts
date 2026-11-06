@@ -1,8 +1,9 @@
 import type { MarkerState } from './markers';
 import type { VideoViewState } from './video-geometry';
 import type { Provenance } from './import-client';
+import type { WaveView } from './waveform';
 
-export type SavedTab = MarkerState & { id: string; file: File; playbackFile: File; position: number; speed: number; pitchLocked?: boolean; volume: number; muted: boolean; view: VideoViewState; provenance?: Provenance; importId?: string };
+export type SavedTab = MarkerState & { id: string; file: File; playbackFile: File; position: number; speed: number; pitchLocked?: boolean; volume: number; muted: boolean; view: VideoViewState; waveform?: WaveView; provenance?: Provenance; importId?: string };
 export type Workspace = { active: string | null; tabs: SavedTab[] };
 type FileRecord = { blob: Blob; name: string; modified: number };
 type TabRecord = Omit<SavedTab, 'file' | 'playbackFile'> & { converted: boolean };

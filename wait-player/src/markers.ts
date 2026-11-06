@@ -5,7 +5,7 @@ export class MarkerEditor {
   private state: MarkerState | null = null;
   private dragging = false;
   private cancelDrag: (() => void) | null = null;
-  constructor(private lanes: HTMLElement, private list: HTMLElement, private changed: () => void, private seek: (seconds: number) => void, private report: (text: string) => void) {}
+  constructor(private lanes: HTMLElement, private list: HTMLElement, private changed: () => void, private seek: (seconds: number) => void, private report: (text: string) => void, private viewport?: () => { start: number; end: number }) {}
   get isDragging() { return this.dragging; }
   bind(state: MarkerState | null) { this.cancelDrag?.(); this.state = state; this.render(); }
   add(kind: Mark['kind'], position: number) {
@@ -39,8 +39,20 @@ export class MarkerEditor {
     const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.setAttribute('aria-label', label); b.addEventListener('click', action); return b;
   }
   private placement(track: HTMLElement, mark: Mark, duration: number) {
-    track.style.left = `${mark.start / duration * 100}%`;
-    track.style.width = mark.kind === 'checkpoint' ? '0px' : `${(mark.end - mark.start) / duration * 100}%`;
+    const view = this.viewport?.() ?? { start: 0, end: duration }, span = view.end - view.start;
+    // Keep a captured drag target alive even when it crosses the visible window.
+    track.hidden = !this.dragging && (mark.end < view.start || mark.start > view.end);
+    track.toggleAttribute('data-start-outside', !this.dragging && mark.start < view.start);
+    track.toggleAttribute('data-end-outside', !this.dragging && mark.end > view.end);
+    track.style.left = `${(mark.start - view.start) / span * 100}%`;
+    track.style.width = mark.kind === 'checkpoint' ? '0px' : `${(mark.end - mark.start) / span * 100}%`;
+  }
+  refreshViewport() {
+    if (!this.state) return;
+    for (const mark of this.state.marks) {
+      const track = this.lanes.querySelector<HTMLElement>(`[data-id="${mark.id}"] .marker-track`);
+      if (track) this.placement(track, mark, this.state.duration);
+    }
   }
   private refreshMark(mark: Mark) {
     if (!this.state) return;
@@ -71,12 +83,13 @@ export class MarkerEditor {
       event.preventDefault();
       const s = this.state, original = { ...mark }, startX = event.clientX;
       const width = lane.getBoundingClientRect().width;
+      const view = this.viewport?.() ?? { start: 0, end: s.duration }, span = view.end - view.start;
       let moved = false;
       this.dragging = true; s.selected = mark.id;
       button.focus(); button.setPointerCapture(event.pointerId);
       const move = (e: PointerEvent) => {
         moved ||= Math.abs(e.clientX - startX) > 2;
-        Object.assign(mark, moveMark(original, part, (e.clientX - startX) / width * s.duration, s.duration));
+        Object.assign(mark, moveMark(original, part, (e.clientX - startX) / width * span, s.duration));
         this.placement(track, mark, s.duration);
         button.setAttribute('aria-valuetext', time(part === 'end' ? mark.end : mark.start, true));
         const row = this.list.querySelector<HTMLElement>(`[data-id="${mark.id}"]`);

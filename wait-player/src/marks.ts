@@ -3,6 +3,19 @@ export type Part = 'move' | 'start' | 'end';
 export const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 export const minSpan = (duration: number) => Math.min(.1, duration);
 
+/** Prefer the enabled loop, then the selected/innermost range at the playhead. */
+export function loopBoundary(marks: Mark[], position: number, direction: -1 | 1, loop: string | null, selected: string | null): number | null {
+  const ranges = marks.filter(mark => mark.kind === 'range');
+  const containing = ranges.filter(mark => position >= mark.start && position <= mark.end);
+  const current = containing.find(mark => mark.id === loop)
+    ?? containing.find(mark => mark.id === selected)
+    ?? containing.sort((a, b) => (a.end - a.start) - (b.end - b.start) || a.start - b.start)[0];
+  if (current) return direction < 0 ? current.start : current.end;
+  const boundaries = ranges.map(mark => direction < 0 ? mark.end : mark.start)
+    .filter(boundary => direction < 0 ? boundary < position : boundary > position);
+  return boundaries.length ? (direction < 0 ? Math.max(...boundaries) : Math.min(...boundaries)) : null;
+}
+
 export function moveMark(mark: Mark, part: Part, delta: number, duration: number): Mark {
   if (mark.kind === 'checkpoint') {
     const start = clamp(mark.start + delta, 0, duration);
